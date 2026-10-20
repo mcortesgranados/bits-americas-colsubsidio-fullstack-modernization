@@ -203,6 +203,7 @@ flowchart LR
 | Mensajería | Service Bus (cola `subsidy-requests`) | Publicador en proceso + pipeline Reactor | `app.messaging.transport=azure\|local` |
 | Eventos de dominio externos | Event Grid (topic de documentos) | Logger estructurado | `app.integrations.event-grid.enabled` (prevista, no implementada) |
 | Documentos | Blob Storage (contenedor privado) | Sistema de archivos local | `app.storage.provider=azure\|local` |
+| Base de datos | Azure Database for MySQL Flexible Server | Contenedor `mysql:8.4` en `docker-compose` | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` |
 | Notificaciones | Azure Function HTTP | Logger estructurado | `app.notifications.provider=azure-function\|local-log` |
 | Secretos | Key Vault referenciado por App Service | Variables de entorno / `.env` | Pipeline y `application.yml` |
 | Frontend | Static Web Apps | `ng serve` en tres puertos | Scripts npm |

@@ -61,6 +61,11 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td>Los binarios no pertenecen a MySQL</td>
 </tr>
 <tr>
+<td>Persistir el estado transaccional</td>
+<td>Azure Database for MySQL</td>
+<td>Es el motor relacional del dominio; en local corre como contenedor y en Azure como servidor flexible</td>
+</tr>
+<tr>
 <td>Validar y notificar sin mantener servidores</td>
 <td>Azure Functions</td>
 <td>Carga esporádica, costo por ejecución</td>
@@ -111,6 +116,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <th>Sustituto local</th>
 <th>Propiedad de conmutación</th>
 <th>Estado</th>
+<th>Free tier</th>
 </tr>
 </thead>
 <tbody>
@@ -122,6 +128,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td>Publicador en proceso + pipeline Reactor</td>
 <td><code>app.messaging.transport=local\|azure</code></td>
 <td>Parcial: adaptadores escritos, sin broker real</td>
+<td>No: sin cuota gratuita</td>
 </tr>
 <tr>
 <td><strong>Azure Functions</strong></td>
@@ -131,6 +138,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td><code>LocalLoggingNotificationGateway</code></td>
 <td><code>app.notifications.provider=local-log\|azure-function</code></td>
 <td>Parcial: solo el cliente HTTP; la Function no existe</td>
+<td>Sí, permanente: 1 M de ejecuciones y 400 000 GB-s al mes</td>
 </tr>
 <tr>
 <td><strong>Event Grid</strong></td>
@@ -140,6 +148,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td>Logger estructurado</td>
 <td><code>app.integrations.event-grid.enabled</code> (prevista)</td>
 <td>Pendiente</td>
+<td>Sí, permanente: 100 000 operaciones al mes</td>
 </tr>
 <tr>
 <td><strong>Blob Storage</strong></td>
@@ -149,6 +158,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td><code>LocalFileSystemDocumentStorage</code> en <code>target/document-storage</code></td>
 <td><code>app.storage.provider=local\|azure</code></td>
 <td>Parcial: adaptador escrito, sin cuenta real</td>
+<td>No: sin cuota gratuita</td>
 </tr>
 <tr>
 <td><strong>Table Storage</strong></td>
@@ -158,6 +168,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td>—</td>
 <td>—</td>
 <td><strong>Fuera de alcance</strong> (ver 10.9)</td>
+<td>No aplica: fuera de alcance</td>
 </tr>
 <tr>
 <td><strong>Static Web Apps</strong></td>
@@ -167,6 +178,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td><code>ng serve</code> en 4200 / 4201 / 4202</td>
 <td>Scripts npm</td>
 <td>Pendiente</td>
+<td>Sí, plan Free: 100 GB de banda al mes</td>
 </tr>
 <tr>
 <td><strong>Key Vault</strong></td>
@@ -176,6 +188,17 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td>Variables de entorno / <code>.env</code> no versionado</td>
 <td><code>AZURE_KEY_VAULT_URI</code> (prevista)</td>
 <td>Pendiente</td>
+<td>No: se factura por operaciones</td>
+</tr>
+<tr>
+<td><strong>Azure Database for MySQL Flexible Server</strong></td>
+<td>Persistencia transaccional del dominio y del historial; Flyway versiona el esquema</td>
+<td>JDBC con Hikari (<code>mysql-connector-j</code>) y migraciones con <code>flyway-mysql</code></td>
+<td>Esquema versionado en <code>db/migration</code>; TLS obligatorio (<code>sslMode=REQUIRED</code>) fuera de local</td>
+<td>Contenedor <code>mysql:8.4</code> en <code>docker-compose</code></td>
+<td><code>DB_URL</code>, <code>DB_USERNAME</code>, <code>DB_PASSWORD</code></td>
+<td>Pendiente: solo contenedor local, sin servidor real</td>
+<td>Sí, pero solo 12 meses: 750 h B1MS y 32 GB en cuentas nuevas</td>
 </tr>
 <tr>
 <td><strong>Application Insights</strong></td>
@@ -185,6 +208,7 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td>Logs con MDC <code>correlationId</code></td>
 <td><code>APPLICATIONINSIGHTS_CONNECTION_STRING</code></td>
 <td>Pendiente</td>
+<td>Sí, parcial: 5 GB de ingesta al mes</td>
 </tr>
 </tbody>
 </table>

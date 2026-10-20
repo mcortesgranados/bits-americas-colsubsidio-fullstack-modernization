@@ -14,6 +14,7 @@ no forma parte del alcance.
 | Procesar tareas lentas fuera de la petición HTTP | Service Bus + consumidor | El afiliado no debe esperar la clasificación documental |
 | Notificar a sistemas externos un documento cargado | Event Grid + Function | Desacopla el upload de los suscriptores |
 | Guardar evidencias fuera de la base | Blob Storage | Los binarios no pertenecen a MySQL |
+| Persistir el estado transaccional | Azure Database for MySQL | Es el motor relacional del dominio; en local corre como contenedor y en Azure como servidor flexible |
 | Validar y notificar sin mantener servidores | Azure Functions | Carga esporádica, costo por ejecución |
 | Publicar los portales | Static Web Apps | CDN y ruteo sin servidor |
 | Custodiar secretos | Key Vault | El repositorio no puede contener cadenas de conexión |
@@ -42,16 +43,17 @@ flowchart LR
 
 ## 10.3 Matriz de intervención
 
-| Servicio | Rol en la prueba | Disparador / binding | Contrato | Sustituto local | Propiedad de conmutación | Estado |
-|----------|------------------|----------------------|----------|-----------------|--------------------------|--------|
-| **Service Bus** | Cola de trabajo `subsidy-requests` para clasificar solicitudes y recalcular documentos | Outbox → `ServiceBusSenderClient`; consumidor `ServiceBusProcessorClient` | `DomainEventEnvelope` en JSON, `messageId` = id del outbox | Publicador en proceso + pipeline Reactor | `app.messaging.transport=local\|azure` | Parcial: adaptadores escritos, sin broker real |
-| **Azure Functions** | Validación de documentos y envío de notificaciones | HTTP trigger (backend) y Service Bus trigger (previsto) | JSON con `notificationId`, `requestId`, `correlationId` | `LocalLoggingNotificationGateway` | `app.notifications.provider=local-log\|azure-function` | Parcial: solo el cliente HTTP; la Function no existe |
-| **Event Grid** | Aviso `document.uploaded` a suscriptores | Topic custom, CloudEvent 1.0 | `type`, `subject`, `data.documentId`, `data.requestId` | Logger estructurado | `app.integrations.event-grid.enabled` (prevista) | Pendiente |
-| **Blob Storage** | Evidencias de la solicitud en contenedor privado | SDK `BlobContainerClient` | Clave opaca `{requestId}/{uuid}.{ext}`, checksum SHA-256, content-type validado | `LocalFileSystemDocumentStorage` en `target/document-storage` | `app.storage.provider=local\|azure` | Parcial: adaptador escrito, sin cuenta real |
-| **Table Storage** | No se usa | — | — | — | — | **Fuera de alcance** (ver 10.9) |
-| **Static Web Apps** | Publicación de shell y remotos | Deploy de `dist/` por pipeline | `staticwebapp.config.json` con fallback de rutas | `ng serve` en 4200 / 4201 / 4202 | Scripts npm | Pendiente |
-| **Key Vault** | Secretos de conexión y clave JWT | Referencia desde App Service y Function | Nombres de secreto por entorno | Variables de entorno / `.env` no versionado | `AZURE_KEY_VAULT_URI` (prevista) | Pendiente |
-| **Application Insights** | Trazas correlacionadas de API, consumidor y Function | Agente/SDK | `operation_Id` = `correlationId` | Logs con MDC `correlationId` | `APPLICATIONINSIGHTS_CONNECTION_STRING` | Pendiente |
+| Servicio | Rol en la prueba | Disparador / binding | Contrato | Sustituto local | Propiedad de conmutación | Estado | Free tier |
+|---|---|---|---|---|---|---|---|
+| **Service Bus** | Cola de trabajo `subsidy-requests` para clasificar solicitudes y recalcular documentos | Outbox → `ServiceBusSenderClient`; consumidor `ServiceBusProcessorClient` | `DomainEventEnvelope` en JSON, `messageId` = id del outbox | Publicador en proceso + pipeline Reactor | `app.messaging.transport=local\|azure` | Parcial: adaptadores escritos, sin broker real | No: sin cuota gratuita |
+| **Azure Functions** | Validación de documentos y envío de notificaciones | HTTP trigger (backend) y Service Bus trigger (previsto) | JSON con `notificationId`, `requestId`, `correlationId` | `LocalLoggingNotificationGateway` | `app.notifications.provider=local-log\|azure-function` | Parcial: solo el cliente HTTP; la Function no existe | Sí, permanente: 1 M de ejecuciones y 400 000 GB-s al mes |
+| **Event Grid** | Aviso `document.uploaded` a suscriptores | Topic custom, CloudEvent 1.0 | `type`, `subject`, `data.documentId`, `data.requestId` | Logger estructurado | `app.integrations.event-grid.enabled` (prevista) | Pendiente | Sí, permanente: 100 000 operaciones al mes |
+| **Blob Storage** | Evidencias de la solicitud en contenedor privado | SDK `BlobContainerClient` | Clave opaca `{requestId}/{uuid}.{ext}`, checksum SHA-256, content-type validado | `LocalFileSystemDocumentStorage` en `target/document-storage` | `app.storage.provider=local\|azure` | Parcial: adaptador escrito, sin cuenta real | No: sin cuota gratuita |
+| **Table Storage** | No se usa | — | — | — | — | **Fuera de alcance** (ver 10.9) | No aplica: fuera de alcance |
+| **Static Web Apps** | Publicación de shell y remotos | Deploy de `dist/` por pipeline | `staticwebapp.config.json` con fallback de rutas | `ng serve` en 4200 / 4201 / 4202 | Scripts npm | Pendiente | Sí, plan Free: 100 GB de banda al mes |
+| **Key Vault** | Secretos de conexión y clave JWT | Referencia desde App Service y Function | Nombres de secreto por entorno | Variables de entorno / `.env` no versionado | `AZURE_KEY_VAULT_URI` (prevista) | Pendiente | No: se factura por operaciones |
+| **Azure Database for MySQL Flexible Server** | Persistencia transaccional del dominio y del historial; Flyway versiona el esquema | JDBC con Hikari (`mysql-connector-j`) y migraciones con `flyway-mysql` | Esquema versionado en `db/migration`; TLS obligatorio (`sslMode=REQUIRED`) fuera de local | Contenedor `mysql:8.4` en `docker-compose` | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Pendiente: solo contenedor local, sin servidor real | Sí, pero solo 12 meses: 750 h B1MS y 32 GB en cuentas nuevas |
+| **Application Insights** | Trazas correlacionadas de API, consumidor y Function | Agente/SDK | `operation_Id` = `correlationId` | Logs con MDC `correlationId` | `APPLICATIONINSIGHTS_CONNECTION_STRING` | Pendiente | Sí, parcial: 5 GB de ingesta al mes |
 
 ## 10.4 Requisitos de integración
 

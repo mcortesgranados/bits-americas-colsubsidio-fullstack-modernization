@@ -788,9 +788,12 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 </tr>
 </tbody>
 </table>
-<p><strong>Ocho de los trece casos no requieren Azure.</strong> Solo los tres que cruzan una frontera asíncrona
-(UC-03, UC-12, UC-13) y el que manipula binarios (UC-04) lo necesitan. Añadir mensajería a una lectura
-de perfil sería sobrearquitectura, y el diseño lo evita a propósito.</p>
+<p><strong>Ocho de los trece casos no requieren ningún servicio de integración de Azure.</strong> Solo los tres que
+cruzan una frontera asíncrona (UC-03, UC-12, UC-13) y el que manipula binarios (UC-04) lo necesitan.
+Añadir mensajería a una lectura de perfil sería sobrearquitectura, y el diseño lo evita a propósito.</p>
+<p><strong>Ninguno significa ningún servicio de integración.</strong> La persistencia en MySQL y el hosting en Static
+Web Apps son transversales: los trece casos leen o escriben en el motor relacional, así que en Azure
+todos pasan por el servidor flexible de MySQL, igual que todos se sirven desde el mismo hosting.</p>
 <h2 id="85-free-tier-de-los-servicios-usados">8.5 Free tier de los servicios usados</h2>
 <p>Consulta del <strong>2026-10-20</strong> sobre las páginas públicas de precios y la lista de servicios gratuitos de
 Azure. Las cuotas cambian con el tiempo: hay que reconfirmarlas antes de desplegar.</p>
@@ -964,9 +967,14 @@ es gratuito.</p>
 </tr>
 </tbody>
 </table>
-<p><strong>Diez de los trece casos no tocan ningún servicio de pago.</strong> Solo UC-03 y UC-13 dependen de Service
-Bus y UC-04 de Blob Storage. Si en una demo se sustituyen esos dos servicios —Event Grid en lugar de la
-cola y el adaptador de disco local en lugar del contenedor— el prototipo completo corre en free tier.</p>
+<p><strong>Diez de los trece casos no tocan ningún servicio de Azure de pago.</strong> Solo UC-03 y UC-13 dependen de
+Service Bus y UC-04 de Blob Storage. Si en una demo se sustituyen esos dos servicios —Event Grid en
+lugar de la cola y el adaptador de disco local en lugar del contenedor— el prototipo completo corre
+dentro del año gratuito.</p>
+<p><strong>Azure Database for MySQL aplica a los trece casos.</strong> Toda lectura y escritura pasa por el motor
+relacional: en local es un contenedor y en Azure, un servidor flexible. Es la diferencia entre «ningún
+servicio de integración» y «ningún servicio de Azure»: la base entra en el año gratuito, pero no es una
+cuota permanente, y desde el mes 13 es coste fijo aunque el caso no cambie.</p>
 <p><strong>Application Insights aplica a los trece casos.</strong> Es telemetría transversal, no una dependencia
 funcional: si se cae, el caso de uso sigue funcionando. Por eso no se repite como servicio principal en
 la tabla de la sección 8.4.</p>
