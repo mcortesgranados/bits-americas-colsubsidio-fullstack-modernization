@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 · Inventario del código preliminar</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="07-inventario-del-codigo-preliminar">07 · Inventario del código preliminar</h1>
+<h2 id="71-estado">7.1 Estado</h2>
+<p>El repositorio contiene un <strong>esqueleto de backend</strong> generado antes de cerrar la línea base de
+requisitos. Se conserva completo porque adelanta trabajo de la Fase 2, pero:</p>
+<ul>
+<li><strong>no ha sido compilado todavía</strong>;</li>
+<li><strong>no se declara funcional</strong>;</li>
+<li><strong>se ajustará</strong> contra los documentos 01–06 antes de considerarlo parte de la entrega.</li>
+</ul>
+<p>Ningún archivo se elimina sin dejar constancia aquí de la razón y del reemplazo.</p>
+<h2 id="72-archivos-generados">7.2 Archivos generados</h2>
+<table>
+<thead>
+<tr>
+<th>Paquete / recurso</th>
+<th>Contenido</th>
+<th>Estado</th>
+<th>Observación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ColsubsidioPlatformApplication</code></td>
+<td>Arranque, <code>@EnableScheduling</code>, <code>@ConfigurationPropertiesScan</code></td>
+<td>Completo</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>backend/pom.xml</code></td>
+<td>Boot 3.5.16, Java 17 release, web + webflux, JPA, security, oauth2-resource-server, Flyway, MySQL, H2, springdoc, Azure SDK</td>
+<td>Completo</td>
+<td>Validar versiones al compilar</td>
+</tr>
+<tr>
+<td><code>application.yml</code></td>
+<td>Datasource, JPA, Flyway, seguridad, mensajería, almacenamiento, notificaciones, CORS</td>
+<td>Completo</td>
+<td>Sin secretos reales; valores por defecto sólo para demo</td>
+</tr>
+<tr>
+<td><code>common/api</code>, <code>common/error</code></td>
+<td><code>PageResponse</code>, excepciones, <code>GlobalExceptionHandler</code> (RFC 7807)</td>
+<td>Completo</td>
+<td>Revisar mapeo de <code>AccessDeniedException</code></td>
+</tr>
+<tr>
+<td><code>common/correlation</code></td>
+<td>Filtro y utilidades de correlación</td>
+<td>Completo</td>
+<td>Propaga a MDC y cabecera</td>
+</tr>
+<tr>
+<td><code>common/privacy</code></td>
+<td><code>MaskingUtils</code></td>
+<td>Completo</td>
+<td>Documento, correo, teléfono y NIT</td>
+</tr>
+<tr>
+<td><code>security</code></td>
+<td><code>SecurityConfig</code>, <code>JwtConfig</code>, <code>CurrentUser</code>, <code>CurrentUserProvider</code>, <code>AccessGuard</code></td>
+<td>Completo</td>
+<td>Falta prueba de extremo a extremo</td>
+</tr>
+<tr>
+<td><code>auth/domain</code></td>
+<td><code>AppUser</code>, <code>Role</code>, repositorio</td>
+<td>Completo</td>
+<td>Falta emisión de token y controlador</td>
+</tr>
+<tr>
+<td><code>affiliate</code></td>
+<td>Entidades, repositorios, especificaciones, DTOs, servicio, controlador</td>
+<td>Parcial</td>
+<td>El controlador referencia <code>SubsidyRequestService</code> (aún no existe)</td>
+</tr>
+<tr>
+<td><code>company/domain</code></td>
+<td><code>Company</code>, <code>CompanyWorker</code>, enums, repositorios</td>
+<td>Completo</td>
+<td>Faltan servicio, DTOs y controlador</td>
+</tr>
+<tr>
+<td><code>subsidy/domain</code></td>
+<td>Agregado, documentos, historial, repositorios, especificaciones, estados</td>
+<td>Completo</td>
+<td>Base sólida para Fase 2</td>
+</tr>
+<tr>
+<td><code>subsidy/application</code></td>
+<td><code>SubsidyDemoRules</code>, <code>SubsidyStatusStreamRegistry</code></td>
+<td>Parcial</td>
+<td>Faltan servicios de solicitud y documentos</td>
+</tr>
+<tr>
+<td><code>messaging</code></td>
+<td>Outbox, envelope, publicador, consumidor, idempotencia, fallidos, adaptadores local y Azure</td>
+<td>Completo</td>
+<td>Requiere pruebas de idempotencia y reintentos</td>
+</tr>
+<tr>
+<td><code>notification</code></td>
+<td>Entidad, repositorio, servicio, gateways local y Azure</td>
+<td>Completo</td>
+<td>Falta controlador propio (se expone en afiliados)</td>
+</tr>
+<tr>
+<td><code>storage</code></td>
+<td>Puerto, DTO y adaptadores local/Azure</td>
+<td>Completo</td>
+<td>Falta prueba de path traversal y checksum</td>
+</tr>
+<tr>
+<td><code>audit</code></td>
+<td>Entidad, repositorio, servicio y catálogo de acciones</td>
+<td>Completo</td>
+<td>Transacción independiente documentada</td>
+</tr>
+<tr>
+<td><code>config</code></td>
+<td>Propiedades tipadas y <code>WebClient</code></td>
+<td>Completo</td>
+<td>Revisar validación de propiedades obligatorias</td>
+</tr>
+<tr>
+<td><code>db/migration</code></td>
+<td>—</td>
+<td><strong>Pendiente</strong></td>
+<td>Fase 2</td>
+</tr>
+<tr>
+<td>Pruebas</td>
+<td>—</td>
+<td><strong>Pendiente</strong></td>
+<td>Fase 3</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>—</td>
+<td><strong>Pendiente</strong></td>
+<td>Fase 4</td>
+</tr>
+</tbody>
+</table>
+<h2 id="73-brechas-para-que-el-backend-compile">7.3 Brechas para que el backend compile</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Brecha</th>
+<th>Acción en Fase 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td><code>SubsidyRequestService</code> referenciado por <code>AffiliateController</code> y por el manejador de eventos</td>
+<td>Implementar servicio de solicitudes y DTOs asociados</td>
+</tr>
+<tr>
+<td>B2</td>
+<td>Servicio, DTOs y controlador de empresas</td>
+<td>Implementar <code>CompanyService</code>, <code>CompanyController</code> y DTOs</td>
+</tr>
+<tr>
+<td>B3</td>
+<td>Emisión de JWT, controlador de autenticación e inicializador de usuarios demo</td>
+<td>Implementar <code>DemoTokenService</code>, <code>AuthController</code>, <code>DemoUserInitializer</code></td>
+</tr>
+<tr>
+<td>B4</td>
+<td>DTOs de solicitud (<code>SubsidyRequestSummaryResponse</code>, detalle, documentos, historial, revisión)</td>
+<td>Crear en <code>subsidy/api/dto</code></td>
+</tr>
+<tr>
+<td>B5</td>
+<td>Tablero reactivo del afiliado</td>
+<td>Crear módulo <code>dashboard</code> con <code>Mono.zip</code></td>
+</tr>
+<tr>
+<td>B6</td>
+<td>Controlador de operación (outbox y fallidos)</td>
+<td>Crear <code>ops</code></td>
+</tr>
+<tr>
+<td>B7</td>
+<td>Migraciones Flyway</td>
+<td>Crear <code>V1__schema.sql</code> y <code>V2__demo_data.sql</code> portables</td>
+</tr>
+</tbody>
+</table>
+<h2 id="74-ajustes-detectados-al-contrastar-con-los-requisitos">7.4 Ajustes detectados al contrastar con los requisitos</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Hallazgo</th>
+<th>Requisito afectado</th>
+<th>Resolución propuesta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td><code>AffiliateController.myBeneficiaries()</code> obtiene el id llamando a <code>ownProfile()</code> (consulta redundante)</td>
+<td>NFR-PER-01</td>
+<td>Exponer <code>currentAffiliateId()</code> en el servicio y usarlo</td>
+</tr>
+<tr>
+<td>A2</td>
+<td><code>updateContact</code> devuelve <code>companyName</code> nulo</td>
+<td>FR-AFI-01</td>
+<td>Resolver el nombre de empresa en la misma consulta</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>Import sin uso (<code>SimpleAuthorityMapper</code>) en <code>SecurityConfig</code></td>
+<td>Calidad</td>
+<td>Eliminar y activar comprobación de imports en revisión</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>Formato de radicado <code>SOL-&lt;año&gt;-&lt;secuencia&gt;</code> aún no implementado</td>
+<td>FR-SOL-02</td>
+<td>Usar tabla de secuencia (<code>document_sequence</code>) para garantizar unicidad sin colisiones</td>
+</tr>
+<tr>
+<td>A5</td>
+<td>No existe prueba de que el evento SSE llegue tras el commit</td>
+<td>FR-SOL-12</td>
+<td>Prueba de integración con <code>StepVerifier</code> y Awaitility</td>
+</tr>
+<tr>
+<td>A6</td>
+<td>El outbox usa sondeo; el intervalo por defecto es 3 s</td>
+<td>NFR-PER-03</td>
+<td>Documentar la latencia esperada y permitir ajuste por configuración</td>
+</tr>
+<tr>
+<td>A7</td>
+<td>El consumidor registra auditoría en transacción independiente</td>
+<td>NFR-REL-01</td>
+<td>Verificar que un fallo del handler no deje auditoría de una transición no confirmada</td>
+</tr>
+</tbody>
+</table>
+<h2 id="75-regla-de-conservacion">7.5 Regla de conservación</h2>
+<ol>
+<li>Todo archivo existente se <strong>refactoriza</strong>, no se reescribe desde cero, salvo que el documento 04
+   contradiga su diseño.</li>
+<li>Si un archivo debe desaparecer, se anota en este documento con la razón y el reemplazo.</li>
+<li>El historial de Git conserva la evolución; el repositorio entregado no incluye código muerto.</li>
+</ol>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
