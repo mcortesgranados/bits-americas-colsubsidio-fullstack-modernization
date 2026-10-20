@@ -1,0 +1,138 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: colsubsidio-platform-api
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/colsubsidio_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:colsubsidio}
+    password: ${DB_PASSWORD:colsubsidio}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      pool-name: colsubsidio-pool
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        query:
+          fail_on_pagination_over_collection_fetch: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+  data:
+    web:
+      pageable:
+        max-page-size: 50
+        default-page-size: 20
+  mvc:
+    problemdetails:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+info:
+  app:
+    name: Colsubsidio Affiliates & Companies Platform (technical demo)
+    version: 1.0.0
+    disclaimer: Independent prototype. Not affiliated with Colsubsidio. Synthetic data only.
+
+app:
+  security:
+    jwt:
+      issuer: colsubsidio-demo-platform
+      secret: ${JWT_SECRET:demo-only-secret-key-change-me-32-bytes-minimum}
+      ttl: PT2H
+    demo-users:
+      - username: afiliado.demo
+        password: ${DEMO_AFFILIATE_PASSWORD:Demo123!}
+        role: ROLE_AFFILIATE
+        affiliate-document: 1020304050
+      - username: empresa.demo
+        password: ${DEMO_COMPANY_PASSWORD:Demo123!}
+        role: ROLE_COMPANY
+        company-nit: 900123456-7
+      - username: backoffice.demo
+        password: ${DEMO_BACKOFFICE_PASSWORD:Demo123!}
+        role: ROLE_BACKOFFICE
+      - username: auditor.demo
+        password: ${DEMO_AUDITOR_PASSWORD:Demo123!}
+        role: ROLE_AUDITOR
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:4201,http://localhost:4202}
+  messaging:
+    transport: ${MESSAGING_TRANSPORT:local}
+    outbox:
+      enabled: true
+      publish-interval-ms: 3000
+      batch-size: 50
+      max-attempts: 5
+    consumer:
+      max-attempts: 3
+      backoff-ms: 150
+      name: subsidy-request-processor
+    local:
+      async: true
+      simulated-latency-ms: 0
+    azure:
+      connection-string: ${AZURE_SERVICE_BUS_CONNECTION_STRING:}
+      queue-name: ${AZURE_SERVICE_BUS_QUEUE:subsidy-requests}
+  storage:
+    provider: ${STORAGE_PROVIDER:local}
+    max-size-bytes: 5242880
+    allowed-content-types: application/pdf,image/png,image/jpeg
+    local:
+      base-path: ${DOCUMENT_STORAGE_PATH:./target/document-storage}
+    azure:
+      connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
+      container-name: ${AZURE_STORAGE_CONTAINER:subsidy-documents}
+  notifications:
+    provider: ${NOTIFICATION_PROVIDER:local-log}
+    azure-function:
+      base-url: ${AZURE_FUNCTION_BASE_URL:http://localhost:7071}
+      api-key: ${AZURE_FUNCTION_KEY:}
+      timeout-ms: 4000
+  demo:
+    accept-synthetic-only: true
+    rules-notice: >-
+      All business rules in this prototype (amount limits, required documents, automatic
+      classification) are DEMONSTRATION rules. They do not represent Colsubsidio policies.
