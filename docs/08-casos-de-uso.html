@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Casos de uso</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="08-casos-de-uso">08 · Casos de uso</h1>
+<p>Catálogo formal de los casos de uso del prototipo. Cada caso declara actor, precondiciones, disparador,
+flujo principal, flujos alternos, postcondiciones y los requisitos que implementa, de modo que pueda
+usarse como guion de demostración y como base de las pruebas de aceptación.</p>
+<h2 id="81-actores">8.1 Actores</h2>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Rol técnico</th>
+<th>Alcance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Afiliado</td>
+<td><code>ROLE_AFFILIATE</code></td>
+<td>Sus propios datos, solicitudes, documentos y notificaciones</td>
+</tr>
+<tr>
+<td>Administrador de empresa</td>
+<td><code>ROLE_COMPANY</code></td>
+<td>Datos de su empresa, trabajadores y trámites asociados</td>
+</tr>
+<tr>
+<td>Analista de back-office</td>
+<td><code>ROLE_BACKOFFICE</code></td>
+<td>Consulta transversal y decisión de demostración</td>
+</tr>
+<tr>
+<td>Auditor</td>
+<td><code>ROLE_AUDITOR</code></td>
+<td>Consulta transversal de solo lectura</td>
+</tr>
+<tr>
+<td>Consumidor de eventos</td>
+<td><code>system:subsidy-consumer</code></td>
+<td>Procesamiento asíncrono idempotente</td>
+</tr>
+</tbody>
+</table>
+<h2 id="82-mapa-de-actores-y-casos-de-uso">8.2 Mapa de actores y casos de uso</h2>
+<pre class="mermaid">flowchart LR
+    AFI([Afiliado]) --&gt; UC01[UC-01 Perfil]
+    AFI --&gt; UC02[UC-02 Beneficiarios]
+    AFI --&gt; UC03[UC-03 Registrar solicitud]
+    AFI --&gt; UC04[UC-04 Cargar documentos]
+    AFI --&gt; UC05[UC-05 Consultar estado]
+    AFI --&gt; UC06[UC-06 Cancelar solicitud]
+    AFI --&gt; UC07[UC-07 Notificaciones]
+
+    EMP([Administrador de empresa]) --&gt; UC08[UC-08 Perfil de empresa]
+    EMP --&gt; UC09[UC-09 Gestionar trabajadores]
+    EMP --&gt; UC10[UC-10 Trámites de la empresa]
+    EMP --&gt; UC11[UC-11 Reporte administrativo]
+
+    ANA([Back-office]) --&gt; UC12[UC-12 Revisar y decidir]
+    AUD([Auditor]) --&gt; UC12
+
+    CON([Consumidor]) --&gt; UC13[UC-13 Procesar evento]
+
+    UC03 -. publica .-&gt; UC13
+    UC04 -. publica .-&gt; UC13
+    UC13 -. actualiza .-&gt; UC05
+    UC13 -. notifica .-&gt; UC07
+</pre>
+<h2 id="83-convenciones">8.3 Convenciones</h2>
+<ul>
+<li><strong>Flujo principal</strong>: camino que termina en éxito.</li>
+<li><strong>Flujos alternos</strong>: desviaciones esperadas (validación, permisos, estado, duplicados).</li>
+<li><strong>Postcondición</strong>: estado observable al finalizar, incluso en el camino de error.</li>
+<li>Los identificadores <code>UC-xx</code> se referencian desde la <a href="05-trazabilidad.html#54-casos-de-uso">matriz de trazabilidad</a>.</li>
+</ul>
+<hr>
+<h2 id="uc-01-consultar-el-perfil-del-afiliado">UC-01 · Consultar el perfil del afiliado</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Afiliado</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-AFI-01, FR-AUT-05</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET /api/v1/affiliates/me</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Token válido con <code>affiliateId</code> en los claims</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal obtiene el token del almacenamiento de sesión y lo adjunta como <code>Bearer</code>.</li>
+<li>El backend valida firma, expiración y autoridad <code>ROLE_AFFILIATE</code>.</li>
+<li>El servicio resuelve el afiliado a partir del claim, no de un parámetro de la ruta.</li>
+<li>El mapper construye el DTO enmascarando documento, correo y teléfono.</li>
+<li>El portal muestra nombre, categoría, estado, empresa y fechas.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Token ausente o expirado</strong> → 401 con <code>code=UNAUTHENTICATED</code>; el shell redirige al login conservando la ruta solicitada.</li>
+<li><strong>A2 Afiliado inexistente o inactivo</strong> → 404 o 403 sin revelar si el registro existe.</li>
+<li><strong>A3 El afiliado intenta leer otro identificador</strong> → 403 <code>ACCESS_DENIED</code> y registro en auditoría.</li>
+</ul>
+<p><strong>Postcondición:</strong> el afiliado ve únicamente su información, con datos personales enmascarados.</p>
+<hr>
+<h2 id="uc-02-consultar-beneficiarios">UC-02 · Consultar beneficiarios</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Afiliado (o staff sobre un afiliado concreto)</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-AFI-03</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET /api/v1/affiliates/me/beneficiaries</code> · <code>GET /api/v1/affiliates/{id}/beneficiaries</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Sesión válida y pertenencia al afiliado (o rol de staff)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal solicita la lista de beneficiarios del afiliado autenticado.</li>
+<li>La capa de aplicación valida la pertenencia con <code>AccessGuard</code>.</li>
+<li>El repositorio devuelve los beneficiarios ordenados por nombre.</li>
+<li>El mapper enmascara el documento de cada beneficiario.</li>
+<li>El portal muestra parentesco, fecha de nacimiento y estado.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Afiliado sin beneficiarios</strong> → 200 con lista vacía y estado vacío explicativo en el portal.</li>
+<li><strong>A2 Acceso a un afiliado ajeno</strong> → 403 y evento <code>PII_ACCESS</code> fallido en auditoría.</li>
+</ul>
+<p><strong>Postcondición:</strong> no se expone ningún documento completo ni dato de contacto de terceros.</p>
+<hr>
+<h2 id="uc-03-registrar-una-solicitud-de-subsidio">UC-03 · Registrar una solicitud de subsidio</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Afiliado</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-SOL-01, FR-SOL-02, FR-SOL-03, FR-AUT-05</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>POST /api/v1/subsidy-requests</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Afiliado <code>ACTIVE</code>, sin solicitud abierta del mismo tipo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El afiliado elige tipo, monto y motivo en el asistente del portal.</li>
+<li>El portal valida formato y envía el <code>POST</code>.</li>
+<li>El backend autoriza por rol y resuelve el afiliado desde el token.</li>
+<li><code>SubsidyDemoRules</code> valida monto positivo, límite por tipo y elegibilidad de categoría.</li>
+<li>El servicio verifica que no exista otra solicitud abierta del mismo tipo.</li>
+<li>Se persisten, en una sola transacción, la solicitud <code>SUBMITTED</code>, los documentos requeridos, la primera entrada de historial y el evento de outbox.</li>
+<li>La respuesta es 201 con <code>Location</code> y el número de radicado.</li>
+<li>El publicador del outbox entrega el evento al consumidor.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Monto sobre el límite</strong> → 422 <code>AMOUNT_ABOVE_DEMO_LIMIT</code>, sin persistencia.</li>
+<li><strong>A2 Solicitud abierta del mismo tipo</strong> → 409 <code>DUPLICATE_OPEN_REQUEST</code>.</li>
+<li><strong>A3 Educación sin beneficiarios</strong> → 422 <code>NO_BENEFICIARIES</code>.</li>
+<li><strong>A4 Crédito en categoría C</strong> → 422 <code>CATEGORY_NOT_ELIGIBLE</code>.</li>
+<li><strong>A5 Falla al escribir el outbox</strong> → rollback completo; no queda solicitud sin evento.</li>
+</ul>
+<p><strong>Postcondición:</strong> la solicitud existe en <code>SUBMITTED</code>, con documentos <code>PENDING</code> y evento en outbox.</p>
+<hr>
+<h2 id="uc-04-cargar-un-documento-requerido">UC-04 · Cargar un documento requerido</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Afiliado</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-SOL-05, FR-SOL-06, FR-SOL-07</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>POST /api/v1/subsidy-requests/{id}/documents</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Solicitud propia en estado abierto y documento del catálogo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal envía el archivo como <code>multipart/form-data</code> con el tipo de documento.</li>
+<li>El backend valida pertenencia, estado de la solicitud y tipo de documento.</li>
+<li>El almacenamiento valida MIME y tamaño, calcula SHA-256 y guarda con clave opaca.</li>
+<li>El documento pasa a <code>RECEIVED</code> con nombre, tipo, tamaño y checksum.</li>
+<li>Se publica <code>subsidy.document.uploaded</code> en el outbox.</li>
+<li>El consumidor recalcula la completitud y, si ya no faltan evidencias, mueve la solicitud a <code>IN_REVIEW</code>.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Tipo no permitido</strong> → 422 <code>FILE_TYPE_NOT_ALLOWED</code>; no se escribe archivo.</li>
+<li><strong>A2 Archivo mayor a 5 MB</strong> → 413 <code>FILE_TOO_LARGE</code>; el contenedor descarta el cuerpo.</li>
+<li><strong>A3 Documento ya cargado</strong> → reemplazo controlado, conservando el checksum anterior en auditoría.</li>
+<li><strong>A4 Solicitud en estado terminal</strong> → 422 <code>INVALID_STATUS_TRANSITION</code>.</li>
+</ul>
+<p><strong>Postcondición:</strong> el documento queda disponible para el afiliado y para el back-office, con trazabilidad.</p>
+<hr>
+<h2 id="uc-05-consultar-el-estado-y-el-historial-en-tiempo-real">UC-05 · Consultar el estado y el historial en tiempo real</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Afiliado, empresa o back-office</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-AFI-05, FR-AFI-06, FR-SOL-08, FR-SOL-12</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET /api/v1/subsidy-requests/{id}</code> · <code>GET .../history</code> · <code>GET .../events</code> (SSE)</td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Acceso autorizado al recurso</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal solicita el detalle de la solicitud.</li>
+<li>El backend autoriza por rol y por recurso.</li>
+<li>Devuelve estado, monto, fechas, documentos con su estado e historial ordenado.</li>
+<li>El portal abre un <code>EventSource</code> contra <code>/events</code>.</li>
+<li>Cada transición se publica en el <code>Sinks.Many</code> y llega como <code>ServerSentEvent</code>.</li>
+<li>El portal actualiza la línea de tiempo sin recargar y anuncia el cambio con <code>aria-live</code>.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Sin permisos sobre la solicitud</strong> → 403; el portal muestra un mensaje sin detalles del recurso.</li>
+<li><strong>A2 Corte de la conexión SSE</strong> → reconexión automática del navegador con <code>Last-Event-ID</code> y <code>heartbeat</code>.</li>
+<li><strong>A3 Sin cambios durante el tiempo de espera</strong> → latido periódico para evitar el cierre por proxies.</li>
+</ul>
+<p><strong>Postcondición:</strong> el usuario ve el estado vigente y el historial completo, con actor, motivo y fecha.</p>
+<hr>
+<h2 id="uc-06-cancelar-una-solicitud">UC-06 · Cancelar una solicitud</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Afiliado</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-SOL-09, FR-SOL-11</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>POST /api/v1/subsidy-requests/{id}/cancel</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Solicitud propia en <code>SUBMITTED</code>, <code>PENDING_DOCUMENTS</code> o <code>IN_REVIEW</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal solicita confirmación explicando que la acción es irreversible.</li>
+<li>El backend valida pertenencia y estado.</li>
+<li>El agregado aplica la transición a <code>CANCELLED</code> y registra el motivo.</li>
+<li>Se añade la entrada de historial y la notificación al afiliado.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Estado terminal</strong> → 422 <code>INVALID_STATUS_TRANSITION</code>.</li>
+<li><strong>A2 Solicitud ajena</strong> → 403.</li>
+</ul>
+<p><strong>Postcondición:</strong> la solicitud queda en <code>CANCELLED</code> y no admite nuevas cargas.</p>
+<hr>
+<h2 id="uc-07-consultar-y-marcar-notificaciones">UC-07 · Consultar y marcar notificaciones</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Afiliado</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-AFI-07, FR-ASY-05</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET /api/v1/affiliates/me/notifications</code> · <code>PATCH .../{id}/read</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Sesión válida</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal consulta la bandeja paginada y el contador de no leídas.</li>
+<li>El backend devuelve las notificaciones del afiliado autenticado.</li>
+<li>Al abrir una notificación, el portal la marca como leída.</li>
+<li>El backend actualiza de forma idempotente y devuelve 204.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Notificación de otro afiliado</strong> → 404, sin distinguir de una inexistente.</li>
+<li><strong>A2 Marcado repetido</strong> → 204 sin error.</li>
+</ul>
+<p><strong>Postcondición:</strong> el contador refleja el estado real y no se altera la de otros usuarios.</p>
+<hr>
+<h2 id="uc-08-consultar-el-perfil-de-la-empresa">UC-08 · Consultar el perfil de la empresa</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Administrador de empresa</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-EMP-01, FR-EMP-07</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET /api/v1/companies/me</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Token con <code>companyId</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal solicita el perfil sin enviar identificador.</li>
+<li>El backend resuelve la empresa desde el claim.</li>
+<li>Devuelve razón social, NIT con dígito de verificación enmascarado, sector, tamaño, ciudad y número de afiliados.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Token sin <code>companyId</code></strong> → 403.</li>
+<li><strong>A2 Empresa inactiva</strong> → 200 con estado <code>INACTIVE</code> y aviso en el portal.</li>
+</ul>
+<p><strong>Postcondición:</strong> la empresa ve solo su información.</p>
+<hr>
+<h2 id="uc-09-gestionar-trabajadores-de-demostracion">UC-09 · Gestionar trabajadores de demostración</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Administrador de empresa</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-EMP-02, FR-EMP-03, FR-EMP-04</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET/POST /api/v1/companies/me/workers</code> · <code>PATCH .../{id}</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Empresa activa</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal lista trabajadores con filtro por estado y búsqueda, paginados.</li>
+<li>El administrador registra un trabajador con documento, nombre, cargo y fecha de ingreso.</li>
+<li>El backend valida campos y unicidad del documento dentro de la empresa.</li>
+<li>Se persiste el trabajador y se registra auditoría.</li>
+<li>El administrador puede cambiar el estado a <code>ACTIVE</code> o <code>INACTIVE</code>.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Documento duplicado en la empresa</strong> → 409 <code>DATA_CONFLICT</code>.</li>
+<li><strong>A2 Trabajador de otra empresa</strong> → 404.</li>
+<li><strong>A3 Datos inválidos</strong> → 400 con errores por campo.</li>
+</ul>
+<p><strong>Postcondición:</strong> el registro queda disponible solo para la empresa propietaria.</p>
+<hr>
+<h2 id="uc-10-consultar-los-tramites-de-la-empresa-con-datos-minimizados">UC-10 · Consultar los trámites de la empresa con datos minimizados</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Administrador de empresa</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-EMP-05, NFR-PRI-02</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET /api/v1/companies/me/subsidy-requests</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Empresa con afiliados</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal solicita los trámites con filtros de estado y tipo.</li>
+<li>El backend restringe la consulta al <code>companyId</code> del token mediante especificación.</li>
+<li>Devuelve número, tipo, estado, monto, fecha y documento del afiliado enmascarado.</li>
+<li>El portal muestra la bandeja sin nombres ni datos de contacto.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Intento de filtrar por otra empresa</strong> → el parámetro se ignora y se aplica el del token.</li>
+<li><strong>A2 Sin trámites</strong> → 200 con página vacía.</li>
+</ul>
+<p><strong>Postcondición:</strong> la empresa no recibe datos personales innecesarios.</p>
+<hr>
+<h2 id="uc-11-consultar-el-reporte-administrativo">UC-11 · Consultar el reporte administrativo</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Administrador de empresa, auditor</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-EMP-06</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>GET /api/v1/companies/me/reports/summary</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Sesión válida con empresa asociada</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El portal solicita el resumen del periodo.</li>
+<li>El backend agrega conteos por estado y tipo, trabajadores activos y monto solicitado.</li>
+<li>Devuelve la serie agregada sin identificadores personales.</li>
+<li>El portal representa los totales en tarjetas y una tabla.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Periodo inválido</strong> → 400 <code>VALIDATION_ERROR</code>.</li>
+<li><strong>A2 Periodo sin datos</strong> → 200 con ceros explícitos.</li>
+</ul>
+<p><strong>Postcondición:</strong> el reporte es agregado y no permite reidentificar a un afiliado.</p>
+<hr>
+<h2 id="uc-12-revisar-y-registrar-una-decision-de-demostracion">UC-12 · Revisar y registrar una decisión de demostración</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Analista de back-office</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-SOL-10, FR-SOL-11, FR-AUT-04</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>POST /api/v1/subsidy-requests/{id}/review</code></td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Solicitud en <code>IN_REVIEW</code> y documentos completos</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El analista consulta la solicitud, sus documentos y el historial.</li>
+<li>Verifica la evidencia y elige aprobar o rechazar en modo demostración.</li>
+<li>Escribe un motivo obligatorio de 10 a 400 caracteres.</li>
+<li>El backend valida la autoridad <code>ROLE_BACKOFFICE</code> y la transición.</li>
+<li>La solicitud pasa a <code>APPROVED_DEMO</code> o <code>REJECTED_DEMO</code>, con fecha y motivo.</li>
+<li>Se registra historial, auditoría y notificación al afiliado.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Rol distinto de back-office</strong> → 403 antes de ejecutar el cuerpo.</li>
+<li><strong>A2 Motivo ausente o demasiado corto</strong> → 400 <code>VALIDATION_ERROR</code>.</li>
+<li><strong>A3 Estado no revisable</strong> → 422 <code>INVALID_STATUS_TRANSITION</code>.</li>
+<li><strong>A4 Dos analistas deciden a la vez</strong> → 409 por bloqueo optimista; solo una decisión prevalece.</li>
+</ul>
+<p><strong>Postcondición:</strong> la decisión queda marcada como demostración y es trazable, sin efecto oficial.</p>
+<hr>
+<h2 id="uc-13-procesar-un-evento-de-solicitud-o-de-documento">UC-13 · Procesar un evento de solicitud o de documento</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Actor</td>
+<td>Consumidor de eventos</td>
+</tr>
+<tr>
+<td>Requisitos</td>
+<td>FR-ASY-01, FR-ASY-02, FR-ASY-03, FR-ASY-04</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td>Interno: outbox → transporte local o Service Bus</td>
+</tr>
+<tr>
+<td>Precondición</td>
+<td>Envelope válido con <code>messageId</code> único</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flujo principal</strong></p>
+<ol>
+<li>El publicador lee el outbox pendiente y envía el envelope.</li>
+<li>El consumidor verifica si <code>(messageId, consumer)</code> ya fue procesado.</li>
+<li>Ejecuta el manejador dentro de una transacción.</li>
+<li>Clasifica la solicitud en <code>PENDING_DOCUMENTS</code> o <code>IN_REVIEW</code>.</li>
+<li>Registra historial, notificación y auditoría.</li>
+<li>Marca el mensaje como procesado y el outbox como publicado.</li>
+</ol>
+<p><strong>Flujos alternos</strong></p>
+<ul>
+<li><strong>A1 Mensaje duplicado</strong> → se descarta sin segundo efecto; queda evidencia en <code>processed_message</code>.</li>
+<li><strong>A2 Fallo transitorio</strong> → reintentos con backoff exponencial.</li>
+<li><strong>A3 Reintentos agotados</strong> → fila en <code>failed_message</code> con el error y el payload.</li>
+<li><strong>A4 Evento desconocido</strong> → se registra y se ignora, sin romper el consumidor.</li>
+</ul>
+<p><strong>Postcondición:</strong> el estado es consistente con el evento y existe trazabilidad completa.</p>
+<h2 id="84-cobertura">8.4 Cobertura</h2>
+<table>
+<thead>
+<tr>
+<th>Grupo</th>
+<th>Casos</th>
+<th>Requisitos <code>M</code> cubiertos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Afiliado</td>
+<td>UC-01 a UC-07</td>
+<td>FR-AFI-01, FR-AFI-03, FR-AFI-04, FR-AFI-05, FR-SOL-01, FR-SOL-05, FR-SOL-08</td>
+</tr>
+<tr>
+<td>Empresa</td>
+<td>UC-08 a UC-11</td>
+<td>FR-EMP-01, FR-EMP-02, FR-EMP-03, FR-EMP-05, FR-EMP-07</td>
+</tr>
+<tr>
+<td>Back-office</td>
+<td>UC-12</td>
+<td>FR-SOL-10, FR-SOL-11</td>
+</tr>
+<tr>
+<td>Sistema</td>
+<td>UC-13</td>
+<td>FR-ASY-01 a FR-ASY-04</td>
+</tr>
+</tbody>
+</table>
+<p>Los casos <code>S</code> (FR-AFI-02, FR-AFI-07, FR-AFI-08, FR-EMP-04, FR-EMP-06, FR-SOL-07, FR-SOL-09, FR-SOL-12) se cubren en UC-04, UC-05, UC-06, UC-07, UC-09 y UC-11.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
