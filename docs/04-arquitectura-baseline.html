@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Arquitectura baseline</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="04-arquitectura-baseline">04 · Arquitectura baseline</h1>
+<p>Esta sección fija la arquitectura <strong>antes</strong> de continuar la implementación. Cualquier cambio posterior
+debe reflejarse aquí y en un ADR.</p>
+<h2 id="41-principios">4.1 Principios</h2>
+<ol>
+<li><strong>Monolito modular primero.</strong> Un solo despliegue de backend con módulos por funcionalidad y
+   fronteras explícitas; la extracción a servicios se decide con evidencia, no por moda.</li>
+<li><strong>Puertos y adaptadores en los bordes.</strong> Mensajería, almacenamiento y notificaciones dependen de
+   interfaces; Azure y las implementaciones locales son intercambiables por configuración.</li>
+<li><strong>El dominio no conoce HTTP ni JPA.</strong> Entidades con comportamiento, servicios de aplicación
+   transaccionales, controladores delgados.</li>
+<li><strong>Reactividad con propósito.</strong> Spring MVC para CRUD; Reactor para streaming (SSE), composición
+   paralela y llamadas salientes. No se mezcla WebFlux y MVC en el mismo camino de ejecución.</li>
+<li><strong>Seguridad por defecto.</strong> Todo cerrado salvo lo explícitamente público; autorización por rol y por
+   recurso; datos personales enmascarados desde el DTO.</li>
+<li><strong>Consistencia antes que velocidad.</strong> Outbox transaccional e idempotencia en el consumidor.</li>
+<li><strong>Ejecutable sin nube.</strong> Todo el flujo funciona en local; Azure es una opción de despliegue.</li>
+</ol>
+<h2 id="42-contexto-del-sistema">4.2 Contexto del sistema</h2>
+<pre class="mermaid">flowchart LR
+    AFI[Afiliado] --&gt;|HTTPS| SHELL[Shell Angular]
+    EMP[Administrador de empresa] --&gt;|HTTPS| SHELL
+    ANA[Back-office / Auditor] --&gt;|Swagger / Postman| API
+    SHELL --&gt; MFE1[MFE Afiliados]
+    SHELL --&gt; MFE2[MFE Empresas]
+    MFE1 --&gt; API[API REST / SSE]
+    MFE2 --&gt; API
+    API --&gt; DB[(MySQL 8)]
+    API --&gt; BLOB[(Almacenamiento de documentos)]
+    API --&gt; BUS[[Bus de mensajes]]
+    BUS --&gt; CON[Consumidor idempotente]
+    CON --&gt; DB
+    CON --&gt; NOTIF[Notificaciones]
+    CON --&gt; FUNC[Azure Function opcional]
+</pre>
+<h2 id="43-contenedores-y-despliegue">4.3 Contenedores y despliegue</h2>
+<pre class="mermaid">flowchart TB
+    subgraph Navegador
+        HOST[Shell :4200]
+        R1[Remote Afiliados :4201]
+        R2[Remote Empresas :4202]
+        HOST -. carga dinámica .-&gt; R1
+        HOST -. carga dinámica .-&gt; R2
+    end
+    subgraph Backend
+        API[Spring Boot :8080]
+        OUT[Outbox publisher]
+        CONS[Consumidor]
+        API --- OUT
+        OUT --&gt; CONS
+    end
+    subgraph Datos
+        MYSQL[(MySQL :3306)]
+        FILES[(Volumen de documentos)]
+    end
+    subgraph Azure opcional
+        SB[Service Bus]
+        EG[Event Grid]
+        BLB[Blob Storage]
+        FN[Function App]
+        SWA[Static Web Apps]
+        KV[Key Vault]
+        AI[Application Insights]
+    end
+    HOST --&gt; API
+    API --&gt; MYSQL
+    API --&gt; FILES
+    OUT -. perfil azure .-&gt; SB
+    SB -. perfil azure .-&gt; CONS
+    API -. perfil azure .-&gt; BLB
+    API -. perfil azure .-&gt; EG
+    API -. perfil azure .-&gt; FN
+    KV -. secretos .-&gt; API
+    API -. telemetría .-&gt; AI
+    HOST -. despliegue .-&gt; SWA
+</pre>
+<h2 id="44-modulos-del-backend">4.4 Módulos del backend</h2>
+<table>
+<thead>
+<tr>
+<th>Módulo</th>
+<th>Responsabilidad</th>
+<th>Depende de</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>affiliate</code></td>
+<td>Perfil, beneficiarios, contacto</td>
+<td><code>company</code> (sólo lectura de nombre), <code>audit</code>, <code>security</code></td>
+</tr>
+<tr>
+<td><code>company</code></td>
+<td>Perfil de empresa, trabajadores, reporte agregado</td>
+<td><code>audit</code>, <code>security</code></td>
+</tr>
+<tr>
+<td><code>dashboard</code></td>
+<td>Agregación paralela del tablero del afiliado (Reactiva)</td>
+<td><code>affiliate</code>, <code>subsidy</code>, <code>notification</code></td>
+</tr>
+<tr>
+<td><code>subsidy</code></td>
+<td>Agregado de solicitud, documentos, historial, reglas de demostración</td>
+<td><code>affiliate</code> (lectura), <code>messaging</code>, <code>storage</code>, <code>notification</code>, <code>audit</code></td>
+</tr>
+<tr>
+<td><code>notification</code></td>
+<td>Persistencia y despacho de notificaciones</td>
+<td><code>security</code></td>
+</tr>
+<tr>
+<td><code>messaging</code></td>
+<td>Outbox, envelope, publicadores, consumidor, idempotencia, fallidos</td>
+<td><code>subsidy</code> (handler), <code>notification</code>, <code>audit</code></td>
+</tr>
+<tr>
+<td><code>storage</code></td>
+<td>Puerto de almacenamiento y adaptadores</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>auth</code></td>
+<td>Identidad de demostración y emisión de JWT</td>
+<td><code>audit</code></td>
+</tr>
+<tr>
+<td><code>audit</code></td>
+<td>Registro de operaciones</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>security</code></td>
+<td>Configuración, principal actual, guardas de acceso</td>
+<td><code>auth</code> (claims)</td>
+</tr>
+<tr>
+<td><code>common</code></td>
+<td>Errores, paginación, correlación, enmascaramiento</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>config</code></td>
+<td>Propiedades tipadas y configuración transversal</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regla de dependencia:</strong> <code>api → application → domain</code>; <code>infrastructure/transport</code> implementa puertos
+declarados en <code>application</code>. Un módulo no accede a los repositorios de otro: usa su servicio de
+aplicación o una consulta explícita y documentada.</p>
+<h2 id="45-decisiones-de-arquitectura-resumen">4.5 Decisiones de arquitectura (resumen)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decisión</th>
+<th>Alternativas descartadas</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td>Monolito modular</td>
+<td>Microservicios por dominio</td>
+<td>Equipo y alcance de la prueba; los límites quedan preparados para extraer</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>Spring MVC + JPA como camino principal</td>
+<td>WebFlux + R2DBC en todo el backend</td>
+<td>MySQL/JPA es el requisito; Reactor se usa donde aporta (SSE, composición, salidas)</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>Outbox transaccional + broker abstracto</td>
+<td>Publicar dentro del servicio o usar sólo eventos internos</td>
+<td>Evita escritura dual y permite auditar/reenviar</td>
+</tr>
+<tr>
+<td>D4</td>
+<td>JWT HS256 emitido localmente</td>
+<td>Entra ID real</td>
+<td>Autocontenido; el resource server es el mismo que se usaría con un IdP</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>Module Federation con webpack y Angular 18</td>
+<td>Native Federation, versiones mixtas</td>
+<td>Compatibilidad declarada y reproducible; se documenta la matriz</td>
+</tr>
+<tr>
+<td>D6</td>
+<td>Flyway con SQL portable</td>
+<td><code>ddl-auto=update</code></td>
+<td>Versionado, revisión y reproducibilidad; permite H2 y MySQL</td>
+</tr>
+<tr>
+<td>D7</td>
+<td>Enmascaramiento en DTOs</td>
+<td>Enmascarar en la vista o en el controlador</td>
+<td>El dato sin enmascarar no puede salir por error de programación</td>
+</tr>
+<tr>
+<td>D8</td>
+<td>SSE para tiempo real</td>
+<td>WebSocket, polling</td>
+<td>Unidireccional, simple, compatible con proxies y con <code>Flux</code></td>
+</tr>
+<tr>
+<td>D9</td>
+<td>Errores RFC 7807</td>
+<td>Estructura ad-hoc</td>
+<td>Contrato estándar y estable para los portales</td>
+</tr>
+<tr>
+<td>D10</td>
+<td>Adaptadores locales por configuración</td>
+<td>Mocks en pruebas y código distinto en local</td>
+<td>El camino de ejecución es el mismo que en Azure</td>
+</tr>
+</tbody>
+</table>
+<h2 id="46-contrato-de-api">4.6 Contrato de API</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Convención</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base</td>
+<td><code>/api/v1</code></td>
+</tr>
+<tr>
+<td>Formato</td>
+<td>JSON UTF-8; fechas ISO-8601 en UTC</td>
+</tr>
+<tr>
+<td>Autenticación</td>
+<td><code>Authorization: Bearer &lt;jwt&gt;</code></td>
+</tr>
+<tr>
+<td>Correlación</td>
+<td><code>X-Correlation-Id</code> (aceptado y devuelto; se genera si falta)</td>
+</tr>
+<tr>
+<td>Paginación</td>
+<td><code>page</code>, <code>size</code> (máx. 50), <code>sort=campo,asc\|desc</code>; respuesta con <code>content</code>, <code>page</code>, <code>size</code>, <code>totalElements</code>, <code>totalPages</code>, <code>first</code>, <code>last</code></td>
+</tr>
+<tr>
+<td>Filtros</td>
+<td>Parámetros de consulta opcionales y combinables</td>
+</tr>
+<tr>
+<td>Errores</td>
+<td><code>application/problem+json</code> con <code>type</code>, <code>title</code>, <code>status</code>, <code>detail</code>, <code>code</code>, <code>correlationId</code>, <code>errors[]</code></td>
+</tr>
+<tr>
+<td>Creación</td>
+<td><code>201 Created</code> + cabecera <code>Location</code></td>
+</tr>
+<tr>
+<td>Sin contenido</td>
+<td><code>204 No Content</code></td>
+</tr>
+<tr>
+<td>Conflictos</td>
+<td><code>409</code> para duplicados y concurrencia optimista</td>
+</tr>
+<tr>
+<td>Regla de negocio</td>
+<td><code>422</code> con código estable</td>
+</tr>
+<tr>
+<td>Idempotencia de escritura</td>
+<td><code>POST</code> de documentos es idempotente por tipo de documento; el reenvío del mismo mensaje no duplica efectos</td>
+</tr>
+</tbody>
+</table>
+<h2 id="47-modelo-de-datos">4.7 Modelo de datos</h2>
+<pre class="mermaid">erDiagram
+    COMPANY ||--o{ AFFILIATE : &quot;vincula&quot;
+    COMPANY ||--o{ COMPANY_WORKER : &quot;registra&quot;
+    AFFILIATE ||--o{ BENEFICIARY : &quot;tiene&quot;
+    AFFILIATE ||--o{ SUBSIDY_REQUEST : &quot;solicita&quot;
+    AFFILIATE ||--o{ NOTIFICATION : &quot;recibe&quot;
+    SUBSIDY_REQUEST ||--o{ REQUIRED_DOCUMENT : &quot;exige&quot;
+    SUBSIDY_REQUEST ||--o{ REQUEST_STATUS_HISTORY : &quot;traza&quot;
+    APP_USER }o--|| AFFILIATE : &quot;representa (opcional)&quot;
+    APP_USER }o--|| COMPANY : &quot;representa (opcional)&quot;
+    OUTBOX_EVENT }o--|| SUBSIDY_REQUEST : &quot;publica&quot;
+    PROCESSED_MESSAGE }o--|| OUTBOX_EVENT : &quot;consume&quot;
+</pre>
+<table>
+<thead>
+<tr>
+<th>Tabla</th>
+<th>Propósito</th>
+<th>Claves e índices relevantes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>company</code></td>
+<td>Empresa aportante</td>
+<td>PK <code>id</code>; único <code>nit</code></td>
+</tr>
+<tr>
+<td><code>affiliate</code></td>
+<td>Afiliado</td>
+<td>PK <code>id</code>; único <code>document_number</code>; índice <code>company_id</code>, <code>status</code></td>
+</tr>
+<tr>
+<td><code>beneficiary</code></td>
+<td>Beneficiario</td>
+<td>FK lógica <code>affiliate_id</code>; índice por afiliado</td>
+</tr>
+<tr>
+<td><code>company_worker</code></td>
+<td>Trabajador de demostración</td>
+<td>único <code>(company_id, document_number)</code></td>
+</tr>
+<tr>
+<td><code>subsidy_request</code></td>
+<td>Agregado de solicitud</td>
+<td>único <code>request_number</code>; índices <code>(affiliate_id, status)</code>, <code>(company_id, status)</code>, <code>submitted_at</code>; <code>version</code> para concurrencia</td>
+</tr>
+<tr>
+<td><code>required_document</code></td>
+<td>Documento exigido</td>
+<td>único <code>(request_id, document_type)</code></td>
+</tr>
+<tr>
+<td><code>request_status_history</code></td>
+<td>Trazabilidad</td>
+<td>índice <code>request_id, occurred_at</code></td>
+</tr>
+<tr>
+<td><code>notification</code></td>
+<td>Notificaciones</td>
+<td>índice <code>(affiliate_id, read_flag)</code></td>
+</tr>
+<tr>
+<td><code>app_user</code></td>
+<td>Identidad de demostración</td>
+<td>único <code>username</code>; FK lógica a afiliado/empresa</td>
+</tr>
+<tr>
+<td><code>outbox_event</code></td>
+<td>Outbox transaccional</td>
+<td>PK UUID; índice <code>(status, created_at)</code>; <code>version</code></td>
+</tr>
+<tr>
+<td><code>processed_message</code></td>
+<td>Idempotencia</td>
+<td>único <code>(message_id, consumer)</code></td>
+</tr>
+<tr>
+<td><code>failed_message</code></td>
+<td>Cola de fallidos</td>
+<td>índice <code>(resolved, failed_at)</code></td>
+</tr>
+<tr>
+<td><code>audit_log</code></td>
+<td>Auditoría</td>
+<td>índices <code>occurred_at</code>, <code>entity_id</code>, <code>action</code></td>
+</tr>
+</tbody>
+</table>
+<p>Convenciones: <code>snake_case</code>, <code>BIGINT AUTO_INCREMENT</code> para identidades, <code>TIMESTAMP</code> en UTC, <code>DECIMAL(14,2)</code>
+para montos, <code>VARCHAR</code> para enums (legibilidad y evolución), sin <code>ON UPDATE CURRENT_TIMESTAMP</code> para
+mantener portabilidad con H2.</p>
+<h2 id="48-frontend-y-microfrontends">4.8 Frontend y microfrontends</h2>
+<pre class="mermaid">flowchart LR
+    SHELL[app-shell&lt;br/&gt;layout + auth + router] --&gt;|loadRemoteModule| AFF[mfe-affiliates]
+    SHELL --&gt;|loadRemoteModule| COM[mfe-companies]
+    SHELL --&gt; SHARED[shared-core&lt;br/&gt;modelos, API client, auth, eventos]
+    AFF --&gt; SHARED
+    COM --&gt; SHARED
+    SHARED --&gt; UI[shared-ui&lt;br/&gt;componentes + web component]
+</pre>
+<table>
+<thead>
+<tr>
+<th>Elemento</th>
+<th>Decisión</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shell</td>
+<td>Autenticación, layout, navegación, carga de remotos, límites de error, versión mínima de contrato</td>
+</tr>
+<tr>
+<td>Remotos</td>
+<td><code>mfe-affiliates</code> (:4201) y <code>mfe-companies</code> (:4202), expuestos como <code>./Routes</code> y <code>./Metadata</code></td>
+</tr>
+<tr>
+<td>Contratos</td>
+<td>Modelos TypeScript en <code>shared-core</code>; eventos tipados con un bus (<code>PortalEventBus</code>); sin acceso directo a stores internos</td>
+</tr>
+<tr>
+<td>Configuración de remotos</td>
+<td><code>assets/mf.manifest.json</code> leído en runtime, con valores por defecto de desarrollo</td>
+</tr>
+<tr>
+<td>Fallo de carga</td>
+<td>Componente de error con reintento y mensaje comprensible; el shell sigue operativo</td>
+</tr>
+<tr>
+<td>Versiones</td>
+<td><code>Metadata</code> expone <code>contractVersion</code>; el shell rechaza versiones incompatibles</td>
+</tr>
+<tr>
+<td>Estilos</td>
+<td>SCSS con tokens, Flexbox/Grid, mobile first</td>
+</tr>
+<tr>
+<td>Accesibilidad</td>
+<td>Skip link, landmarks, foco visible, <code>aria-live</code> en estados, contraste AA</td>
+</tr>
+<tr>
+<td>Web Component</td>
+<td><code>cs-status-badge</code> (Angular Element) reutilizado por ambos portales para justificar el caso de uso</td>
+</tr>
+</tbody>
+</table>
+<h2 id="49-correspondencia-azure-local">4.9 Correspondencia Azure ↔ local</h2>
+<table>
+<thead>
+<tr>
+<th>Capacidad</th>
+<th>Producción (Azure)</th>
+<th>Local (por defecto)</th>
+<th>Activación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mensajería</td>
+<td>Service Bus (cola <code>subsidy-requests</code>)</td>
+<td>Publicador en proceso + pipeline Reactor</td>
+<td><code>app.messaging.transport=azure\|local</code></td>
+</tr>
+<tr>
+<td>Eventos de dominio externos</td>
+<td>Event Grid (topic de documentos)</td>
+<td>Logger estructurado</td>
+<td><code>app.integrations.event-grid.enabled</code></td>
+</tr>
+<tr>
+<td>Documentos</td>
+<td>Blob Storage (contenedor privado)</td>
+<td>Sistema de archivos local</td>
+<td><code>app.storage.provider=azure\|local</code></td>
+</tr>
+<tr>
+<td>Notificaciones</td>
+<td>Azure Function HTTP</td>
+<td>Logger estructurado</td>
+<td><code>app.notifications.provider=azure-function\|local-log</code></td>
+</tr>
+<tr>
+<td>Secretos</td>
+<td>Key Vault referenciado por App Service</td>
+<td>Variables de entorno / <code>.env</code></td>
+<td>Pipeline y <code>application.yml</code></td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>Static Web Apps</td>
+<td><code>ng serve</code> en tres puertos</td>
+<td>Scripts npm</td>
+</tr>
+<tr>
+<td>Observabilidad</td>
+<td>Application Insights</td>
+<td>Logs y Actuator</td>
+<td>Configuración por perfil</td>
+</tr>
+</tbody>
+</table>
+<h2 id="410-estructura-del-repositorio">4.10 Estructura del repositorio</h2>
+<pre><code class="language-text">bits-americas-colsubsidio-fullstack-modernization/
+├── README.md
+├── docs/
+│   ├── README.md
+│   ├── 01-contexto-y-alcance.md
+│   ├── 02-requisitos-funcionales.md
+│   ├── 03-requisitos-no-funcionales.md
+│   ├── 04-arquitectura-baseline.md
+│   ├── 05-trazabilidad.md
+│   ├── 06-plan-entrega.md
+│   ├── 07-inventario-codigo-preliminar.md
+│   ├── adr/                      # ADR-0001..0008 (fase 7)
+│   ├── api/openapi.yaml          # contrato (fase 3)
+│   ├── modernizacion/            # plan y matriz (fase 7)
+│   └── demo/                     # guion y escenarios (fase 7)
+├── backend/                      # Spring Boot
+├── frontend/                     # workspace Angular (shell + 2 remotos + 2 libs)
+├── azure/
+│   ├── functions/                # Function App de ejemplo
+│   └── bicep/                    # infraestructura como código
+├── infra/
+│   ├── docker/                   # Dockerfiles
+│   ├── mysql/init/               # soporte de arranque local
+│   └── docker-compose.yml
+├── pipelines/                    # azure-pipelines.yml y plantillas
+├── postman/                      # colección y entorno
+└── legacy-lab/                   # módulo heredado mínimo (Java 8 / Boot 2.3)
+</code></pre>
+<h2 id="411-entornos-y-puertos">4.11 Entornos y puertos</h2>
+<table>
+<thead>
+<tr>
+<th>Servicio</th>
+<th>Puerto local</th>
+<th>Notas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend</td>
+<td>8080</td>
+<td><code>/swagger-ui.html</code>, <code>/actuator/health</code></td>
+</tr>
+<tr>
+<td>Shell</td>
+<td>4200</td>
+<td>Host de microfrontends</td>
+</tr>
+<tr>
+<td>MFE afiliados</td>
+<td>4201</td>
+<td><code>remoteEntry.js</code></td>
+</tr>
+<tr>
+<td>MFE empresas</td>
+<td>4202</td>
+<td><code>remoteEntry.js</code></td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>3306</td>
+<td>Base <code>colsubsidio_demo</code></td>
+</tr>
+<tr>
+<td>Azure Functions</td>
+<td>7071</td>
+<td>Opcional, perfil azure</td>
+</tr>
+</tbody>
+</table>
+<h2 id="412-estrategia-de-pruebas">4.12 Estrategia de pruebas</h2>
+<table>
+<thead>
+<tr>
+<th>Nivel</th>
+<th>Herramienta</th>
+<th>Alcance</th>
+<th>Ejemplos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dominio</td>
+<td>JUnit 5</td>
+<td>Transiciones, reglas, enmascaramiento</td>
+<td><code>SubsidyRequestTest</code>, <code>SubsidyDemoRulesTest</code></td>
+</tr>
+<tr>
+<td>Aplicación</td>
+<td>JUnit + Mockito</td>
+<td>Servicios con colaboradores simulados</td>
+<td><code>SubsidyRequestServiceTest</code>, <code>OutboxPublisherTest</code></td>
+</tr>
+<tr>
+<td>Integración</td>
+<td><code>@SpringBootTest</code> + MockMvc + H2</td>
+<td>Seguridad, validación, flujo completo, idempotencia</td>
+<td><code>SecurityIT</code>, <code>SubsidyRequestFlowIT</code>, <code>IdempotencyIT</code></td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>Jest + Testing Library</td>
+<td>Servicios, guardas, componentes de estado</td>
+<td><code>auth.service.spec.ts</code>, <code>requests.component.spec.ts</code></td>
+</tr>
+<tr>
+<td>Contrato</td>
+<td>Revisión OpenAPI + colección Postman</td>
+<td>Coherencia de endpoints y esquemas</td>
+<td><code>docs/api/openapi.yaml</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="413-modernizacion-resumen-detalle-en-fase-7">4.13 Modernización (resumen; detalle en fase 7)</h2>
+<p>Ruta: inventario y línea base → pruebas de caracterización → actualización de dependencias con
+OpenRewrite → <code>javax.*</code> a <code>jakarta.*</code> → Spring Security 5/6 a 6 (componentes explícitos, sin
+<code>WebSecurityConfigurerAdapter</code>) → Hibernate 5 a 6 (dialectos, <code>@Type</code>, consultas) → configuración
+(<code>spring.sql.init</code>, propiedades renombradas) → despliegue progresivo con rollback por versión.</p>
+<p>Se incluirá un módulo heredado mínimo de laboratorio (<code>legacy-lab</code>) con código típico de Java 8 /
+Boot 2.3 y su equivalente migrado, sin afirmar que se migró ningún sistema real.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
