@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Requisitos no funcionales</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="03-requisitos-no-funcionales">03 · Requisitos no funcionales</h1>
+<p>Cada requisito declara <strong>cómo se verifica</strong>. Los objetivos numéricos son metas de diseño del
+prototipo; se reportarán con mediciones reales sólo cuando exista la prueba correspondiente.</p>
+<h2 id="31-arquitectura-y-mantenibilidad">3.1 Arquitectura y mantenibilidad</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-ARQ-01</td>
+<td>Java 17 y Spring Boot 3.x</td>
+<td><code>maven.compiler.release=17</code>; versión de Boot fijada en el <code>pom.xml</code></td>
+</tr>
+<tr>
+<td>NFR-ARQ-02</td>
+<td>Organización por funcionalidad con capas internas (<code>api</code>, <code>application</code>, <code>domain</code>)</td>
+<td>Estructura de paquetes revisable; sin dependencias de <code>api</code> hacia <code>infrastructure</code></td>
+</tr>
+<tr>
+<td>NFR-ARQ-03</td>
+<td>Principios SOLID y responsabilidad única</td>
+<td>Servicios pequeños, puertos (<code>DocumentStorage</code>, <code>DomainEventPublisher</code>, <code>NotificationGateway</code>) con adaptadores intercambiables</td>
+</tr>
+<tr>
+<td>NFR-ARQ-04</td>
+<td>Configuración externalizada</td>
+<td>Sin credenciales ni URLs de entorno en código; <code>application.yml</code> con variables de entorno</td>
+</tr>
+<tr>
+<td>NFR-ARQ-05</td>
+<td>Decisiones arquitectónicas registradas</td>
+<td>Un ADR por decisión relevante en <code>docs/adr/</code></td>
+</tr>
+<tr>
+<td>NFR-ARQ-06</td>
+<td>Contrato de API estable</td>
+<td>OpenAPI versionado en <code>docs/api/openapi.yaml</code>, contrastado con los controladores</td>
+</tr>
+</tbody>
+</table>
+<h2 id="32-seguridad">3.2 Seguridad</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+<th>Estado en el prototipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-SEG-01</td>
+<td>Autenticación sin estado basada en JWT firmado (HS256)</td>
+<td>Firma y expiración validadas por el resource server; secreto ≥ 32 bytes inyectado por entorno</td>
+<td>Implementado</td>
+</tr>
+<tr>
+<td>NFR-SEG-02</td>
+<td>Autorización por rol y por recurso</td>
+<td>Pruebas que demuestran 401/403 para accesos indebidos (FR-AUT-04, FR-AUT-05)</td>
+<td>Implementado</td>
+</tr>
+<tr>
+<td>NFR-SEG-03</td>
+<td>Contraseñas con hash lento</td>
+<td>BCrypt con factor 10; nunca se registran en logs</td>
+<td>Implementado</td>
+</tr>
+<tr>
+<td>NFR-SEG-04</td>
+<td>Validación de entrada en el borde</td>
+<td>Bean Validation en DTOs; rechazo con 400 y detalle por campo</td>
+<td>Implementado</td>
+</tr>
+<tr>
+<td>NFR-SEG-05</td>
+<td>Errores sin filtración de detalles internos</td>
+<td><code>ProblemDetail</code> sin stacktrace ni SQL; <code>include-message: never</code></td>
+<td>Implementado</td>
+</tr>
+<tr>
+<td>NFR-SEG-06</td>
+<td>Carga de archivos segura</td>
+<td>Tipo MIME permitido, tamaño máximo, nombre saneado, clave generada por la aplicación (sin path traversal), checksum SHA-256</td>
+<td>Implementado</td>
+</tr>
+<tr>
+<td>NFR-SEG-07</td>
+<td>CORS restringido a los orígenes de los portales</td>
+<td>Lista explícita por configuración</td>
+<td>Implementado</td>
+</tr>
+<tr>
+<td>NFR-SEG-08</td>
+<td>Cabeceras de seguridad HTTP</td>
+<td><code>X-Content-Type-Options</code>, <code>Cache-Control</code> en respuestas sensibles, HSTS en el borde</td>
+<td>Parcial: cabeceras de Spring Security; HSTS en el ingress</td>
+</tr>
+<tr>
+<td>NFR-SEG-09</td>
+<td>Secretos fuera del repositorio</td>
+<td><code>.gitignore</code> excluye <code>.env</code>; Azure Key Vault en el pipeline</td>
+<td>Implementado como configuración</td>
+</tr>
+<tr>
+<td>NFR-SEG-10</td>
+<td>Protección frente a fuerza bruta</td>
+<td>Rate limiting en el endpoint de token y bloqueo progresivo</td>
+<td><strong>Sólo documentado</strong> (se declara como pendiente de producción)</td>
+</tr>
+<tr>
+<td>NFR-SEG-11</td>
+<td>Dependencias sin vulnerabilidades críticas</td>
+<td><code>mvn dependency-check</code> / <code>npm audit</code> en el pipeline</td>
+<td>Previsto en CI</td>
+</tr>
+<tr>
+<td>NFR-SEG-12</td>
+<td>Resistencia a inyección</td>
+<td>Consultas derivadas y criterios JPA; sin SQL concatenado</td>
+<td>Implementado</td>
+</tr>
+</tbody>
+</table>
+<p>Mapeo con OWASP API Security Top 10 (2023): API1 BOLA → <code>AccessGuard</code>; API2 autenticación rota →
+JWT + BCrypt; API3 consumo de datos → DTOs con enmascaramiento; API4 consumo de recursos → paginación
+con máximo y límite de tamaño de archivo; API5 autorización a nivel de función → <code>@PreAuthorize</code>;
+API6 flujos sensibles → reglas de estado; API8 configuración → perfiles y secretos externos; API10
+consumo inseguro de APIs → WebClient con timeout y reintentos acotados.</p>
+<h2 id="33-privacidad-y-tratamiento-de-datos">3.3 Privacidad y tratamiento de datos</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-PRI-01</td>
+<td>Datos exclusivamente sintéticos</td>
+<td>Guion de demo y migraciones usan documentos, nombres y correos ficticios</td>
+</tr>
+<tr>
+<td>NFR-PRI-02</td>
+<td>Minimización</td>
+<td>La empresa no recibe nombre completo ni contacto del afiliado; sólo documento enmascarado y estado</td>
+</tr>
+<tr>
+<td>NFR-PRI-03</td>
+<td>Enmascaramiento por construcción</td>
+<td>Los DTOs no tienen campos para el dato sin enmascarar; helpers en <code>MaskingUtils</code></td>
+</tr>
+<tr>
+<td>NFR-PRI-04</td>
+<td>Auditoría de acceso a datos personales</td>
+<td>Lectura de perfil por staff genera registro <code>PII_ACCESS</code> con actor y correlación</td>
+</tr>
+<tr>
+<td>NFR-PRI-05</td>
+<td>Retención declarada</td>
+<td>Se documenta política de retención y borrado; no se implementa job de purga en el prototipo</td>
+</tr>
+</tbody>
+</table>
+<h2 id="34-rendimiento-y-escalabilidad">3.4 Rendimiento y escalabilidad</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Objetivo de diseño</th>
+<th>Verificación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-PER-01</td>
+<td>Latencia de lecturas paginadas</td>
+<td>p95 &lt; 300 ms con 50 registros y 100 usuarios concurrentes</td>
+<td>Escenario k6 documentado</td>
+</tr>
+<tr>
+<td>NFR-PER-02</td>
+<td>Latencia de registro de solicitud</td>
+<td>p95 &lt; 500 ms sin contar el procesamiento asíncrono</td>
+<td>Prueba de carga</td>
+</tr>
+<tr>
+<td>NFR-PER-03</td>
+<td>Latencia de propagación de estado</td>
+<td>&lt; 2 s entre commit y evento SSE</td>
+<td>Prueba de integración con Awaitility</td>
+</tr>
+<tr>
+<td>NFR-PER-04</td>
+<td>Cotas de memoria en streaming</td>
+<td>Sinks con buffer acotado y heartbeat; sin acumulación por solicitud</td>
+<td>Revisión de código y prueba de suscripción</td>
+</tr>
+<tr>
+<td>NFR-PER-05</td>
+<td>Sin consultas N+1 en listados</td>
+<td>Listados usan proyecciones o entidades sin colecciones ansiosas; <code>open-in-view=false</code></td>
+<td>Revisión de logs SQL en pruebas</td>
+</tr>
+<tr>
+<td>NFR-PER-06</td>
+<td>Conexiones acotadas</td>
+<td>Hikari con máximo configurable (10 por defecto)</td>
+<td>Configuración</td>
+</tr>
+</tbody>
+</table>
+<h2 id="35-confiabilidad-e-integridad">3.5 Confiabilidad e integridad</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-REL-01</td>
+<td>Consistencia entre negocio y evento</td>
+<td>El evento se escribe en la misma transacción que el cambio (outbox)</td>
+</tr>
+<tr>
+<td>NFR-REL-02</td>
+<td>Entrega al menos una vez</td>
+<td>Publicación antes de marcar como enviado; el consumidor tolera duplicados</td>
+</tr>
+<tr>
+<td>NFR-REL-03</td>
+<td>Idempotencia demostrada</td>
+<td>Restricción única <code>(message_id, consumer)</code> y prueba de reentrega</td>
+</tr>
+<tr>
+<td>NFR-REL-04</td>
+<td>Aislamiento de mensajes fallidos</td>
+<td>Reintentos con backoff exponencial y tabla <code>failed_message</code> con el error</td>
+</tr>
+<tr>
+<td>NFR-REL-05</td>
+<td>Integridad del ciclo de vida</td>
+<td>Transiciones inválidas rechazadas por el agregado, no por el controlador</td>
+</tr>
+<tr>
+<td>NFR-REL-06</td>
+<td>Concurrencia optimista</td>
+<td><code>@Version</code> en solicitud y outbox; conflicto devuelve 409</td>
+</tr>
+<tr>
+<td>NFR-REL-07</td>
+<td>Migraciones reproducibles</td>
+<td>Flyway con scripts versionados e idempotentes por versión</td>
+</tr>
+</tbody>
+</table>
+<h2 id="36-observabilidad">3.6 Observabilidad</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-OBS-01</td>
+<td>Correlación de extremo a extremo</td>
+<td><code>X-Correlation-Id</code> aceptado o generado, devuelto en la respuesta, en logs, historial, auditoría y outbox</td>
+</tr>
+<tr>
+<td>NFR-OBS-02</td>
+<td>Logs estructurados</td>
+<td>Formato con marca de tiempo, nivel, logger, correlación y campos de negocio; sin datos personales</td>
+</tr>
+<tr>
+<td>NFR-OBS-03</td>
+<td>Health checks</td>
+<td><code>/actuator/health</code> con probes de liveness/readiness</td>
+</tr>
+<tr>
+<td>NFR-OBS-04</td>
+<td>Métricas mínimas</td>
+<td>Uso de Actuator; métricas de negocio (% solicitudes pendientes, mensajes fallidos) documentadas como extensión</td>
+</tr>
+<tr>
+<td>NFR-OBS-05</td>
+<td>Trazabilidad del trámite</td>
+<td>Historial persistido con actor, motivo, fecha y correlación</td>
+</tr>
+</tbody>
+</table>
+<h2 id="37-accesibilidad-y-experiencia">3.7 Accesibilidad y experiencia</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-UX-01</td>
+<td>Mobile first y responsive</td>
+<td>Layout fluido desde 320 px; sin scroll horizontal; probado en 320/768/1280</td>
+</tr>
+<tr>
+<td>NFR-UX-02</td>
+<td>WCAG 2.1 AA</td>
+<td>Contraste ≥ 4.5:1 en texto, foco visible, etiquetas asociadas, navegación completa por teclado, landmarks semánticos, <code>aria-live</code> en cambios de estado, enlace "saltar al contenido"</td>
+</tr>
+<tr>
+<td>NFR-UX-03</td>
+<td>Estados de interfaz explícitos</td>
+<td>Carga, vacío, error y reintento en cada vista de datos</td>
+</tr>
+<tr>
+<td>NFR-UX-04</td>
+<td>Mensajes comprensibles</td>
+<td>Errores de API traducidos a lenguaje de negocio, con código y correlación visibles para soporte</td>
+</tr>
+<tr>
+<td>NFR-UX-05</td>
+<td>Preferencias del usuario</td>
+<td>Respeto a <code>prefers-reduced-motion</code> y tamaño de fuente base escalable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="38-compatibilidad">3.8 Compatibilidad</h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Versión fijada</th>
+<th>Justificación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java</td>
+<td>17 (<code>--release</code>)</td>
+<td>Requisito de la prueba y LTS soportada por Spring Boot 3</td>
+</tr>
+<tr>
+<td>Spring Boot</td>
+<td>3.5.x</td>
+<td>Última línea 3.x estable</td>
+</tr>
+<tr>
+<td>Spring Framework</td>
+<td>6.2.x (gestionada por Boot)</td>
+<td>Requiere Jakarta EE 9+</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>8.0</td>
+<td>Soporte de Flyway, JSON y transacciones</td>
+</tr>
+<tr>
+<td>H2</td>
+<td>2.2.x (pruebas)</td>
+<td>Modo MySQL para validar migraciones sin Docker</td>
+</tr>
+<tr>
+<td>Angular</td>
+<td>18.2.x</td>
+<td>Estable y compatible con Module Federation vía webpack</td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>20 o 22 LTS</td>
+<td>Requerido por Angular 18</td>
+</tr>
+<tr>
+<td><code>@angular-architects/module-federation</code></td>
+<td>18.0.x</td>
+<td>Debe coincidir con la línea mayor de Angular</td>
+</tr>
+<tr>
+<td><code>@angular-builders/custom-webpack</code></td>
+<td>18.0.x</td>
+<td>Necesario para extender la build con ModuleFederationPlugin</td>
+</tr>
+<tr>
+<td>webpack</td>
+<td>5.9x (el que resuelve Angular 18)</td>
+<td>El plugin de federación no es compatible con el builder esbuild por defecto</td>
+</tr>
+<tr>
+<td>Jest</td>
+<td>29 + <code>jest-preset-angular</code> 14.x</td>
+<td>Pruebas de componentes y servicios</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regla explícita:</strong> Angular, el plugin de federación y el builder de webpack se fijan a la <strong>misma
+línea mayor</strong>. No se mezclan versiones ni se asume equivalencia entre Module Federation con webpack y
+Native Federation; la decisión y su justificación se registran en un ADR.</p>
+<h2 id="39-pruebas-y-calidad">3.9 Pruebas y calidad</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-TST-01</td>
+<td>Pruebas unitarias de dominio y reglas</td>
+<td>Transiciones de estado, límites de monto, catálogo de documentos, enmascaramiento</td>
+</tr>
+<tr>
+<td>NFR-TST-02</td>
+<td>Pruebas unitarias de servicios con Mockito</td>
+<td>Casos felices y de error, verificación de interacciones</td>
+</tr>
+<tr>
+<td>NFR-TST-03</td>
+<td>Pruebas de integración de API</td>
+<td>Seguridad, validación, paginación, flujo completo, idempotencia</td>
+</tr>
+<tr>
+<td>NFR-TST-04</td>
+<td>Pruebas de componentes y servicios Angular</td>
+<td>Jest con <code>jest-preset-angular</code>; servicios HTTP con <code>HttpTestingController</code></td>
+</tr>
+<tr>
+<td>NFR-TST-05</td>
+<td>Resultados reales</td>
+<td>Todo resultado de prueba reportado debe provenir de una ejecución; no se declaran pruebas verdes sin evidencia</td>
+</tr>
+<tr>
+<td>NFR-TST-06</td>
+<td>Cobertura objetivo</td>
+<td>≥ 70 % de líneas en dominio y aplicación del backend; ≥ 60 % en servicios del frontend (se mide y se reporta)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="310-operacion-y-despliegue">3.10 Operación y despliegue</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Criterio verificable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-OPS-01</td>
+<td>Ejecución local sin Azure</td>
+<td>Perfil <code>local</code> con adaptadores en memoria/filesystem; <code>docker compose up</code> levanta MySQL y backend</td>
+</tr>
+<tr>
+<td>NFR-OPS-02</td>
+<td>Separación real/simulado</td>
+<td>Paquetes <code>transport</code>, <code>storage</code> y <code>notification</code> con implementaciones <code>local</code> y <code>azure</code> condicionadas por configuración</td>
+</tr>
+<tr>
+<td>NFR-OPS-03</td>
+<td>Contenedores reproducibles</td>
+<td>Multi-stage build, usuario no root, healthcheck, imagen ligera (JRE 17)</td>
+</tr>
+<tr>
+<td>NFR-OPS-04</td>
+<td>Pipeline CI/CD</td>
+<td>Build + pruebas + análisis + empaquetado + despliegue por etapas con aprobación manual a producción</td>
+</tr>
+<tr>
+<td>NFR-OPS-05</td>
+<td>Configuración por entorno</td>
+<td>Variables y Key Vault; ninguna credencial en el repositorio ni en la imagen</td>
+</tr>
+<tr>
+<td>NFR-OPS-06</td>
+<td>Despliegue progresivo</td>
+<td>Blue/green o slots con rollback documentado</td>
+</tr>
+</tbody>
+</table>
+<h2 id="311-limites-conocidos-del-prototipo-declarados">3.11 Límites conocidos del prototipo (declarados)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Límite</th>
+<th>Impacto</th>
+<th>Mitigación documentada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td>El registro SSE es en memoria</td>
+<td>No funciona con varias instancias</td>
+<td>Sustituir por Redis pub/sub o Service Bus topic; contrato sin cambios</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>El outbox se publica por sondeo cada pocos segundos</td>
+<td>Latencia adicional de hasta el intervalo</td>
+<td>Ajustar intervalo o usar Debezium/Change Feed en producción</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>La autenticación es de demostración</td>
+<td>No apta para producción</td>
+<td>Sustituir por Entra ID / B2C manteniendo resource server</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>Sin rate limiting</td>
+<td>Riesgo de fuerza bruta</td>
+<td>API Management o filtro dedicado</td>
+</tr>
+<tr>
+<td>L5</td>
+<td>Sin cifrado de campos en reposo</td>
+<td>Riesgo sobre datos personales</td>
+<td>TDE + cifrado a nivel de columna con Key Vault</td>
+</tr>
+<tr>
+<td>L6</td>
+<td>Las pruebas de integración usan H2</td>
+<td>Diferencias menores con MySQL</td>
+<td>Perfil Testcontainers disponible cuando el daemon de Docker esté activo</td>
+</tr>
+</tbody>
+</table>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
