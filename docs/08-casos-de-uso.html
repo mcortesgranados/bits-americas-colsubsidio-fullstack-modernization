@@ -26,7 +26,7 @@
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
-  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#81-actores">8.1 Actores</a></li><li><a href="#82-mapa-de-actores-y-casos-de-uso">8.2 Mapa de actores y casos de uso</a></li><li><a href="#83-convenciones">8.3 Convenciones</a></li><li><a href="#uc-01-consultar-el-perfil-del-afiliado">UC-01 · Consultar el perfil del afiliado</a></li><li><a href="#uc-02-consultar-beneficiarios">UC-02 · Consultar beneficiarios</a></li><li><a href="#uc-03-registrar-una-solicitud-de-subsidio">UC-03 · Registrar una solicitud de subsidio</a></li><li><a href="#uc-04-cargar-un-documento-requerido">UC-04 · Cargar un documento requerido</a></li><li><a href="#uc-05-consultar-el-estado-y-el-historial-en-tiempo-real">UC-05 · Consultar el estado y el historia…</a></li><li><a href="#uc-06-cancelar-una-solicitud">UC-06 · Cancelar una solicitud</a></li><li><a href="#uc-07-consultar-y-marcar-notificaciones">UC-07 · Consultar y marcar notificaciones</a></li><li><a href="#uc-08-consultar-el-perfil-de-la-empresa">UC-08 · Consultar el perfil de la empresa</a></li><li><a href="#uc-09-gestionar-trabajadores-de-demostracion">UC-09 · Gestionar trabajadores de demostr…</a></li><li><a href="#uc-10-consultar-los-tramites-de-la-empresa-con-datos-minimizados">UC-10 · Consultar los trámites de la empr…</a></li><li><a href="#uc-11-consultar-el-reporte-administrativo">UC-11 · Consultar el reporte administrativo</a></li><li><a href="#uc-12-revisar-y-registrar-una-decision-de-demostracion">UC-12 · Revisar y registrar una decisión…</a></li><li><a href="#uc-13-procesar-un-evento-de-solicitud-o-de-documento">UC-13 · Procesar un evento de solicitud o…</a></li><li><a href="#84-servicios-azure-por-caso-de-uso">8.4 Servicios Azure por caso de uso</a></li><li><a href="#85-cobertura">8.5 Cobertura</a></li></ul></nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#81-actores">8.1 Actores</a></li><li><a href="#82-mapa-de-actores-y-casos-de-uso">8.2 Mapa de actores y casos de uso</a></li><li><a href="#83-convenciones">8.3 Convenciones</a></li><li><a href="#uc-01-consultar-el-perfil-del-afiliado">UC-01 · Consultar el perfil del afiliado</a></li><li><a href="#uc-02-consultar-beneficiarios">UC-02 · Consultar beneficiarios</a></li><li><a href="#uc-03-registrar-una-solicitud-de-subsidio">UC-03 · Registrar una solicitud de subsidio</a></li><li><a href="#uc-04-cargar-un-documento-requerido">UC-04 · Cargar un documento requerido</a></li><li><a href="#uc-05-consultar-el-estado-y-el-historial-en-tiempo-real">UC-05 · Consultar el estado y el historia…</a></li><li><a href="#uc-06-cancelar-una-solicitud">UC-06 · Cancelar una solicitud</a></li><li><a href="#uc-07-consultar-y-marcar-notificaciones">UC-07 · Consultar y marcar notificaciones</a></li><li><a href="#uc-08-consultar-el-perfil-de-la-empresa">UC-08 · Consultar el perfil de la empresa</a></li><li><a href="#uc-09-gestionar-trabajadores-de-demostracion">UC-09 · Gestionar trabajadores de demostr…</a></li><li><a href="#uc-10-consultar-los-tramites-de-la-empresa-con-datos-minimizados">UC-10 · Consultar los trámites de la empr…</a></li><li><a href="#uc-11-consultar-el-reporte-administrativo">UC-11 · Consultar el reporte administrativo</a></li><li><a href="#uc-12-revisar-y-registrar-una-decision-de-demostracion">UC-12 · Revisar y registrar una decisión…</a></li><li><a href="#uc-13-procesar-un-evento-de-solicitud-o-de-documento">UC-13 · Procesar un evento de solicitud o…</a></li><li><a href="#84-servicios-azure-por-caso-de-uso">8.4 Servicios Azure por caso de uso</a></li><li><a href="#85-free-tier-de-los-servicios-usados">8.5 Free tier de los servicios usados</a></li><li><a href="#86-cobertura">8.6 Cobertura</a></li></ul></nav>
 <h1 id="08-casos-de-uso">08 · Casos de uso</h1>
 <p>Catálogo formal de los casos de uso del prototipo. Cada caso declara actor, precondiciones, disparador,
 flujo principal, flujos alternos, postcondiciones y los requisitos que implementa, de modo que pueda
@@ -128,7 +128,7 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 </tr>
 <tr>
 <td>Servicios Azure</td>
-<td>Ninguno · solo Static Web Apps como hosting</td>
+<td>Ninguno · solo Static Web Apps como hosting — free tier sí: 100 GB de banda al mes por suscripción</td>
 </tr>
 </tbody>
 </table>
@@ -221,7 +221,7 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 </tr>
 <tr>
 <td>Servicios Azure</td>
-<td>Service Bus · evento <code>subsidy.request.submitted</code></td>
+<td>Service Bus · <code>subsidy.request.submitted</code> — sin free tier: se paga por operaciones; cubierto por el crédito de 200 USD</td>
 </tr>
 </tbody>
 </table>
@@ -273,7 +273,7 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 </tr>
 <tr>
 <td>Servicios Azure</td>
-<td>Blob Storage · evidencia; Event Grid previsto</td>
+<td>Blob Storage · evidencia — sin free tier: pago por GB y operaciones. Event Grid previsto — free tier sí: 100 000 operaciones al mes</td>
 </tr>
 </tbody>
 </table>
@@ -641,7 +641,7 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 </tr>
 <tr>
 <td>Servicios Azure</td>
-<td>Service Bus · evento de decisión (previsto)</td>
+<td>Service Bus · evento de decisión (previsto) — sin free tier: se paga por operaciones</td>
 </tr>
 </tbody>
 </table>
@@ -690,7 +690,7 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 </tr>
 <tr>
 <td>Servicios Azure</td>
-<td>Service Bus · consumo; Function de notificación (previsto)</td>
+<td>Service Bus · consumo — sin free tier. Function de notificación (prevista) — free tier sí: 1 000 000 de ejecuciones y 400 000 GB-s al mes</td>
 </tr>
 </tbody>
 </table>
@@ -791,7 +791,84 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <p><strong>Ocho de los trece casos no requieren Azure.</strong> Solo los tres que cruzan una frontera asíncrona
 (UC-03, UC-12, UC-13) y el que manipula binarios (UC-04) lo necesitan. Añadir mensajería a una lectura
 de perfil sería sobrearquitectura, y el diseño lo evita a propósito.</p>
-<h2 id="85-cobertura">8.5 Cobertura</h2>
+<h2 id="85-free-tier-de-los-servicios-usados">8.5 Free tier de los servicios usados</h2>
+<p>Consulta del <strong>2026-10-20</strong> sobre las páginas públicas de precios y la lista de servicios gratuitos de
+Azure. Las cuotas cambian con el tiempo: hay que reconfirmarlas antes de desplegar.</p>
+<table>
+<thead>
+<tr>
+<th>Servicio</th>
+<th>¿Entra en free tier?</th>
+<th>Capacidad incluida</th>
+<th>Al superarla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Azure Functions (Consumption)</td>
+<td>Sí, permanente</td>
+<td>1 000 000 de ejecuciones y 400 000 GB-s al mes por suscripción</td>
+<td>0,20 USD por millón de ejecuciones y 0,000016 USD por GB-s</td>
+</tr>
+<tr>
+<td>Azure Functions (Flex Consumption)</td>
+<td>Sí, permanente</td>
+<td>250 000 ejecuciones y 100 000 GB-s al mes</td>
+<td>Se factura por ejecución y por GB-s</td>
+</tr>
+<tr>
+<td>Service Bus</td>
+<td><strong>No</strong></td>
+<td>Sin cuota gratuita; Basic se factura por operaciones y Standard por hora base</td>
+<td>Crédito de 200 USD o pago por uso</td>
+</tr>
+<tr>
+<td>Event Grid</td>
+<td>Sí, permanente</td>
+<td>100 000 operaciones al mes</td>
+<td>0,60 USD por millón de operaciones</td>
+</tr>
+<tr>
+<td>Blob Storage</td>
+<td><strong>No</strong></td>
+<td>No figura en la lista de servicios gratuitos; se paga por GB almacenado y por operaciones</td>
+<td>Pago por uso</td>
+</tr>
+<tr>
+<td>Static Web Apps (plan Free)</td>
+<td>Sí, permanente</td>
+<td>100 GB de banda al mes por suscripción, 0,5 GB de almacenamiento por app y 2 dominios</td>
+<td>El sitio deja de servirse hasta el siguiente ciclo; sin SLA</td>
+</tr>
+<tr>
+<td>Azure Database for MySQL Flexible</td>
+<td>Solo 12 meses, cuentas nuevas</td>
+<td>750 h de Burstable B1MS, 32 GB de datos y 32 GB de backup</td>
+<td>Pago por uso</td>
+</tr>
+<tr>
+<td>Key Vault</td>
+<td><strong>No</strong></td>
+<td>Se factura por operaciones</td>
+<td>Pago por uso</td>
+</tr>
+<tr>
+<td>Application Insights</td>
+<td>Sí, parcial</td>
+<td>5 GB al mes por cuenta de facturación</td>
+<td>2,30 USD por GB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusión:</strong> el flujo de la prueba cabe en free tier salvo <strong>Service Bus</strong>, <strong>Blob Storage</strong>,
+<strong>Key Vault</strong> y MySQL tras los primeros 12 meses. Para una demo de 2,5 meses el crédito de 200 USD de
+la cuenta gratuita cubre esos tres servicios con holgura, y el consumo esperado se mide en centavos por
+operaciones.</p>
+<p><strong>Aviso sobre el alojamiento del backend:</strong> App Service no está en la lista anterior porque no participa
+en ningún caso de uso, pero publicar la API sí cuesta. Su cuota gratuita permanente (hasta 10 apps con
+1 GB y 1 hora al día) no alcanza para un servicio disponible 24/7, así que un despliegue real requiere
+plan de pago o Container Apps.</p>
+<h2 id="86-cobertura">8.6 Cobertura</h2>
 <table>
 <thead>
 <tr>

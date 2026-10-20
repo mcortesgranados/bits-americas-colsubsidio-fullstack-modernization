@@ -59,7 +59,7 @@ flowchart LR
 | Requisitos | FR-AFI-01, FR-AUT-05 |
 | Endpoint | `GET /api/v1/affiliates/me` |
 | Precondición | Token válido con `affiliateId` en los claims |
-| Servicios Azure | Ninguno · solo Static Web Apps como hosting |
+| Servicios Azure | Ninguno · solo Static Web Apps como hosting — free tier sí: 100 GB de banda al mes por suscripción |
 
 **Flujo principal**
 
@@ -114,7 +114,7 @@ flowchart LR
 | Requisitos | FR-SOL-01, FR-SOL-02, FR-SOL-03, FR-AUT-05 |
 | Endpoint | `POST /api/v1/subsidy-requests` |
 | Precondición | Afiliado `ACTIVE`, sin solicitud abierta del mismo tipo |
-| Servicios Azure | Service Bus · evento `subsidy.request.submitted` |
+| Servicios Azure | Service Bus · `subsidy.request.submitted` — sin free tier: se paga por operaciones; cubierto por el crédito de 200 USD |
 
 **Flujo principal**
 
@@ -147,7 +147,7 @@ flowchart LR
 | Requisitos | FR-SOL-05, FR-SOL-06, FR-SOL-07 |
 | Endpoint | `POST /api/v1/subsidy-requests/{id}/documents` |
 | Precondición | Solicitud propia en estado abierto y documento del catálogo |
-| Servicios Azure | Blob Storage · evidencia; Event Grid previsto |
+| Servicios Azure | Blob Storage · evidencia — sin free tier: pago por GB y operaciones. Event Grid previsto — free tier sí: 100 000 operaciones al mes |
 
 **Flujo principal**
 
@@ -363,7 +363,7 @@ flowchart LR
 | Requisitos | FR-SOL-10, FR-SOL-11, FR-AUT-04 |
 | Endpoint | `POST /api/v1/subsidy-requests/{id}/review` |
 | Precondición | Solicitud en `IN_REVIEW` y documentos completos |
-| Servicios Azure | Service Bus · evento de decisión (previsto) |
+| Servicios Azure | Service Bus · evento de decisión (previsto) — sin free tier: se paga por operaciones |
 
 **Flujo principal**
 
@@ -393,7 +393,7 @@ flowchart LR
 | Requisitos | FR-ASY-01, FR-ASY-02, FR-ASY-03, FR-ASY-04 |
 | Endpoint | Interno: outbox → transporte local o Service Bus |
 | Precondición | Envelope válido con `messageId` único |
-| Servicios Azure | Service Bus · consumo; Function de notificación (previsto) |
+| Servicios Azure | Service Bus · consumo — sin free tier. Function de notificación (prevista) — free tier sí: 1 000 000 de ejecuciones y 400 000 GB-s al mes |
 
 **Flujo principal**
 
@@ -435,7 +435,34 @@ flowchart LR
 (UC-03, UC-12, UC-13) y el que manipula binarios (UC-04) lo necesitan. Añadir mensajería a una lectura
 de perfil sería sobrearquitectura, y el diseño lo evita a propósito.
 
-## 8.5 Cobertura
+## 8.5 Free tier de los servicios usados
+
+Consulta del **2026-10-20** sobre las páginas públicas de precios y la lista de servicios gratuitos de
+Azure. Las cuotas cambian con el tiempo: hay que reconfirmarlas antes de desplegar.
+
+| Servicio | ¿Entra en free tier? | Capacidad incluida | Al superarla |
+|----------|----------------------|--------------------|--------------|
+| Azure Functions (Consumption) | Sí, permanente | 1 000 000 de ejecuciones y 400 000 GB-s al mes por suscripción | 0,20 USD por millón de ejecuciones y 0,000016 USD por GB-s |
+| Azure Functions (Flex Consumption) | Sí, permanente | 250 000 ejecuciones y 100 000 GB-s al mes | Se factura por ejecución y por GB-s |
+| Service Bus | **No** | Sin cuota gratuita; Basic se factura por operaciones y Standard por hora base | Crédito de 200 USD o pago por uso |
+| Event Grid | Sí, permanente | 100 000 operaciones al mes | 0,60 USD por millón de operaciones |
+| Blob Storage | **No** | No figura en la lista de servicios gratuitos; se paga por GB almacenado y por operaciones | Pago por uso |
+| Static Web Apps (plan Free) | Sí, permanente | 100 GB de banda al mes por suscripción, 0,5 GB de almacenamiento por app y 2 dominios | El sitio deja de servirse hasta el siguiente ciclo; sin SLA |
+| Azure Database for MySQL Flexible | Solo 12 meses, cuentas nuevas | 750 h de Burstable B1MS, 32 GB de datos y 32 GB de backup | Pago por uso |
+| Key Vault | **No** | Se factura por operaciones | Pago por uso |
+| Application Insights | Sí, parcial | 5 GB al mes por cuenta de facturación | 2,30 USD por GB |
+
+**Conclusión:** el flujo de la prueba cabe en free tier salvo **Service Bus**, **Blob Storage**,
+**Key Vault** y MySQL tras los primeros 12 meses. Para una demo de 2,5 meses el crédito de 200 USD de
+la cuenta gratuita cubre esos tres servicios con holgura, y el consumo esperado se mide en centavos por
+operaciones.
+
+**Aviso sobre el alojamiento del backend:** App Service no está en la lista anterior porque no participa
+en ningún caso de uso, pero publicar la API sí cuesta. Su cuota gratuita permanente (hasta 10 apps con
+1 GB y 1 hora al día) no alcanza para un servicio disponible 24/7, así que un despliegue real requiere
+plan de pago o Container Apps.
+
+## 8.6 Cobertura
 
 | Grupo | Casos | Requisitos `M` cubiertos |
 |-------|-------|--------------------------|
