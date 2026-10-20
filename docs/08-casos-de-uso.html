@@ -125,6 +125,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Token válido con <code>affiliateId</code> en los claims</td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno · solo Static Web Apps como hosting</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -168,6 +172,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Sesión válida y pertenencia al afiliado (o rol de staff)</td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -209,6 +217,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <tr>
 <td>Precondición</td>
 <td>Afiliado <code>ACTIVE</code>, sin solicitud abierta del mismo tipo</td>
+</tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Service Bus · evento <code>subsidy.request.submitted</code></td>
 </tr>
 </tbody>
 </table>
@@ -258,6 +270,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Solicitud propia en estado abierto y documento del catálogo</td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Blob Storage · evidencia; Event Grid previsto</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -303,6 +319,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Acceso autorizado al recurso</td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno · SSE en proceso</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -347,6 +367,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Solicitud propia en <code>SUBMITTED</code>, <code>PENDING_DOCUMENTS</code> o <code>IN_REVIEW</code></td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -387,6 +411,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <tr>
 <td>Precondición</td>
 <td>Sesión válida</td>
+</tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno</td>
 </tr>
 </tbody>
 </table>
@@ -429,6 +457,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Token con <code>companyId</code></td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -468,6 +500,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <tr>
 <td>Precondición</td>
 <td>Empresa activa</td>
+</tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno</td>
 </tr>
 </tbody>
 </table>
@@ -512,6 +548,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Empresa con afiliados</td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -553,6 +593,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Sesión válida con empresa asociada</td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Ninguno</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -593,6 +637,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <tr>
 <td>Precondición</td>
 <td>Solicitud en <code>IN_REVIEW</code> y documentos completos</td>
+</tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Service Bus · evento de decisión (previsto)</td>
 </tr>
 </tbody>
 </table>
@@ -639,6 +687,10 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <td>Precondición</td>
 <td>Envelope válido con <code>messageId</code> único</td>
 </tr>
+<tr>
+<td>Servicios Azure</td>
+<td>Service Bus · consumo; Function de notificación (previsto)</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Flujo principal</strong></p>
@@ -658,7 +710,87 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <li><strong>A4 Evento desconocido</strong> → se registra y se ignora, sin romper el consumidor.</li>
 </ul>
 <p><strong>Postcondición:</strong> el estado es consistente con el evento y existe trazabilidad completa.</p>
-<h2 id="84-cobertura">8.4 Cobertura</h2>
+<h2 id="84-servicios-azure-por-caso-de-uso">8.4 Servicios Azure por caso de uso</h2>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Servicio de Azure</th>
+<th>Para qué</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01</td>
+<td>Solo Static Web Apps (hosting)</td>
+<td>Servir el portal que consume la API</td>
+</tr>
+<tr>
+<td>UC-02</td>
+<td>Ninguno</td>
+<td>Lectura directa de MySQL</td>
+</tr>
+<tr>
+<td>UC-03</td>
+<td>Service Bus</td>
+<td>Publicar <code>subsidy.request.submitted</code> para clasificar la solicitud</td>
+</tr>
+<tr>
+<td>UC-04</td>
+<td>Blob Storage · Event Grid (previsto)</td>
+<td>Guardar la evidencia y avisar a suscriptores</td>
+</tr>
+<tr>
+<td>UC-05</td>
+<td>Ninguno</td>
+<td>El estado se empuja por SSE desde el mismo proceso</td>
+</tr>
+<tr>
+<td>UC-06</td>
+<td>Ninguno</td>
+<td>Cambio de estado síncrono con historial y notificación</td>
+</tr>
+<tr>
+<td>UC-07</td>
+<td>Ninguno</td>
+<td>Bandeja de notificaciones en MySQL</td>
+</tr>
+<tr>
+<td>UC-08</td>
+<td>Ninguno</td>
+<td>Lectura de la empresa</td>
+</tr>
+<tr>
+<td>UC-09</td>
+<td>Ninguno</td>
+<td>CRUD de trabajadores sintéticos</td>
+</tr>
+<tr>
+<td>UC-10</td>
+<td>Ninguno</td>
+<td>Consulta agregada con datos minimizados</td>
+</tr>
+<tr>
+<td>UC-11</td>
+<td>Ninguno</td>
+<td>Agregaciones sobre MySQL</td>
+</tr>
+<tr>
+<td>UC-12</td>
+<td>Service Bus (previsto)</td>
+<td>Propagar el cambio de estado a otros consumidores</td>
+</tr>
+<tr>
+<td>UC-13</td>
+<td>Service Bus · Function (prevista)</td>
+<td>Consumir el evento y disparar la notificación</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ocho de los trece casos no requieren Azure.</strong> Solo los tres que cruzan una frontera asíncrona
+(UC-03, UC-12, UC-13) y el que manipula binarios (UC-04) lo necesitan. Añadir mensajería a una lectura
+de perfil sería sobrearquitectura, y el diseño lo evita a propósito.</p>
+<h2 id="85-cobertura">8.5 Cobertura</h2>
 <table>
 <thead>
 <tr>

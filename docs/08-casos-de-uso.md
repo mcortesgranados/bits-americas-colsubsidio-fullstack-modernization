@@ -59,6 +59,7 @@ flowchart LR
 | Requisitos | FR-AFI-01, FR-AUT-05 |
 | Endpoint | `GET /api/v1/affiliates/me` |
 | Precondición | Token válido con `affiliateId` en los claims |
+| Servicios Azure | Ninguno · solo Static Web Apps como hosting |
 
 **Flujo principal**
 
@@ -86,6 +87,7 @@ flowchart LR
 | Requisitos | FR-AFI-03 |
 | Endpoint | `GET /api/v1/affiliates/me/beneficiaries` · `GET /api/v1/affiliates/{id}/beneficiaries` |
 | Precondición | Sesión válida y pertenencia al afiliado (o rol de staff) |
+| Servicios Azure | Ninguno |
 
 **Flujo principal**
 
@@ -112,6 +114,7 @@ flowchart LR
 | Requisitos | FR-SOL-01, FR-SOL-02, FR-SOL-03, FR-AUT-05 |
 | Endpoint | `POST /api/v1/subsidy-requests` |
 | Precondición | Afiliado `ACTIVE`, sin solicitud abierta del mismo tipo |
+| Servicios Azure | Service Bus · evento `subsidy.request.submitted` |
 
 **Flujo principal**
 
@@ -144,6 +147,7 @@ flowchart LR
 | Requisitos | FR-SOL-05, FR-SOL-06, FR-SOL-07 |
 | Endpoint | `POST /api/v1/subsidy-requests/{id}/documents` |
 | Precondición | Solicitud propia en estado abierto y documento del catálogo |
+| Servicios Azure | Blob Storage · evidencia; Event Grid previsto |
 
 **Flujo principal**
 
@@ -173,6 +177,7 @@ flowchart LR
 | Requisitos | FR-AFI-05, FR-AFI-06, FR-SOL-08, FR-SOL-12 |
 | Endpoint | `GET /api/v1/subsidy-requests/{id}` · `GET .../history` · `GET .../events` (SSE) |
 | Precondición | Acceso autorizado al recurso |
+| Servicios Azure | Ninguno · SSE en proceso |
 
 **Flujo principal**
 
@@ -201,6 +206,7 @@ flowchart LR
 | Requisitos | FR-SOL-09, FR-SOL-11 |
 | Endpoint | `POST /api/v1/subsidy-requests/{id}/cancel` |
 | Precondición | Solicitud propia en `SUBMITTED`, `PENDING_DOCUMENTS` o `IN_REVIEW` |
+| Servicios Azure | Ninguno |
 
 **Flujo principal**
 
@@ -226,6 +232,7 @@ flowchart LR
 | Requisitos | FR-AFI-07, FR-ASY-05 |
 | Endpoint | `GET /api/v1/affiliates/me/notifications` · `PATCH .../{id}/read` |
 | Precondición | Sesión válida |
+| Servicios Azure | Ninguno |
 
 **Flujo principal**
 
@@ -251,6 +258,7 @@ flowchart LR
 | Requisitos | FR-EMP-01, FR-EMP-07 |
 | Endpoint | `GET /api/v1/companies/me` |
 | Precondición | Token con `companyId` |
+| Servicios Azure | Ninguno |
 
 **Flujo principal**
 
@@ -275,6 +283,7 @@ flowchart LR
 | Requisitos | FR-EMP-02, FR-EMP-03, FR-EMP-04 |
 | Endpoint | `GET/POST /api/v1/companies/me/workers` · `PATCH .../{id}` |
 | Precondición | Empresa activa |
+| Servicios Azure | Ninguno |
 
 **Flujo principal**
 
@@ -302,6 +311,7 @@ flowchart LR
 | Requisitos | FR-EMP-05, NFR-PRI-02 |
 | Endpoint | `GET /api/v1/companies/me/subsidy-requests` |
 | Precondición | Empresa con afiliados |
+| Servicios Azure | Ninguno |
 
 **Flujo principal**
 
@@ -327,6 +337,7 @@ flowchart LR
 | Requisitos | FR-EMP-06 |
 | Endpoint | `GET /api/v1/companies/me/reports/summary` |
 | Precondición | Sesión válida con empresa asociada |
+| Servicios Azure | Ninguno |
 
 **Flujo principal**
 
@@ -352,6 +363,7 @@ flowchart LR
 | Requisitos | FR-SOL-10, FR-SOL-11, FR-AUT-04 |
 | Endpoint | `POST /api/v1/subsidy-requests/{id}/review` |
 | Precondición | Solicitud en `IN_REVIEW` y documentos completos |
+| Servicios Azure | Service Bus · evento de decisión (previsto) |
 
 **Flujo principal**
 
@@ -381,6 +393,7 @@ flowchart LR
 | Requisitos | FR-ASY-01, FR-ASY-02, FR-ASY-03, FR-ASY-04 |
 | Endpoint | Interno: outbox → transporte local o Service Bus |
 | Precondición | Envelope válido con `messageId` único |
+| Servicios Azure | Service Bus · consumo; Function de notificación (previsto) |
 
 **Flujo principal**
 
@@ -400,7 +413,29 @@ flowchart LR
 
 **Postcondición:** el estado es consistente con el evento y existe trazabilidad completa.
 
-## 8.4 Cobertura
+## 8.4 Servicios Azure por caso de uso
+
+| Caso | Servicio de Azure | Para qué |
+|------|-------------------|----------|
+| UC-01 | Solo Static Web Apps (hosting) | Servir el portal que consume la API |
+| UC-02 | Ninguno | Lectura directa de MySQL |
+| UC-03 | Service Bus | Publicar `subsidy.request.submitted` para clasificar la solicitud |
+| UC-04 | Blob Storage · Event Grid (previsto) | Guardar la evidencia y avisar a suscriptores |
+| UC-05 | Ninguno | El estado se empuja por SSE desde el mismo proceso |
+| UC-06 | Ninguno | Cambio de estado síncrono con historial y notificación |
+| UC-07 | Ninguno | Bandeja de notificaciones en MySQL |
+| UC-08 | Ninguno | Lectura de la empresa |
+| UC-09 | Ninguno | CRUD de trabajadores sintéticos |
+| UC-10 | Ninguno | Consulta agregada con datos minimizados |
+| UC-11 | Ninguno | Agregaciones sobre MySQL |
+| UC-12 | Service Bus (previsto) | Propagar el cambio de estado a otros consumidores |
+| UC-13 | Service Bus · Function (prevista) | Consumir el evento y disparar la notificación |
+
+**Ocho de los trece casos no requieren Azure.** Solo los tres que cruzan una frontera asíncrona
+(UC-03, UC-12, UC-13) y el que manipula binarios (UC-04) lo necesitan. Añadir mensajería a una lectura
+de perfil sería sobrearquitectura, y el diseño lo evita a propósito.
+
+## 8.5 Cobertura
 
 | Grupo | Casos | Requisitos `M` cubiertos |
 |-------|-------|--------------------------|
