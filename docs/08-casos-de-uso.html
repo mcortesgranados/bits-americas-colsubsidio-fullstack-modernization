@@ -26,7 +26,7 @@
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
-  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#81-actores">8.1 Actores</a></li><li><a href="#82-mapa-de-actores-y-casos-de-uso">8.2 Mapa de actores y casos de uso</a></li><li><a href="#83-convenciones">8.3 Convenciones</a></li><li><a href="#uc-01-consultar-el-perfil-del-afiliado">UC-01 · Consultar el perfil del afiliado</a></li><li><a href="#uc-02-consultar-beneficiarios">UC-02 · Consultar beneficiarios</a></li><li><a href="#uc-03-registrar-una-solicitud-de-subsidio">UC-03 · Registrar una solicitud de subsidio</a></li><li><a href="#uc-04-cargar-un-documento-requerido">UC-04 · Cargar un documento requerido</a></li><li><a href="#uc-05-consultar-el-estado-y-el-historial-en-tiempo-real">UC-05 · Consultar el estado y el historia…</a></li><li><a href="#uc-06-cancelar-una-solicitud">UC-06 · Cancelar una solicitud</a></li><li><a href="#uc-07-consultar-y-marcar-notificaciones">UC-07 · Consultar y marcar notificaciones</a></li><li><a href="#uc-08-consultar-el-perfil-de-la-empresa">UC-08 · Consultar el perfil de la empresa</a></li><li><a href="#uc-09-gestionar-trabajadores-de-demostracion">UC-09 · Gestionar trabajadores de demostr…</a></li><li><a href="#uc-10-consultar-los-tramites-de-la-empresa-con-datos-minimizados">UC-10 · Consultar los trámites de la empr…</a></li><li><a href="#uc-11-consultar-el-reporte-administrativo">UC-11 · Consultar el reporte administrativo</a></li><li><a href="#uc-12-revisar-y-registrar-una-decision-de-demostracion">UC-12 · Revisar y registrar una decisión…</a></li><li><a href="#uc-13-procesar-un-evento-de-solicitud-o-de-documento">UC-13 · Procesar un evento de solicitud o…</a></li><li><a href="#84-servicios-azure-por-caso-de-uso">8.4 Servicios Azure por caso de uso</a></li><li><a href="#85-free-tier-de-los-servicios-usados">8.5 Free tier de los servicios usados</a></li><li><a href="#86-cobertura">8.6 Cobertura</a></li></ul></nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#81-actores">8.1 Actores</a></li><li><a href="#82-mapa-de-actores-y-casos-de-uso">8.2 Mapa de actores y casos de uso</a></li><li><a href="#83-convenciones">8.3 Convenciones</a></li><li><a href="#uc-01-consultar-el-perfil-del-afiliado">UC-01 · Consultar el perfil del afiliado</a></li><li><a href="#uc-02-consultar-beneficiarios">UC-02 · Consultar beneficiarios</a></li><li><a href="#uc-03-registrar-una-solicitud-de-subsidio">UC-03 · Registrar una solicitud de subsidio</a></li><li><a href="#uc-04-cargar-un-documento-requerido">UC-04 · Cargar un documento requerido</a></li><li><a href="#uc-05-consultar-el-estado-y-el-historial-en-tiempo-real">UC-05 · Consultar el estado y el historia…</a></li><li><a href="#uc-06-cancelar-una-solicitud">UC-06 · Cancelar una solicitud</a></li><li><a href="#uc-07-consultar-y-marcar-notificaciones">UC-07 · Consultar y marcar notificaciones</a></li><li><a href="#uc-08-consultar-el-perfil-de-la-empresa">UC-08 · Consultar el perfil de la empresa</a></li><li><a href="#uc-09-gestionar-trabajadores-de-demostracion">UC-09 · Gestionar trabajadores de demostr…</a></li><li><a href="#uc-10-consultar-los-tramites-de-la-empresa-con-datos-minimizados">UC-10 · Consultar los trámites de la empr…</a></li><li><a href="#uc-11-consultar-el-reporte-administrativo">UC-11 · Consultar el reporte administrativo</a></li><li><a href="#uc-12-revisar-y-registrar-una-decision-de-demostracion">UC-12 · Revisar y registrar una decisión…</a></li><li><a href="#uc-13-procesar-un-evento-de-solicitud-o-de-documento">UC-13 · Procesar un evento de solicitud o…</a></li><li><a href="#84-servicios-azure-por-caso-de-uso">8.4 Servicios Azure por caso de uso</a></li><li><a href="#85-free-tier-de-los-servicios-usados">8.5 Free tier de los servicios usados</a></li><li><a href="#86-free-tier-aplicable-caso-por-caso">8.6 Free tier aplicable caso por caso</a></li><li><a href="#87-cobertura">8.7 Cobertura</a></li></ul></nav>
 <h1 id="08-casos-de-uso">08 · Casos de uso</h1>
 <p>Catálogo formal de los casos de uso del prototipo. Cada caso declara actor, precondiciones, disparador,
 flujo principal, flujos alternos, postcondiciones y los requisitos que implementa, de modo que pueda
@@ -868,7 +868,118 @@ operaciones.</p>
 en ningún caso de uso, pero publicar la API sí cuesta. Su cuota gratuita permanente (hasta 10 apps con
 1 GB y 1 hora al día) no alcanza para un servicio disponible 24/7, así que un despliegue real requiere
 plan de pago o Container Apps.</p>
-<h2 id="86-cobertura">8.6 Cobertura</h2>
+<p>El detalle de qué servicio gratuito se podría añadir a cada caso, y cuáles no admiten sustituto
+gratuito, está en la sección 8.6.</p>
+<h2 id="86-free-tier-aplicable-caso-por-caso">8.6 Free tier aplicable caso por caso</h2>
+<p>La sección 8.5 dice cuánto cuesta cada servicio que ya participa. Esta sección responde la pregunta
+contraria: qué servicio <strong>gratuito</strong> se podría sumar a cada caso, y qué casos dependen hoy de algo que no
+es gratuito.</p>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Free tier ya aplicado</th>
+<th>Free tier que se podría añadir</th>
+<th>Límite a vigilar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01 · Perfil del afiliado</td>
+<td>Static Web Apps (hosting del portal)</td>
+<td>Application Insights para trazar el endpoint</td>
+<td>100 GB de banda y 5 GB de ingesta al mes</td>
+</tr>
+<tr>
+<td>UC-02 · Beneficiarios</td>
+<td>Ninguno: no toca Azure</td>
+<td>Application Insights</td>
+<td>5 GB de ingesta al mes</td>
+</tr>
+<tr>
+<td>UC-03 · Registrar solicitud</td>
+<td>Ninguno: Service Bus no es gratuito</td>
+<td>Event Grid como bus de eventos de la demo</td>
+<td>100 000 operaciones al mes</td>
+</tr>
+<tr>
+<td>UC-04 · Cargar documento</td>
+<td>Event Grid (previsto)</td>
+<td>Functions Consumption para validar tipo y tamaño y calcular el SHA-256</td>
+<td>1 000 000 de ejecuciones al mes</td>
+</tr>
+<tr>
+<td>UC-05 · Estado en tiempo real</td>
+<td>Ninguno: SSE en el mismo proceso</td>
+<td>Application Insights para medir la duración del stream</td>
+<td>5 GB de ingesta al mes</td>
+</tr>
+<tr>
+<td>UC-06 · Cancelar solicitud</td>
+<td>Ninguno</td>
+<td>Event Grid para avisar la cancelación</td>
+<td>100 000 operaciones al mes</td>
+</tr>
+<tr>
+<td>UC-07 · Notificaciones</td>
+<td>Functions Consumption (prevista)</td>
+<td>Event Grid para entregar el aviso</td>
+<td>1 000 000 de ejecuciones y 100 000 operaciones</td>
+</tr>
+<tr>
+<td>UC-08 · Perfil de empresa</td>
+<td>Static Web Apps (hosting)</td>
+<td>Application Insights</td>
+<td>100 GB de banda y 5 GB de ingesta</td>
+</tr>
+<tr>
+<td>UC-09 · Trabajadores</td>
+<td>Static Web Apps (hosting)</td>
+<td>—</td>
+<td>100 GB de banda al mes</td>
+</tr>
+<tr>
+<td>UC-10 · Trámites minimizados</td>
+<td>Static Web Apps (hosting)</td>
+<td>Application Insights</td>
+<td>100 GB de banda y 5 GB de ingesta</td>
+</tr>
+<tr>
+<td>UC-11 · Reporte administrativo</td>
+<td>Ninguno</td>
+<td>Function con temporizador que precalcule el reporte</td>
+<td>1 000 000 de ejecuciones (30 al mes con frecuencia diaria)</td>
+</tr>
+<tr>
+<td>UC-12 · Decisión de demostración</td>
+<td>Ninguno: Service Bus no es gratuito</td>
+<td>Event Grid para el evento de decisión</td>
+<td>100 000 operaciones al mes</td>
+</tr>
+<tr>
+<td>UC-13 · Procesar evento</td>
+<td>Functions Consumption (prevista)</td>
+<td>Event Grid como disparador en lugar de Service Bus</td>
+<td>1 000 000 de ejecuciones y 100 000 operaciones</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Diez de los trece casos no tocan ningún servicio de pago.</strong> Solo UC-03 y UC-13 dependen de Service
+Bus y UC-04 de Blob Storage. Si en una demo se sustituyen esos dos servicios —Event Grid en lugar de la
+cola y el adaptador de disco local en lugar del contenedor— el prototipo completo corre en free tier.</p>
+<p><strong>Application Insights aplica a los trece casos.</strong> Es telemetría transversal, no una dependencia
+funcional: si se cae, el caso de uso sigue funcionando. Por eso no se repite como servicio principal en
+la tabla de la sección 8.4.</p>
+<p><strong>Event Grid no sustituye a Service Bus.</strong> Sirve para repartir eventos de dominio con reintento, pero no
+ofrece consumidores competidores, sesiones ni transacciones, y su cola de mensajes fallidos exige un
+contenedor de Blob (de pago). Se puede usar para el fan-out de la demo; no para una cola de trabajo real.</p>
+<p><strong>Lo que no entra en free tier:</strong> Service Bus, Blob Storage y Key Vault no tienen cuota gratuita, y
+MySQL Flexible solo es gratuito 12 meses en cuentas nuevas. Para una demo de 2,5 meses los cubre el
+crédito de 200 USD; para producción son coste fijo.</p>
+<p><strong>Estado:</strong> la columna «se podría añadir» es diseño previsto, no implementación. Hoy lo único
+desplegable es el hosting en Static Web Apps; Functions y Event Grid están en el plan y marcados como
+previstos en la <a href="10-tecnologias-azure.html">sección 10</a>.</p>
+<h2 id="87-cobertura">8.7 Cobertura</h2>
 <table>
 <thead>
 <tr>

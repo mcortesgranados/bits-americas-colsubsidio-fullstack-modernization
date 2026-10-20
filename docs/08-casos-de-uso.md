@@ -462,7 +462,52 @@ en ningún caso de uso, pero publicar la API sí cuesta. Su cuota gratuita perma
 1 GB y 1 hora al día) no alcanza para un servicio disponible 24/7, así que un despliegue real requiere
 plan de pago o Container Apps.
 
-## 8.6 Cobertura
+El detalle de qué servicio gratuito se podría añadir a cada caso, y cuáles no admiten sustituto
+gratuito, está en la sección 8.6.
+
+## 8.6 Free tier aplicable caso por caso
+
+La sección 8.5 dice cuánto cuesta cada servicio que ya participa. Esta sección responde la pregunta
+contraria: qué servicio **gratuito** se podría sumar a cada caso, y qué casos dependen hoy de algo que no
+es gratuito.
+
+| Caso | Free tier ya aplicado | Free tier que se podría añadir | Límite a vigilar |
+|------|-----------------------|-------------------------------|------------------|
+| UC-01 · Perfil del afiliado | Static Web Apps (hosting del portal) | Application Insights para trazar el endpoint | 100 GB de banda y 5 GB de ingesta al mes |
+| UC-02 · Beneficiarios | Ninguno: no toca Azure | Application Insights | 5 GB de ingesta al mes |
+| UC-03 · Registrar solicitud | Ninguno: Service Bus no es gratuito | Event Grid como bus de eventos de la demo | 100 000 operaciones al mes |
+| UC-04 · Cargar documento | Event Grid (previsto) | Functions Consumption para validar tipo y tamaño y calcular el SHA-256 | 1 000 000 de ejecuciones al mes |
+| UC-05 · Estado en tiempo real | Ninguno: SSE en el mismo proceso | Application Insights para medir la duración del stream | 5 GB de ingesta al mes |
+| UC-06 · Cancelar solicitud | Ninguno | Event Grid para avisar la cancelación | 100 000 operaciones al mes |
+| UC-07 · Notificaciones | Functions Consumption (prevista) | Event Grid para entregar el aviso | 1 000 000 de ejecuciones y 100 000 operaciones |
+| UC-08 · Perfil de empresa | Static Web Apps (hosting) | Application Insights | 100 GB de banda y 5 GB de ingesta |
+| UC-09 · Trabajadores | Static Web Apps (hosting) | — | 100 GB de banda al mes |
+| UC-10 · Trámites minimizados | Static Web Apps (hosting) | Application Insights | 100 GB de banda y 5 GB de ingesta |
+| UC-11 · Reporte administrativo | Ninguno | Function con temporizador que precalcule el reporte | 1 000 000 de ejecuciones (30 al mes con frecuencia diaria) |
+| UC-12 · Decisión de demostración | Ninguno: Service Bus no es gratuito | Event Grid para el evento de decisión | 100 000 operaciones al mes |
+| UC-13 · Procesar evento | Functions Consumption (prevista) | Event Grid como disparador en lugar de Service Bus | 1 000 000 de ejecuciones y 100 000 operaciones |
+
+**Diez de los trece casos no tocan ningún servicio de pago.** Solo UC-03 y UC-13 dependen de Service
+Bus y UC-04 de Blob Storage. Si en una demo se sustituyen esos dos servicios —Event Grid en lugar de la
+cola y el adaptador de disco local en lugar del contenedor— el prototipo completo corre en free tier.
+
+**Application Insights aplica a los trece casos.** Es telemetría transversal, no una dependencia
+funcional: si se cae, el caso de uso sigue funcionando. Por eso no se repite como servicio principal en
+la tabla de la sección 8.4.
+
+**Event Grid no sustituye a Service Bus.** Sirve para repartir eventos de dominio con reintento, pero no
+ofrece consumidores competidores, sesiones ni transacciones, y su cola de mensajes fallidos exige un
+contenedor de Blob (de pago). Se puede usar para el fan-out de la demo; no para una cola de trabajo real.
+
+**Lo que no entra en free tier:** Service Bus, Blob Storage y Key Vault no tienen cuota gratuita, y
+MySQL Flexible solo es gratuito 12 meses en cuentas nuevas. Para una demo de 2,5 meses los cubre el
+crédito de 200 USD; para producción son coste fijo.
+
+**Estado:** la columna «se podría añadir» es diseño previsto, no implementación. Hoy lo único
+desplegable es el hosting en Static Web Apps; Functions y Event Grid están en el plan y marcados como
+previstos en la [sección 10](10-tecnologias-azure.md).
+
+## 8.7 Cobertura
 
 | Grupo | Casos | Requisitos `M` cubiertos |
 |-------|-------|--------------------------|
