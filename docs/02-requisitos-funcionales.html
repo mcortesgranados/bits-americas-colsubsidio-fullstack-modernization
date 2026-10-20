@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Requisitos funcionales</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="02-requisitos-funcionales">02 · Requisitos funcionales</h1>
+<h2 id="convenciones">Convenciones</h2>
+<ul>
+<li><strong>Prioridad</strong>: <code>M</code> (must, imprescindible para la demo), <code>S</code> (should, esperado en una entrega sénior),
+  <code>C</code> (could, deseable si el tiempo lo permite).</li>
+<li><strong>Criterio de aceptación</strong>: condición verificable, preferiblemente automatizable con una prueba.</li>
+<li>Los identificadores son estables y se usan en la <a href="05-trazabilidad.html">matriz de trazabilidad</a>.</li>
+</ul>
+<h2 id="21-autenticacion-y-sesion">2.1 Autenticación y sesión</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Prioridad</th>
+<th>Criterio de aceptación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-AUT-01</td>
+<td>Emitir un JWT de demostración con usuario y contraseña</td>
+<td>M</td>
+<td><code>POST /api/v1/auth/demo-token</code> con credenciales válidas devuelve 200, <code>accessToken</code>, <code>tokenType=Bearer</code>, <code>expiresIn</code>, <code>roles</code>, <code>affiliateId</code>/<code>companyId</code> cuando aplique</td>
+</tr>
+<tr>
+<td>FR-AUT-02</td>
+<td>Rechazar credenciales inválidas sin filtrar información</td>
+<td>M</td>
+<td>Credenciales erróneas devuelven 401 con <code>application/problem+json</code> y <code>code=UNAUTHENTICATED</code>; no se distingue usuario inexistente de contraseña incorrecta</td>
+</tr>
+<tr>
+<td>FR-AUT-03</td>
+<td>Proteger todos los endpoints de negocio</td>
+<td>M</td>
+<td>Sin token, cualquier <code>/api/v1/**</code> distinto del token endpoint devuelve 401</td>
+</tr>
+<tr>
+<td>FR-AUT-04</td>
+<td>Autorizar por rol</td>
+<td>M</td>
+<td>Un <code>ROLE_AFFILIATE</code> que llama un endpoint de back-office recibe 403</td>
+</tr>
+<tr>
+<td>FR-AUT-05</td>
+<td>Autorizar por recurso (ownership)</td>
+<td>M</td>
+<td>Un afiliado que solicita el detalle de otro afiliado o de una solicitud ajena recibe 403, aunque su rol sea correcto</td>
+</tr>
+<tr>
+<td>FR-AUT-06</td>
+<td>Exponer la identidad efectiva</td>
+<td>S</td>
+<td><code>GET /api/v1/auth/me</code> devuelve sujeto, roles, <code>affiliateId</code>, <code>companyId</code> y expiración del token</td>
+</tr>
+<tr>
+<td>FR-AUT-07</td>
+<td>Registrar intentos de autenticación</td>
+<td>S</td>
+<td>Cada intento fallido y exitoso queda en <code>audit_log</code> con actor, acción y correlación</td>
+</tr>
+</tbody>
+</table>
+<h2 id="22-portal-de-afiliados">2.2 Portal de afiliados</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Prioridad</th>
+<th>Criterio de aceptación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-AFI-01</td>
+<td>Consultar el perfil del afiliado autenticado</td>
+<td>M</td>
+<td><code>GET /api/v1/affiliates/me</code> devuelve nombre, tipo y número de documento enmascarado, categoría, estado, empresa y fechas</td>
+</tr>
+<tr>
+<td>FR-AFI-02</td>
+<td>Actualizar datos de contacto propios</td>
+<td>S</td>
+<td><code>PATCH /api/v1/affiliates/me/contact</code> valida formato de correo y teléfono, persiste y registra auditoría</td>
+</tr>
+<tr>
+<td>FR-AFI-03</td>
+<td>Consultar beneficiarios</td>
+<td>M</td>
+<td><code>GET /api/v1/affiliates/me/beneficiaries</code> devuelve la lista ordenada; documentos enmascarados; un afiliado no puede consultar los de otro</td>
+</tr>
+<tr>
+<td>FR-AFI-04</td>
+<td>Consultar solicitudes propias con filtro por estado y paginación</td>
+<td>M</td>
+<td><code>GET /api/v1/affiliates/me/subsidy-requests?status=&amp;page=&amp;size=</code> devuelve sólo solicitudes del afiliado, con metadatos de paginación</td>
+</tr>
+<tr>
+<td>FR-AFI-05</td>
+<td>Consultar el detalle de una solicitud con documentos e historial</td>
+<td>M</td>
+<td>El detalle incluye estado, monto, fechas, documentos requeridos con estado y la línea de tiempo de cambios</td>
+</tr>
+<tr>
+<td>FR-AFI-06</td>
+<td>Consultar requisitos y documentos pendientes</td>
+<td>M</td>
+<td>El detalle indica explícitamente cuántos y cuáles documentos están pendientes o rechazados</td>
+</tr>
+<tr>
+<td>FR-AFI-07</td>
+<td>Consultar notificaciones y marcarlas como leídas</td>
+<td>S</td>
+<td>Listado paginado, contador de no leídas y <code>PATCH .../read</code> idempotente</td>
+</tr>
+<tr>
+<td>FR-AFI-08</td>
+<td>Ver un tablero resumen</td>
+<td>S</td>
+<td><code>GET /api/v1/affiliates/me/dashboard</code> devuelve perfil resumido, número de beneficiarios, solicitudes abiertas, documentos pendientes y notificaciones no leídas, con una sola llamada</td>
+</tr>
+</tbody>
+</table>
+<h2 id="23-portal-de-empresas">2.3 Portal de empresas</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Prioridad</th>
+<th>Criterio de aceptación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-EMP-01</td>
+<td>Consultar el perfil de la empresa autenticada</td>
+<td>M</td>
+<td><code>GET /api/v1/companies/me</code> devuelve razón social, NIT parcialmente enmascarado, sector, tamaño, ciudad, estado y número de afiliados</td>
+</tr>
+<tr>
+<td>FR-EMP-02</td>
+<td>Listar trabajadores con filtros y paginación</td>
+<td>M</td>
+<td><code>GET /api/v1/companies/me/workers?status=&amp;search=&amp;page=&amp;size=</code> sólo devuelve trabajadores de la empresa del token</td>
+</tr>
+<tr>
+<td>FR-EMP-03</td>
+<td>Registrar un trabajador de demostración</td>
+<td>M</td>
+<td><code>POST /api/v1/companies/me/workers</code> valida campos, evita documento duplicado en la empresa (409) y registra auditoría</td>
+</tr>
+<tr>
+<td>FR-EMP-04</td>
+<td>Actualizar el estado de un trabajador</td>
+<td>S</td>
+<td><code>PATCH /api/v1/companies/me/workers/{id}</code> permite <code>ACTIVE</code>/<code>INACTIVE</code>; un trabajador de otra empresa devuelve 404/403</td>
+</tr>
+<tr>
+<td>FR-EMP-05</td>
+<td>Consultar solicitudes de sus trabajadores con datos minimizados</td>
+<td>M</td>
+<td><code>GET /api/v1/companies/me/subsidy-requests</code> devuelve número, tipo, estado, monto y documento enmascarado; nunca nombre completo ni contacto</td>
+</tr>
+<tr>
+<td>FR-EMP-06</td>
+<td>Consultar un reporte administrativo agregado</td>
+<td>S</td>
+<td><code>GET /api/v1/companies/me/reports/summary</code> devuelve conteos por estado y tipo, total de trabajadores activos y monto solicitado agregado, sin datos personales</td>
+</tr>
+<tr>
+<td>FR-EMP-07</td>
+<td>No acceder a datos de otra empresa</td>
+<td>M</td>
+<td>Cambiar el identificador en la ruta no permite leer información de otra empresa</td>
+</tr>
+</tbody>
+</table>
+<h2 id="24-solicitudes-de-subsidio-y-documentos">2.4 Solicitudes de subsidio y documentos</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Prioridad</th>
+<th>Criterio de aceptación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-SOL-01</td>
+<td>Registrar una solicitud</td>
+<td>M</td>
+<td><code>POST /api/v1/subsidy-requests</code> valida reglas RD-01…RD-05, persiste la solicitud en estado <code>SUBMITTED</code>, crea los documentos requeridos y devuelve 201 con <code>Location</code></td>
+</tr>
+<tr>
+<td>FR-SOL-02</td>
+<td>Generar un número de solicitud legible y único</td>
+<td>M</td>
+<td>El número cumple <code>SOL-&lt;año&gt;-&lt;secuencia&gt;</code> y tiene restricción única en base de datos</td>
+</tr>
+<tr>
+<td>FR-SOL-03</td>
+<td>Publicar evento al registrar</td>
+<td>M</td>
+<td>La misma transacción inserta una fila en <code>outbox_event</code> con tipo <code>subsidy.request.submitted</code></td>
+</tr>
+<tr>
+<td>FR-SOL-04</td>
+<td>Consultar solicitudes con filtros combinables</td>
+<td>M</td>
+<td>Búsqueda por estado, tipo, rango de fechas y número; el back-office ve todas, la empresa sólo las suyas, el afiliado sólo las propias</td>
+</tr>
+<tr>
+<td>FR-SOL-05</td>
+<td>Cargar un documento requerido</td>
+<td>M</td>
+<td><code>POST /api/v1/subsidy-requests/{id}/documents</code> valida tipo MIME, tamaño máximo 5 MB, calcula SHA-256, guarda el archivo y marca el documento como <code>RECEIVED</code></td>
+</tr>
+<tr>
+<td>FR-SOL-06</td>
+<td>Rechazar cargas inválidas</td>
+<td>M</td>
+<td>Tipo no permitido o tamaño excedido devuelve 4xx con código <code>FILE_TYPE_NOT_ALLOWED</code> / <code>FILE_TOO_LARGE</code>; no se persiste archivo</td>
+</tr>
+<tr>
+<td>FR-SOL-07</td>
+<td>Descargar un documento propio</td>
+<td>S</td>
+<td><code>GET /api/v1/subsidy-requests/{id}/documents/{type}/content</code> devuelve el archivo sólo al dueño o a staff, con <code>Content-Type</code> y <code>Content-Disposition</code></td>
+</tr>
+<tr>
+<td>FR-SOL-08</td>
+<td>Consultar historial de estados</td>
+<td>M</td>
+<td><code>GET /api/v1/subsidy-requests/{id}/history</code> devuelve transiciones ordenadas con actor, motivo, fecha y correlación</td>
+</tr>
+<tr>
+<td>FR-SOL-09</td>
+<td>Cancelar una solicitud abierta</td>
+<td>S</td>
+<td>El afiliado puede cancelar en <code>SUBMITTED</code>, <code>PENDING_DOCUMENTS</code> o <code>IN_REVIEW</code>; estados terminales devuelven 422</td>
+</tr>
+<tr>
+<td>FR-SOL-10</td>
+<td>Registrar decisión de demostración</td>
+<td>M</td>
+<td><code>POST /api/v1/subsidy-requests/{id}/review</code> sólo para <code>ROLE_BACKOFFICE</code>, exige motivo y deja estado <code>APPROVED_DEMO</code>/<code>REJECTED_DEMO</code>; nunca se etiqueta como decisión oficial</td>
+</tr>
+<tr>
+<td>FR-SOL-11</td>
+<td>Impedir transiciones inválidas</td>
+<td>M</td>
+<td>Cualquier transición fuera de la máquina de estados devuelve 422 con <code>code=INVALID_STATUS_TRANSITION</code></td>
+</tr>
+<tr>
+<td>FR-SOL-12</td>
+<td>Consultar el resultado en tiempo real</td>
+<td>S</td>
+<td><code>GET /api/v1/subsidy-requests/{id}/events</code> emite eventos SSE con cada cambio de estado y un latido periódico</td>
+</tr>
+</tbody>
+</table>
+<h2 id="25-procesamiento-asincrono">2.5 Procesamiento asíncrono</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Prioridad</th>
+<th>Criterio de aceptación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-ASY-01</td>
+<td>Consumir el evento de solicitud registrada</td>
+<td>M</td>
+<td>El consumidor clasifica la solicitud en <code>PENDING_DOCUMENTS</code> (faltan documentos) o <code>IN_REVIEW</code> (completos)</td>
+</tr>
+<tr>
+<td>FR-ASY-02</td>
+<td>Ser idempotente</td>
+<td>M</td>
+<td>Reenviar el mismo <code>messageId</code> no produce una segunda transición ni una segunda notificación; queda evidencia en <code>processed_message</code></td>
+</tr>
+<tr>
+<td>FR-ASY-03</td>
+<td>Reintentar con backoff y aislar fallidos</td>
+<td>M</td>
+<td>Un fallo transitorio se reintenta el número configurado de veces; al agotarse, la carga se guarda en <code>failed_message</code> con el error</td>
+</tr>
+<tr>
+<td>FR-ASY-04</td>
+<td>Reaccionar a la carga de documentos</td>
+<td>M</td>
+<td>Al completarse los documentos pendientes, la solicitud pasa a <code>IN_REVIEW</code> automáticamente</td>
+</tr>
+<tr>
+<td>FR-ASY-05</td>
+<td>Notificar al afiliado</td>
+<td>S</td>
+<td>Cada transición relevante genera una notificación persistida y visible en el portal</td>
+</tr>
+<tr>
+<td>FR-ASY-06</td>
+<td>Verificar pendientes operativos</td>
+<td>C</td>
+<td><code>GET /api/v1/ops/failed-messages</code> (staff) lista mensajes fallidos sin exponer datos personales</td>
+</tr>
+</tbody>
+</table>
+<h2 id="26-flujo-principal-de-extremo-a-extremo">2.6 Flujo principal de extremo a extremo</h2>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor A as Afiliado
+    participant API as Backend (MVC)
+    participant DB as MySQL
+    participant OB as Outbox publisher
+    participant C as Consumidor
+    participant P as Portal
+    A-&gt;&gt;API: POST /subsidy-requests
+    API-&gt;&gt;API: valida reglas de demostración y permisos
+    API-&gt;&gt;DB: solicitud SUBMITTED + documentos + historial + outbox (una transacción)
+    API--&gt;&gt;A: 201 Created + Location
+    OB-&gt;&gt;DB: lee outbox PENDING
+    OB-&gt;&gt;C: publica envelope (local o Service Bus)
+    C-&gt;&gt;DB: idempotencia + clasificación a PENDING_DOCUMENTS/IN_REVIEW
+    C--&gt;&gt;P: notificación persistida y evento SSE
+    A-&gt;&gt;API: POST /documents (evidencias)
+    API-&gt;&gt;DB: documento RECEIVED + outbox
+    C-&gt;&gt;DB: si no faltan documentos → IN_REVIEW
+    P-&gt;&gt;API: GET /subsidy-requests/{id}
+    API--&gt;&gt;P: estado, historial y documentos pendientes
+</pre>
+<p>Criterio de aceptación del flujo completo (prueba de integración <code>SubsidyRequestFlowIT</code>):</p>
+<ol>
+<li>Dado un afiliado activo autenticado, cuando registra una solicitud válida, entonces recibe 201 y la
+   solicitud queda en <code>SUBMITTED</code>.</li>
+<li>Cuando el publicador procesa el outbox, entonces la solicitud pasa a <code>PENDING_DOCUMENTS</code> y existe una
+   notificación no leída.</li>
+<li>Cuando carga todos los documentos requeridos, entonces la solicitud pasa a <code>IN_REVIEW</code>.</li>
+<li>Cuando el back-office registra una decisión con motivo, entonces el estado es <code>APPROVED_DEMO</code> o
+   <code>REJECTED_DEMO</code> y el historial contiene tres transiciones.</li>
+<li>En ningún paso una respuesta HTTP expone el número de documento completo.</li>
+</ol>
+<h2 id="27-maquina-de-estados">2.7 Máquina de estados</h2>
+<pre class="mermaid">stateDiagram-v2
+    [*] --&gt; DRAFT
+    DRAFT --&gt; SUBMITTED: registrar
+    SUBMITTED --&gt; PENDING_DOCUMENTS: consumidor (faltan documentos)
+    SUBMITTED --&gt; IN_REVIEW: consumidor (documentos completos)
+    SUBMITTED --&gt; CANCELLED: afiliado
+    PENDING_DOCUMENTS --&gt; IN_REVIEW: documentos completos
+    PENDING_DOCUMENTS --&gt; CANCELLED: afiliado
+    IN_REVIEW --&gt; APPROVED_DEMO: back-office (demostración)
+    IN_REVIEW --&gt; REJECTED_DEMO: back-office (demostración)
+    IN_REVIEW --&gt; PENDING_DOCUMENTS: documento rechazado
+    IN_REVIEW --&gt; CANCELLED: afiliado
+    APPROVED_DEMO --&gt; [*]
+    REJECTED_DEMO --&gt; [*]
+    CANCELLED --&gt; [*]
+</pre>
+<h2 id="28-matriz-de-autorizacion-por-endpoint">2.8 Matriz de autorización por endpoint</h2>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Afiliado</th>
+<th>Empresa</th>
+<th>Back-office</th>
+<th>Auditor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /auth/demo-token</code></td>
+<td>público</td>
+<td>público</td>
+<td>público</td>
+<td>público</td>
+</tr>
+<tr>
+<td><code>GET /affiliates/me/**</code></td>
+<td>propio</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GET /affiliates/{id}</code></td>
+<td>sólo propio</td>
+<td>—</td>
+<td>sí</td>
+<td>sí</td>
+</tr>
+<tr>
+<td><code>GET /affiliates</code> (lista)</td>
+<td>—</td>
+<td>—</td>
+<td>sí</td>
+<td>sí</td>
+</tr>
+<tr>
+<td><code>POST /subsidy-requests</code></td>
+<td>sí</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GET /subsidy-requests/{id}</code></td>
+<td>sólo propio</td>
+<td>sólo su empresa</td>
+<td>sí</td>
+<td>sí</td>
+</tr>
+<tr>
+<td><code>POST /subsidy-requests/{id}/documents</code></td>
+<td>sólo propio</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>POST /subsidy-requests/{id}/review</code></td>
+<td>—</td>
+<td>—</td>
+<td>sí</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GET /companies/me/**</code></td>
+<td>—</td>
+<td>propia</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GET /ops/**</code></td>
+<td>—</td>
+<td>—</td>
+<td>sí</td>
+<td>sí</td>
+</tr>
+</tbody>
+</table>
+<h2 id="29-validaciones-de-entrada-relevantes">2.9 Validaciones de entrada relevantes</h2>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Regla</th>
+<th>Mensaje/código</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subsidyType</code></td>
+<td>Obligatorio, valor del enum</td>
+<td><code>VALIDATION_ERROR</code></td>
+</tr>
+<tr>
+<td><code>requestedAmount</code></td>
+<td>&gt; 0, ≤ límite de demostración, 2 decimales</td>
+<td><code>INVALID_AMOUNT</code> / <code>AMOUNT_ABOVE_DEMO_LIMIT</code></td>
+</tr>
+<tr>
+<td><code>purpose</code></td>
+<td>≤ 400 caracteres, sin HTML</td>
+<td><code>VALIDATION_ERROR</code></td>
+</tr>
+<tr>
+<td>Documento</td>
+<td>PDF, PNG o JPEG; ≤ 5 MB; nombre saneado</td>
+<td><code>FILE_TYPE_NOT_ALLOWED</code> / <code>FILE_TOO_LARGE</code></td>
+</tr>
+<tr>
+<td>Documento de trabajador</td>
+<td>Único por empresa</td>
+<td><code>DATA_CONFLICT</code></td>
+</tr>
+<tr>
+<td>Correo</td>
+<td>Formato válido, ≤ 120 caracteres</td>
+<td><code>VALIDATION_ERROR</code></td>
+</tr>
+<tr>
+<td>Motivo de decisión</td>
+<td>Obligatorio, 10–400 caracteres</td>
+<td><code>VALIDATION_ERROR</code></td>
+</tr>
+<tr>
+<td>Paginación</td>
+<td><code>size</code> ≤ 50, <code>page</code> ≥ 0</td>
+<td>Ajuste automático o 400</td>
+</tr>
+</tbody>
+</table>
+<h2 id="210-historias-de-usuario-priorizadas">2.10 Historias de usuario priorizadas</h2>
+<p><strong>HU-01 (M) — Consultar mi trámite</strong>
+Como afiliado quiero ver el estado de mi solicitud y qué documentos faltan para saber qué hacer a
+continuación. Aceptación: FR-AFI-05, FR-AFI-06, FR-SOL-08.</p>
+<p><strong>HU-02 (M) — Registrar una solicitud</strong>
+Como afiliado quiero registrar una solicitud de subsidio y recibir un número de radicado para hacer
+seguimiento. Aceptación: FR-SOL-01, FR-SOL-02, FR-SOL-03.</p>
+<p><strong>HU-03 (M) — Revisar solicitudes</strong>
+Como analista de back-office quiero revisar una solicitud y dejar una decisión de demostración con
+motivo para mantener trazabilidad. Aceptación: FR-SOL-10, FR-SOL-11.</p>
+<p><strong>HU-04 (S) — Consultar el estado de mi empresa</strong>
+Como administrador de empresa quiero ver el estado de los trámites de mis trabajadores sin acceder a
+sus datos personales completos. Aceptación: FR-EMP-05, FR-EMP-06.</p>
+<p><strong>HU-05 (S) — Ver actualizaciones sin recargar</strong>
+Como afiliado quiero que el detalle de mi solicitud se actualice cuando cambie de estado.
+Aceptación: FR-SOL-12.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
