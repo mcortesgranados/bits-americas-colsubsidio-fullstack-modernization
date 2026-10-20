@@ -201,12 +201,15 @@ flowchart LR
 | Capacidad | Producción (Azure) | Local (por defecto) | Activación |
 |-----------|--------------------|---------------------|------------|
 | Mensajería | Service Bus (cola `subsidy-requests`) | Publicador en proceso + pipeline Reactor | `app.messaging.transport=azure\|local` |
-| Eventos de dominio externos | Event Grid (topic de documentos) | Logger estructurado | `app.integrations.event-grid.enabled` |
+| Eventos de dominio externos | Event Grid (topic de documentos) | Logger estructurado | `app.integrations.event-grid.enabled` (prevista, no implementada) |
 | Documentos | Blob Storage (contenedor privado) | Sistema de archivos local | `app.storage.provider=azure\|local` |
 | Notificaciones | Azure Function HTTP | Logger estructurado | `app.notifications.provider=azure-function\|local-log` |
 | Secretos | Key Vault referenciado por App Service | Variables de entorno / `.env` | Pipeline y `application.yml` |
 | Frontend | Static Web Apps | `ng serve` en tres puertos | Scripts npm |
 | Observabilidad | Application Insights | Logs y Actuator | Configuración por perfil |
+
+El inventario completo —rol, contrato, sustituto local, estado y requisitos `FR-AZR`— está en
+[10 · Tecnologías de Azure](10-tecnologias-azure.md). Esta tabla solo resume la correspondencia.
 
 ## 4.10 Estructura del repositorio
 

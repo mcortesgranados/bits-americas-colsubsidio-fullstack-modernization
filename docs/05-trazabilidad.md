@@ -109,3 +109,16 @@ El documento [09 · Descripción del cargo](09-descripcion-del-cargo.md) mantien
 cada requisito de la vacante con su evidencia en el repositorio y su estado real (cubierto, parcial,
 pendiente o fuera del alcance). Esa matriz es la vista de negocio de esta trazabilidad: aquí se enlaza
 requisito → código → prueba; allí se enlaza requisito del JD → entregable → estado.
+
+## 5.6 Requisitos de integración con Azure
+
+| Requisito | Componente | Prueba prevista | Evidencia |
+|-----------|------------|-----------------|-----------|
+| FR-AZR-01 | `DomainEventEnvelope`, `OutboxPublisher` | `EnvelopeContractTest` | `messageId` igual al id del outbox |
+| FR-AZR-02 | `MessageProcessingService` | `RetryAndDlqTest` | `failed_message` tras agotar intentos |
+| FR-AZR-03 | Adaptador Event Grid (pendiente) | `DocumentEventIT` | CloudEvent con `documentId` |
+| FR-AZR-04 | `DocumentStorage`, `AccessGuard` | `DocumentAccessIT` | 403 al descargar documento ajeno |
+| FR-AZR-05 | Function de notificaciones (pendiente) | `NotificationIdempotencyTest` | Un solo envío por `notificationId` |
+| FR-AZR-06 | `DomainEventPublisher` y `DocumentStorage` | `ParityIT` (perfil local y doble Azure) | Mismo handler en ambos transportes |
+| FR-AZR-07 | `application.yml`, propiedades | `AzureProfileStartupTest` | Falla al iniciar sin cadena de conexión |
+| FR-AZR-08 | `staticwebapp.config.json` (pendiente) | `SwaRoutingTest` | Recarga profunda devuelve el shell |

@@ -23,6 +23,7 @@ demostración**.
 | 07 | [Esqueleto de código existente](07-inventario-codigo-preliminar.md) | Inventario y estado del código ya generado, sin compromiso de diseño final |
 | 08 | [Casos de uso](08-casos-de-uso.md) | Catálogo UC-01…UC-13 con actores, flujos principal y alternos, postcondiciones y requisitos |
 | 09 | [Descripción del cargo](09-descripcion-del-cargo.md) | JD original, lectura estructurada, cobertura real y brechas declaradas |
+| 10 | [Tecnologías de Azure](10-tecnologias-azure.md) | Inventario de servicios, contratos, paridad local, FR-AZR y estado real |
 
 Documentos previstos para fases posteriores (aún no creados):
 

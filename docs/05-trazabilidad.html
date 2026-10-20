@@ -547,6 +547,67 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 cada requisito de la vacante con su evidencia en el repositorio y su estado real (cubierto, parcial,
 pendiente o fuera del alcance). Esa matriz es la vista de negocio de esta trazabilidad: aquí se enlaza
 requisito → código → prueba; allí se enlaza requisito del JD → entregable → estado.</p>
+<h2 id="56-requisitos-de-integracion-con-azure">5.6 Requisitos de integración con Azure</h2>
+<table>
+<thead>
+<tr>
+<th>Requisito</th>
+<th>Componente</th>
+<th>Prueba prevista</th>
+<th>Evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-AZR-01</td>
+<td><code>DomainEventEnvelope</code>, <code>OutboxPublisher</code></td>
+<td><code>EnvelopeContractTest</code></td>
+<td><code>messageId</code> igual al id del outbox</td>
+</tr>
+<tr>
+<td>FR-AZR-02</td>
+<td><code>MessageProcessingService</code></td>
+<td><code>RetryAndDlqTest</code></td>
+<td><code>failed_message</code> tras agotar intentos</td>
+</tr>
+<tr>
+<td>FR-AZR-03</td>
+<td>Adaptador Event Grid (pendiente)</td>
+<td><code>DocumentEventIT</code></td>
+<td>CloudEvent con <code>documentId</code></td>
+</tr>
+<tr>
+<td>FR-AZR-04</td>
+<td><code>DocumentStorage</code>, <code>AccessGuard</code></td>
+<td><code>DocumentAccessIT</code></td>
+<td>403 al descargar documento ajeno</td>
+</tr>
+<tr>
+<td>FR-AZR-05</td>
+<td>Function de notificaciones (pendiente)</td>
+<td><code>NotificationIdempotencyTest</code></td>
+<td>Un solo envío por <code>notificationId</code></td>
+</tr>
+<tr>
+<td>FR-AZR-06</td>
+<td><code>DomainEventPublisher</code> y <code>DocumentStorage</code></td>
+<td><code>ParityIT</code> (perfil local y doble Azure)</td>
+<td>Mismo handler en ambos transportes</td>
+</tr>
+<tr>
+<td>FR-AZR-07</td>
+<td><code>application.yml</code>, propiedades</td>
+<td><code>AzureProfileStartupTest</code></td>
+<td>Falla al iniciar sin cadena de conexión</td>
+</tr>
+<tr>
+<td>FR-AZR-08</td>
+<td><code>staticwebapp.config.json</code> (pendiente)</td>
+<td><code>SwaRoutingTest</code></td>
+<td>Recarga profunda devuelve el shell</td>
+</tr>
+</tbody>
+</table>
   <div class="footer">
     Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
   </div>

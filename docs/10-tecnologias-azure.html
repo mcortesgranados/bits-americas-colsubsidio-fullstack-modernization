@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10 · Tecnologías de Azure en la prueba técnica</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="10-tecnologias-de-azure-en-la-prueba-tecnica">10 · Tecnologías de Azure en la prueba técnica</h1>
+<p>Inventario único de los servicios de Azure que intervienen en el prototipo: para qué se usan, qué
+contrato exponen, con qué se sustituyen en local y en qué estado están. Si un servicio no aparece aquí,
+no forma parte del alcance.</p>
+<blockquote>
+<p>Nada de esto se ejecutó contra una suscripción real. La prueba corre en local con adaptadores; los
+servicios de Azure son el destino previsto y su configuración está versionada como ejemplo.</p>
+</blockquote>
+<h2 id="101-para-que-se-usa-azure">10.1 Para qué se usa Azure</h2>
+<table>
+<thead>
+<tr>
+<th>Necesidad</th>
+<th>Servicio</th>
+<th>Por qué no se resuelve en el backend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Procesar tareas lentas fuera de la petición HTTP</td>
+<td>Service Bus + consumidor</td>
+<td>El afiliado no debe esperar la clasificación documental</td>
+</tr>
+<tr>
+<td>Notificar a sistemas externos un documento cargado</td>
+<td>Event Grid + Function</td>
+<td>Desacopla el upload de los suscriptores</td>
+</tr>
+<tr>
+<td>Guardar evidencias fuera de la base</td>
+<td>Blob Storage</td>
+<td>Los binarios no pertenecen a MySQL</td>
+</tr>
+<tr>
+<td>Validar y notificar sin mantener servidores</td>
+<td>Azure Functions</td>
+<td>Carga esporádica, costo por ejecución</td>
+</tr>
+<tr>
+<td>Publicar los portales</td>
+<td>Static Web Apps</td>
+<td>CDN y ruteo sin servidor</td>
+</tr>
+<tr>
+<td>Custodiar secretos</td>
+<td>Key Vault</td>
+<td>El repositorio no puede contener cadenas de conexión</td>
+</tr>
+<tr>
+<td>Observar el flujo completo</td>
+<td>Application Insights</td>
+<td>Correlacionar API, Function y consumidor</td>
+</tr>
+</tbody>
+</table>
+<h2 id="102-mapa-de-servicios">10.2 Mapa de servicios</h2>
+<pre class="mermaid">flowchart LR
+    AFI[Portal Afiliados] --&gt; SWA[Static Web Apps]
+    EMP[Portal Empresas] --&gt; SWA
+    SWA --&gt; API[API Spring Boot]
+    API --&gt;|outbox| SB[(Service Bus&lt;br/&gt;subsidy-requests)]
+    SB --&gt; CON[Consumidor]
+    CON --&gt; DB[(MySQL)]
+    API --&gt; BLOB[(Blob Storage&lt;br/&gt;subsidy-documents)]
+    API --&gt;|document.uploaded| EG[Event Grid]
+    EG --&gt; FN[Azure Function]
+    FN --&gt;|notificación| EXT[Sistema externo]
+    KV[Key Vault] -.-&gt; API
+    KV -.-&gt; FN
+    API -.-&gt; AI[Application Insights]
+    CON -.-&gt; AI
+    FN -.-&gt; AI
+</pre>
+<h2 id="103-matriz-de-intervencion">10.3 Matriz de intervención</h2>
+<table>
+<thead>
+<tr>
+<th>Servicio</th>
+<th>Rol en la prueba</th>
+<th>Disparador / binding</th>
+<th>Contrato</th>
+<th>Sustituto local</th>
+<th>Propiedad de conmutación</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Service Bus</strong></td>
+<td>Cola de trabajo <code>subsidy-requests</code> para clasificar solicitudes y recalcular documentos</td>
+<td>Outbox → <code>ServiceBusSenderClient</code>; consumidor <code>ServiceBusProcessorClient</code></td>
+<td><code>DomainEventEnvelope</code> en JSON, <code>messageId</code> = id del outbox</td>
+<td>Publicador en proceso + pipeline Reactor</td>
+<td><code>app.messaging.transport=local\|azure</code></td>
+<td>Parcial: adaptadores escritos, sin broker real</td>
+</tr>
+<tr>
+<td><strong>Azure Functions</strong></td>
+<td>Validación de documentos y envío de notificaciones</td>
+<td>HTTP trigger (backend) y Service Bus trigger (previsto)</td>
+<td>JSON con <code>notificationId</code>, <code>requestId</code>, <code>correlationId</code></td>
+<td><code>LocalLoggingNotificationGateway</code></td>
+<td><code>app.notifications.provider=local-log\|azure-function</code></td>
+<td>Parcial: solo el cliente HTTP; la Function no existe</td>
+</tr>
+<tr>
+<td><strong>Event Grid</strong></td>
+<td>Aviso <code>document.uploaded</code> a suscriptores</td>
+<td>Topic custom, CloudEvent 1.0</td>
+<td><code>type</code>, <code>subject</code>, <code>data.documentId</code>, <code>data.requestId</code></td>
+<td>Logger estructurado</td>
+<td><code>app.integrations.event-grid.enabled</code> (prevista)</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td><strong>Blob Storage</strong></td>
+<td>Evidencias de la solicitud en contenedor privado</td>
+<td>SDK <code>BlobContainerClient</code></td>
+<td>Clave opaca <code>{requestId}/{uuid}.{ext}</code>, checksum SHA-256, content-type validado</td>
+<td><code>LocalFileSystemDocumentStorage</code> en <code>target/document-storage</code></td>
+<td><code>app.storage.provider=local\|azure</code></td>
+<td>Parcial: adaptador escrito, sin cuenta real</td>
+</tr>
+<tr>
+<td><strong>Table Storage</strong></td>
+<td>No se usa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td><strong>Fuera de alcance</strong> (ver 10.9)</td>
+</tr>
+<tr>
+<td><strong>Static Web Apps</strong></td>
+<td>Publicación de shell y remotos</td>
+<td>Deploy de <code>dist/</code> por pipeline</td>
+<td><code>staticwebapp.config.json</code> con fallback de rutas</td>
+<td><code>ng serve</code> en 4200 / 4201 / 4202</td>
+<td>Scripts npm</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td><strong>Key Vault</strong></td>
+<td>Secretos de conexión y clave JWT</td>
+<td>Referencia desde App Service y Function</td>
+<td>Nombres de secreto por entorno</td>
+<td>Variables de entorno / <code>.env</code> no versionado</td>
+<td><code>AZURE_KEY_VAULT_URI</code> (prevista)</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td><strong>Application Insights</strong></td>
+<td>Trazas correlacionadas de API, consumidor y Function</td>
+<td>Agente/SDK</td>
+<td><code>operation_Id</code> = <code>correlationId</code></td>
+<td>Logs con MDC <code>correlationId</code></td>
+<td><code>APPLICATIONINSIGHTS_CONNECTION_STRING</code></td>
+<td>Pendiente</td>
+</tr>
+</tbody>
+</table>
+<h2 id="104-requisitos-de-integracion">10.4 Requisitos de integración</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requisito</th>
+<th>Prioridad</th>
+<th>Criterio de aceptación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-AZR-01</td>
+<td>Todo mensaje publicado lleva <code>messageId</code> estable igual al id del registro de outbox</td>
+<td>M</td>
+<td>Reenviar el mismo outbox produce el mismo <code>messageId</code> y el consumidor lo descarta por idempotencia</td>
+</tr>
+<tr>
+<td>FR-AZR-02</td>
+<td>Entrega al menos una vez con un máximo de 3 intentos y retroceso exponencial</td>
+<td>M</td>
+<td>Un fallo transitorio se reintenta; al agotar intentos el mensaje queda en <code>failed_message</code> y se completa en el broker para evitar bucles</td>
+</tr>
+<tr>
+<td>FR-AZR-03</td>
+<td>La carga de un documento publica un CloudEvent en Event Grid</td>
+<td>S</td>
+<td>El evento contiene <code>documentId</code>, <code>requestId</code> y <code>correlationId</code>; sin suscriptor el upload no falla</td>
+</tr>
+<tr>
+<td>FR-AZR-04</td>
+<td>El contenedor de evidencias es privado y la descarga solo ocurre vía API con control de propiedad</td>
+<td>M</td>
+<td>Un afiliado no puede leer el documento de otro; la URL del blob no se expone al cliente</td>
+</tr>
+<tr>
+<td>FR-AZR-05</td>
+<td>La Function de notificaciones es idempotente por <code>notificationId</code></td>
+<td>S</td>
+<td>Invocarla dos veces con el mismo id no genera dos envíos</td>
+</tr>
+<tr>
+<td>FR-AZR-06</td>
+<td>El adaptador local y el de Azure respetan el mismo contrato</td>
+<td>M</td>
+<td>La misma prueba de integración pasa con <code>local</code> y con un doble del SDK; el handler no cambia</td>
+</tr>
+<tr>
+<td>FR-AZR-07</td>
+<td>Sin secretos en el repositorio y fallo rápido si falta configuración</td>
+<td>M</td>
+<td>Arrancar con <code>transport=azure</code> sin cadena de conexión falla al iniciar con mensaje claro</td>
+</tr>
+<tr>
+<td>FR-AZR-08</td>
+<td>Los portales se sirven con fallback de rutas para enlaces profundos</td>
+<td>S</td>
+<td>Recargar <code>/affiliates/requests/42</code> devuelve el shell y no un 404</td>
+</tr>
+</tbody>
+</table>
+<h2 id="105-contrato-del-mensaje">10.5 Contrato del mensaje</h2>
+<p>El envelope es único para los dos transportes:</p>
+<pre><code class="language-json">{
+  &quot;messageId&quot;: &quot;9f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f&quot;,
+  &quot;eventType&quot;: &quot;subsidy.request.submitted&quot;,
+  &quot;aggregateType&quot;: &quot;SubsidyRequest&quot;,
+  &quot;aggregateId&quot;: &quot;42&quot;,
+  &quot;occurredAt&quot;: &quot;2026-10-20T16:42:07Z&quot;,
+  &quot;correlationId&quot;: &quot;b1e2f3a4-5c6d-7e8f-9a0b-1c2d3e4f5a6b&quot;,
+  &quot;payload&quot;: &quot;{\&quot;requestId\&quot;:42,\&quot;affiliateId\&quot;:7,\&quot;subsidyType\&quot;:\&quot;VIVIENDA\&quot;}&quot;
+}
+</code></pre>
+<p>Limitación conocida: <code>payload</code> viaja como <strong>cadena JSON</strong> dentro del envelope, lo que produce doble
+codificación y complica la lectura en herramientas del broker. La corrección prevista es declararlo
+como objeto (<code>JsonNode</code>) manteniendo compatibilidad con los mensajes ya publicados.</p>
+<h2 id="106-contrato-del-documento">10.6 Contrato del documento</h2>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Regla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clave</td>
+<td><code>{requestId}/{uuid}.{ext}</code>; el cliente nunca la elige</td>
+</tr>
+<tr>
+<td>Tipo permitido</td>
+<td><code>application/pdf</code>, <code>image/png</code>, <code>image/jpeg</code></td>
+</tr>
+<tr>
+<td>Tamaño máximo</td>
+<td>5 MB (configurable)</td>
+</tr>
+<tr>
+<td>Integridad</td>
+<td>SHA-256 calculado en streaming y almacenado en MySQL</td>
+</tr>
+<tr>
+<td>Acceso</td>
+<td>Contenedor privado; descarga mediante endpoint con <code>AccessGuard</code></td>
+</tr>
+<tr>
+<td>Nombre original</td>
+<td>Se conserva solo como metadato, saneado</td>
+</tr>
+</tbody>
+</table>
+<h2 id="107-fallos-reintentos-y-cola-de-fallidos">10.7 Fallos, reintentos y cola de fallidos</h2>
+<ol>
+<li>El consumidor comprueba idempotencia por <code>(messageId, consumer)</code> antes de ejecutar.</li>
+<li>Si el handler falla, Reactor reintenta con <code>Retry.backoff</code> hasta <code>max-attempts</code>.</li>
+<li>Agotados los intentos, se guarda el mensaje en <code>failed_message</code> con la causa y se completa el mensaje en el broker: se prefiere un registro consultable a un bucle de reentrega.</li>
+<li>El back-office puede reintentar desde <code>GET /api/v1/ops/failed-messages</code> cuando la causa esté corregida.</li>
+</ol>
+<h2 id="108-paridad-local-azure">10.8 Paridad local ↔ Azure</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Local</th>
+<th>Azure</th>
+<th>Cómo se demuestra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mensajería</td>
+<td>Publicador en proceso</td>
+<td>Service Bus</td>
+<td>Misma clase <code>SubsidyMessageHandler</code>; prueba con doble del sender</td>
+</tr>
+<tr>
+<td>Documentos</td>
+<td>Sistema de archivos</td>
+<td>Blob</td>
+<td>Misma interfaz <code>DocumentStorage</code>; contrato de checksum y content-type</td>
+</tr>
+<tr>
+<td>Notificaciones</td>
+<td>Log estructurado</td>
+<td>Function HTTP</td>
+<td>Mismo <code>NotificationGateway</code>; prueba con <code>MockWebServer</code></td>
+</tr>
+<tr>
+<td>Eventos</td>
+<td>Log</td>
+<td>Event Grid</td>
+<td>Pendiente de implementar el adaptador</td>
+</tr>
+<tr>
+<td>Secretos</td>
+<td>Variables de entorno</td>
+<td>Key Vault</td>
+<td>Misma resolución de propiedades</td>
+</tr>
+</tbody>
+</table>
+<h2 id="109-servicios-evaluados-y-descartados">10.9 Servicios evaluados y descartados</h2>
+<table>
+<thead>
+<tr>
+<th>Servicio</th>
+<th>Decisión</th>
+<th>Motivo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Table Storage</td>
+<td>Descartado</td>
+<td>El caso usa MySQL como relacional y Blob para binarios; añadir Table sería duplicar persistencia sin necesidad</td>
+</tr>
+<tr>
+<td>Container Apps</td>
+<td>Descartado</td>
+<td>App Service con contenedor cubre el requisito con menos piezas; el JD pide Docker y pipelines, no orquestación</td>
+</tr>
+<tr>
+<td>Azure Container Registry</td>
+<td>Previsto, no confirmado</td>
+<td>Solo es necesario si el pipeline publica imágenes; se decide en Fase 6</td>
+</tr>
+<tr>
+<td>Logic Apps</td>
+<td>Descartado</td>
+<td>La orquestación requerida cabe en Functions y Service Bus</td>
+</tr>
+<tr>
+<td>Cosmos DB</td>
+<td>Descartado</td>
+<td>No aporta al modelo relacional de la prueba</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1010-estado-y-evidencia-en-el-codigo">10.10 Estado y evidencia en el código</h2>
+<table>
+<thead>
+<tr>
+<th>Pieza</th>
+<th>Archivo</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Envelope</td>
+<td><code>messaging/domain/DomainEventEnvelope.java</code></td>
+<td>Escrito</td>
+</tr>
+<tr>
+<td>Publicador Service Bus</td>
+<td><code>messaging/transport/AzureServiceBusDomainEventPublisher.java</code></td>
+<td>Escrito, sin ejecutar</td>
+</tr>
+<tr>
+<td>Consumidor Service Bus</td>
+<td><code>messaging/transport/AzureServiceBusConsumerConfig.java</code></td>
+<td>Escrito, sin ejecutar</td>
+</tr>
+<tr>
+<td>Publicador local</td>
+<td><code>messaging/transport/LocalDomainEventPublisher.java</code></td>
+<td>Escrito, sin ejecutar</td>
+</tr>
+<tr>
+<td>Blob</td>
+<td><code>storage/AzureBlobDocumentStorage.java</code></td>
+<td>Escrito, sin ejecutar</td>
+</tr>
+<tr>
+<td>Almacenamiento local</td>
+<td><code>storage/LocalFileSystemDocumentStorage.java</code></td>
+<td>Escrito, sin ejecutar</td>
+</tr>
+<tr>
+<td>Function de notificaciones (cliente)</td>
+<td><code>notification/application/AzureFunctionNotificationGateway.java</code></td>
+<td>Escrito, sin ejecutar</td>
+</tr>
+<tr>
+<td>Function (servidor)</td>
+<td>—</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Event Grid</td>
+<td>—</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Bicep / pipeline</td>
+<td>—</td>
+<td>Pendiente</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1011-configuracion-por-entorno">10.11 Configuración por entorno</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Uso</th>
+<th>Valor por defecto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MESSAGING_TRANSPORT</code></td>
+<td><code>local</code> o <code>azure</code></td>
+<td><code>local</code></td>
+</tr>
+<tr>
+<td><code>AZURE_SERVICE_BUS_CONNECTION_STRING</code></td>
+<td>Conexión al namespace</td>
+<td>vacío</td>
+</tr>
+<tr>
+<td><code>AZURE_SERVICE_BUS_QUEUE</code></td>
+<td>Nombre de cola</td>
+<td><code>subsidy-requests</code></td>
+</tr>
+<tr>
+<td><code>STORAGE_PROVIDER</code></td>
+<td><code>local</code> o <code>azure</code></td>
+<td><code>local</code></td>
+</tr>
+<tr>
+<td><code>AZURE_STORAGE_CONNECTION_STRING</code></td>
+<td>Cuenta de almacenamiento</td>
+<td>vacío</td>
+</tr>
+<tr>
+<td><code>AZURE_STORAGE_CONTAINER</code></td>
+<td>Contenedor privado</td>
+<td><code>subsidy-documents</code></td>
+</tr>
+<tr>
+<td><code>NOTIFICATION_PROVIDER</code></td>
+<td><code>local-log</code> o <code>azure-function</code></td>
+<td><code>local-log</code></td>
+</tr>
+<tr>
+<td><code>AZURE_FUNCTION_BASE_URL</code></td>
+<td>Endpoint de la Function</td>
+<td><code>http://localhost:7071</code></td>
+</tr>
+<tr>
+<td><code>AZURE_FUNCTION_KEY</code></td>
+<td>Clave de función</td>
+<td>vacío</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1012-que-falta-para-desplegar">10.12 Qué falta para desplegar</h2>
+<ol>
+<li>Provisionar con Bicep: Storage, Service Bus, Event Grid topic, Function App, App Service, Static Web App, Key Vault, Application Insights.</li>
+<li>Publicar la Function de notificaciones y la de validación documental.</li>
+<li>Configurar identidad administrada y referencias de Key Vault en lugar de cadenas de conexión.</li>
+<li>Añadir el pipeline de Azure DevOps con etapas de build, pruebas, imagen y despliegue.</li>
+<li>Ejecutar una prueba de humo contra el entorno desplegado y registrar la evidencia.</li>
+</ol>
+<p>Mientras eso no ocurra, el estado es <strong>parcial</strong> y así se declara en la matriz de cobertura del JD
+(documento 09).</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
