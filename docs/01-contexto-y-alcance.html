@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Contexto y alcance</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="01-contexto-y-alcance">01 · Contexto y alcance</h1>
+<h2 id="1-problema-que-se-quiere-resolver">1. Problema que se quiere resolver</h2>
+<p>Una caja de compensación familiar administra información de afiliados, de las empresas aportantes y
+de las solicitudes de subsidio que los afiliados presentan. En plataformas heredadas esa información
+suele estar fragmentada: el afiliado no tiene visibilidad de su trámite, la empresa no puede consultar
+el estado de sus trabajadores sin pedir reportes manuales, y el back-office depende de procesos
+batch poco observables.</p>
+<p>La prueba técnica consiste en demostrar, con un prototipo ejecutable, cómo se moderniza ese tipo de
+plataforma: APIs REST y reactivas sobre Java 17 / Spring Boot 3.x, dos portales construidos con
+microfrontends Angular, mensajería asíncrona confiable y un camino claro de despliegue en Azure.</p>
+<p><strong>Este prototipo es independiente.</strong> No reproduce la arquitectura interna de Colsubsidio ni usa sus
+sistemas, datos o APIs. Cualquier parecido funcional es intencionalmente genérico.</p>
+<h2 id="2-objetivo-general">2. Objetivo general</h2>
+<p>Entregar un repositorio demostrable, ejecutable y documentado que permita evaluar criterio
+arquitectónico, calidad de código, seguridad, pruebas y capacidad de modernización en un contexto
+empresarial realista.</p>
+<h2 id="3-objetivos-evaluables">3. Objetivos evaluables</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Objetivo</th>
+<th>Evidencia esperada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O1</td>
+<td>Separar responsabilidades y modelar el dominio con reglas explícitas</td>
+<td>Módulos por funcionalidad, agregados con transiciones de estado, reglas de demostración aisladas</td>
+</tr>
+<tr>
+<td>O2</td>
+<td>Exponer APIs REST consistentes y seguras</td>
+<td>Contrato OpenAPI, paginación y filtros uniformes, errores RFC 7807, control de acceso por rol y por recurso</td>
+</tr>
+<tr>
+<td>O3</td>
+<td>Usar reactividad donde aporta valor</td>
+<td>SSE de cambios de estado, agregación paralela del tablero, cliente HTTP saliente con timeout y reintentos</td>
+</tr>
+<tr>
+<td>O4</td>
+<td>Garantizar consistencia entre base de datos y mensajería</td>
+<td>Patrón outbox transaccional, consumidor idempotente, reintentos con backoff y cola de fallidos</td>
+</tr>
+<tr>
+<td>O5</td>
+<td>Construir portales desacoplados</td>
+<td>Shell/host con Module Federation, contratos tipados, aislamiento y manejo de fallos de carga</td>
+</tr>
+<tr>
+<td>O6</td>
+<td>Ejecutar sin suscripción de Azure</td>
+<td>Adaptadores locales para mensajería, almacenamiento y notificaciones, con las integraciones reales separadas por perfil</td>
+</tr>
+<tr>
+<td>O7</td>
+<td>Demostrar una ruta de modernización</td>
+<td>Plan Java 8 → 17, javax → jakarta, matriz de compatibilidad, recetas OpenRewrite y estrategia de rollback</td>
+</tr>
+<tr>
+<td>O8</td>
+<td>Tratar datos personales con criterio</td>
+<td>Minimización, enmascaramiento en todas las respuestas, auditoría de accesos y datos sintéticos</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-personas-y-roles">4. Personas y roles</h2>
+<table>
+<thead>
+<tr>
+<th>Rol técnico</th>
+<th>Persona</th>
+<th>Necesidad principal</th>
+<th>Portal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ROLE_AFFILIATE</code></td>
+<td>Afiliado cotizante</td>
+<td>Ver su información, beneficiarios, solicitudes, requisitos y notificaciones</td>
+<td>Portal de afiliados</td>
+</tr>
+<tr>
+<td><code>ROLE_COMPANY</code></td>
+<td>Administrador de empresa aportante</td>
+<td>Ver datos de la empresa, registrar trabajadores de demostración, consultar novedades y estado de trámites</td>
+<td>Portal de empresas</td>
+</tr>
+<tr>
+<td><code>ROLE_BACKOFFICE</code></td>
+<td>Analista de subsidios</td>
+<td>Consultar solicitudes, revisar documentos y registrar una decisión <strong>de demostración</strong></td>
+<td>API / Swagger (sin portal propio)</td>
+</tr>
+<tr>
+<td><code>ROLE_AUDITOR</code></td>
+<td>Auditor</td>
+<td>Consultar información agregada y trazas sin modificar datos</td>
+<td>API / Swagger</td>
+</tr>
+<tr>
+<td><code>system:subsidy-consumer</code></td>
+<td>Consumidor asíncrono</td>
+<td>Clasificar solicitudes y actualizar estados de forma idempotente</td>
+<td>Interno</td>
+</tr>
+</tbody>
+</table>
+<p>El prototipo <strong>no</strong> incluye un portal de back-office: la operación de revisión se expone por API y se
+documenta en Swagger y en la colección Postman. Se declara como decisión de alcance, no como omisión.</p>
+<h2 id="5-alcance-incluido">5. Alcance incluido</h2>
+<h3 id="51-funcional">5.1 Funcional</h3>
+<ol>
+<li>Autenticación de demostración con emisión de JWT y autorización por rol y por recurso.</li>
+<li>Portal de afiliados: perfil, beneficiarios, solicitudes, documentos, historial y notificaciones.</li>
+<li>Portal de empresas: perfil, registro de trabajadores de demostración, consulta de solicitudes y
+   reporte administrativo agregado.</li>
+<li>Registro de solicitud de subsidio con validaciones, persistencia y publicación de evento.</li>
+<li>Procesamiento asíncrono idempotente con actualización de estado y trazabilidad.</li>
+<li>Carga de documentos con validación de tipo y tamaño, checksum y almacenamiento desacoplado.</li>
+<li>Consulta de estado en tiempo real mediante Server-Sent Events.</li>
+<li>Auditoría de operaciones relevantes y acceso a datos personales.</li>
+</ol>
+<h3 id="52-tecnico">5.2 Técnico</h3>
+<ul>
+<li>Backend Java 17 + Spring Boot 3.x (MVC para REST, Reactor/WebFlux para streaming y agregación).</li>
+<li>MySQL 8 con migraciones versionadas (Flyway).</li>
+<li>Seguridad OAuth2 Resource Server con JWT (HS256) emitidos por un endpoint de demostración.</li>
+<li>OpenAPI 3 documentado y publicado en Swagger UI.</li>
+<li>Pruebas unitarias (JUnit + Mockito) y de integración (Spring Boot Test + MockMvc + H2 en modo MySQL).</li>
+<li>Dos portales Angular con shell/host y módulos remotos por Module Federation.</li>
+<li>Pruebas de componentes y servicios con Jest.</li>
+<li>Docker y <code>docker-compose</code> para ejecución local.</li>
+<li>Pipeline CI/CD de Azure DevOps, Functions, Service Bus, Event Grid, Blob Storage y Static Web Apps
+  como configuración de ejemplo, no como dependencia de ejecución.</li>
+</ul>
+<h2 id="6-fuera-de-alcance-explicito">6. Fuera de alcance (explícito)</h2>
+<table>
+<thead>
+<tr>
+<th>Excluido</th>
+<th>Motivo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Integración con sistemas reales de Colsubsidio</td>
+<td>La prueba es un prototipo independiente</td>
+</tr>
+<tr>
+<td>Decisiones reales de aprobación o desembolso</td>
+<td>Sería irresponsable simular decisiones oficiales</td>
+</tr>
+<tr>
+<td>Pasarela de pagos, facturación o dispersión de recursos</td>
+<td>No aporta a los objetivos evaluables</td>
+</tr>
+<tr>
+<td>Motor de reglas configurable (DMN)</td>
+<td>Se implementan reglas de demostración en código aislado y testeable</td>
+</tr>
+<tr>
+<td>Portal de back-office completo</td>
+<td>Se cubre por API, Swagger y Postman; se declara la decisión</td>
+</tr>
+<tr>
+<td>Aplicación móvil nativa</td>
+<td>Los portales son responsive mobile first</td>
+</tr>
+<tr>
+<td>Alta disponibilidad multi-región real</td>
+<td>Se documenta el diseño, no se aprovisiona infraestructura</td>
+</tr>
+<tr>
+<td>Autenticación con Entra ID real</td>
+<td>Se documenta la ruta de sustitución del proveedor de identidad</td>
+</tr>
+<tr>
+<td>Cifrado de campos a nivel de base de datos (TDE/KMS)</td>
+<td>Se documenta como control de producción pendiente</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-supuestos-y-restricciones-del-entorno">7. Supuestos y restricciones del entorno</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Supuesto / restricción</th>
+<th>Impacto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1</td>
+<td>JDK 17 como <code>--release</code> de compilación; el entorno local puede tener un JDK superior</td>
+<td>El código no debe usar APIs posteriores a 17</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>Node.js 20+ y Angular 18 para el frontend</td>
+<td>Versión estable y compatible con Module Federation vía webpack</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>MySQL 8 en ejecución local vía Docker; H2 en modo MySQL para pruebas</td>
+<td>Las migraciones deben ser SQL portable</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>No se requiere suscripción de Azure para ejecutar</td>
+<td>Perfiles <code>local</code> por defecto; <code>azure</code> opt-in</td>
+</tr>
+<tr>
+<td>S5</td>
+<td>El daemon de Docker puede no estar disponible en la máquina de evaluación</td>
+<td>Se documenta ejecución con y sin Docker; las pruebas no dependen de Testcontainers</td>
+</tr>
+<tr>
+<td>S6</td>
+<td>Los datos son sintéticos y se generan por migración o por inicializador idempotente</td>
+<td>Prohibido usar información personal real</td>
+</tr>
+<tr>
+<td>S7</td>
+<td>El prototipo se evalúa como código, no como servicio en producción</td>
+<td>Se prioriza claridad, pruebas y trazabilidad</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-reglas-de-demostracion-no-son-politicas-de-colsubsidio">8. Reglas de demostración (no son políticas de Colsubsidio)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regla</th>
+<th>Valor</th>
+<th>Ubicación prevista</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RD-01</td>
+<td>Afiliado debe estar <code>ACTIVE</code> para registrar solicitud</td>
+<td>—</td>
+<td><code>SubsidyRequestService</code></td>
+</tr>
+<tr>
+<td>RD-02</td>
+<td>Una sola solicitud abierta por tipo y afiliado</td>
+<td>—</td>
+<td><code>SubsidyRequestService</code></td>
+</tr>
+<tr>
+<td>RD-03</td>
+<td>Monto máximo por tipo</td>
+<td>Vivienda 4.500.000 · Educación 1.800.000 · Recreación 900.000 · Crédito 3.000.000 COP</td>
+<td><code>SubsidyDemoRules</code></td>
+</tr>
+<tr>
+<td>RD-04</td>
+<td>Crédito solo para categoría A o B</td>
+<td>—</td>
+<td><code>SubsidyDemoRules</code></td>
+</tr>
+<tr>
+<td>RD-05</td>
+<td>Educación exige al menos un beneficiario registrado</td>
+<td>—</td>
+<td><code>SubsidyRequestService</code></td>
+</tr>
+<tr>
+<td>RD-06</td>
+<td>Catálogo de documentos por tipo</td>
+<td>Vivienda: identidad, ingresos, banco · Educación: identidad, ingresos, matrícula · Recreación: identidad · Crédito: identidad, ingresos, banco</td>
+<td><code>SubsidyDemoRules</code></td>
+</tr>
+<tr>
+<td>RD-07</td>
+<td>Clasificación automática solo a <code>PENDING_DOCUMENTS</code> o <code>IN_REVIEW</code></td>
+<td>Nunca aprueba</td>
+<td><code>SubsidyMessageHandler</code></td>
+</tr>
+<tr>
+<td>RD-08</td>
+<td>Decisión final</td>
+<td>Solo un usuario <code>ROLE_BACKOFFICE</code>, marcada como <code>APPROVED_DEMO</code> / <code>REJECTED_DEMO</code></td>
+<td><code>SubsidyRequestService.review</code></td>
+</tr>
+</tbody>
+</table>
+<p>Toda regla debe aparecer en el código con la marca <code>DEMONSTRATION</code> o <code>DEMO</code> y repetirse en la
+respuesta de la API cuando el cliente necesite explicar el resultado.</p>
+<h2 id="9-glosario">9. Glosario</h2>
+<table>
+<thead>
+<tr>
+<th>Término</th>
+<th>Definición en este prototipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Afiliado</td>
+<td>Persona registrada en la caja de compensación, con categoría y empresa asociada</td>
+</tr>
+<tr>
+<td>Beneficiario</td>
+<td>Persona a cargo del afiliado (hijo, cónyuge, etc.)</td>
+</tr>
+<tr>
+<td>Empresa aportante</td>
+<td>Persona jurídica que vincula trabajadores y reporta novedades</td>
+</tr>
+<tr>
+<td>Trabajador</td>
+<td>Registro de demostración que la empresa administra en su portal</td>
+</tr>
+<tr>
+<td>Novedad</td>
+<td>Cambio reportado por la empresa (ingreso, retiro); en el prototipo se limita al estado del trabajador</td>
+</tr>
+<tr>
+<td>Solicitud de subsidio</td>
+<td>Trámite con tipo, monto, documentos y ciclo de vida</td>
+</tr>
+<tr>
+<td>Documento requerido</td>
+<td>Evidencia exigida por el catálogo de demostración</td>
+</tr>
+<tr>
+<td>Outbox</td>
+<td>Tabla transaccional que garantiza publicación de eventos sin escritura dual</td>
+</tr>
+<tr>
+<td>Idempotencia</td>
+<td>Propiedad por la que un mensaje repetido no produce un segundo efecto de negocio</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-criterios-de-exito-de-la-entrega">10. Criterios de éxito de la entrega</h2>
+<ol>
+<li>El repositorio se clona, se levanta con MySQL (o Docker) y responde el flujo completo de la
+   sección 5 sin pasos manuales no documentados.</li>
+<li>Todas las pruebas declaradas se ejecutan y su resultado se reporta con la salida real.</li>
+<li>El contrato OpenAPI coincide con los endpoints implementados.</li>
+<li>Los portales funcionan de forma independiente y el fallo de un remoto no bloquea al shell.</li>
+<li>La documentación de modernización permite ejecutar la migración sin ambigüedad.</li>
+<li>Ninguna respuesta HTTP expone datos personales sin enmascarar.</li>
+</ol>
+<h2 id="11-decisiones-que-se-validaran-con-el-evaluador">11. Decisiones que se validarán con el evaluador</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Pregunta</th>
+<th>Supuesto actual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1</td>
+<td>¿Se espera portal de back-office?</td>
+<td>No; se cubre por API y Swagger</td>
+</tr>
+<tr>
+<td>Q2</td>
+<td>¿Se prefiere Native Federation sobre webpack Module Federation?</td>
+<td>No; se usa Module Federation con webpack por compatibilidad declarada con Angular 18</td>
+</tr>
+<tr>
+<td>Q3</td>
+<td>¿Se requiere autenticación contra un IdP real?</td>
+<td>No; JWT de demostración con ruta documentada a Entra ID</td>
+</tr>
+<tr>
+<td>Q4</td>
+<td>¿Se exige cobertura mínima de pruebas?</td>
+<td>Se propone 70 % en dominio/aplicación y pruebas de todos los endpoints críticos</td>
+</tr>
+</tbody>
+</table>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
