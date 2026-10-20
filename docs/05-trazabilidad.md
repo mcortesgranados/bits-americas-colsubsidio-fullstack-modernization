@@ -102,3 +102,10 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 
 El catálogo completo, con flujos alternos y postcondiciones, está en
 [08 · Casos de uso](08-casos-de-uso.md).
+
+## 5.5 Cobertura del JD
+
+El documento [09 · Descripción del cargo](09-descripcion-del-cargo.md) mantiene la matriz que relaciona
+cada requisito de la vacante con su evidencia en el repositorio y su estado real (cubierto, parcial,
+pendiente o fuera del alcance). Esa matriz es la vista de negocio de esta trazabilidad: aquí se enlaza
+requisito → código → prueba; allí se enlaza requisito del JD → entregable → estado.

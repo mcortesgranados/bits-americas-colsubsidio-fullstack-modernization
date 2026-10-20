@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Descripción del cargo (JD)</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="09-descripcion-del-cargo-jd">09 · Descripción del cargo (JD)</h1>
+<p>Texto de referencia de la vacante a la que responde esta prueba técnica. Se reproduce <strong>sin
+alteraciones</strong> y se usa como entrada para verificar cobertura: qué exige el rol, qué demuestra hoy el
+repositorio y qué queda pendiente.</p>
+<blockquote>
+<p>Este documento no implica vinculación laboral ni reproduce documentación interna del cliente. El JD
+es el texto de la convocatoria.</p>
+</blockquote>
+<h2 id="91-texto-original">9.1 Texto original</h2>
+<div class="jd-document">
+<p class="jd-confidential">TEXTO ORIGINAL DE LA VACANTE · USO DE REFERENCIA</p>
+<h3>AI CONTEXT DESARROLLADOR FULL STACK SENIOR JAVA (SPRING BOOT / WEBFLUX) + ANGULAR, CON AZURE Y MICROFRONTENDS</h3>
+<p class="jd-meta"><span>Remoto</span><span>2,5 meses</span><span>160 h/mes</span><span>1 recurso</span><span>8:00–17:00</span></p>
+
+<h4>Objetivo del rol</h4>
+<p>Modernizar y extender la plataforma del cliente de punta a punta: ejecutar el upgrade progresivo de Java y Spring Boot, construir APIs REST y reactivas integradas con servicios serverless y de mensajería en Azure, y estructurar la base de dos portales con arquitectura de microfrontends en Angular, dejando estándares que el equipo del cliente pueda seguir.</p>
+
+<h4>Responsabilidades principales</h4>
+<ul class="jd-list">
+<li>Planear y ejecutar el upgrade progresivo desde Spring Boot 2.3.x y Java 8 hacia versiones recientes, resolviendo incompatibilidades (javax a jakarta, Spring Security, dependencias) sin afectar la operación.</li>
+<li>Desarrollar APIs RESTful con Spring (MVC y WebFlux), documentadas con Swagger/OpenAPI.</li>
+<li>Implementar Azure Functions e integración por colas y eventos con Azure Service Bus y Event Grid; usar Azure Storage (Blob, Table) según el caso de uso, y MySQL como base relacional.</li>
+<li>Diseñar y construir la base de los dos portales de microfrontends: shell/host, módulos remotos con Module Federation, dependencias compartidas y comunicación entre microfrontends.</li>
+<li>Desarrollar aplicaciones y web components en Angular (15 o superior) con RxJS, maquetación responsive mobile first (Flexbox, SASS/LESS/CSS) y criterios de accesibilidad.</li>
+<li>Desplegar los portales en Azure Static Web Apps y los servicios con Docker y pipelines de Azure DevOps.</li>
+<li>Escribir pruebas unitarias con JUnit (backend) y Jest (frontend).</li>
+<li>Definir y documentar lineamientos técnicos (patrones de diseño, SOLID, estructura de proyectos) y diagramas en Mermaid.</li>
+<li>Revisar código y acompañar técnicamente al equipo del cliente.</li>
+</ul>
+
+<h4 class="jd-required">Requisitos técnicos obligatorios</h4>
+<ul class="jd-list">
+<li><strong>Lenguajes:</strong> Java (8, 11 y 17, con experiencia real migrando entre versiones), TypeScript y JavaScript moderno (APIs recientes del navegador y de Node.js).</li>
+<li><strong>Backend:</strong> Spring Boot (2.x y 3.x), Spring Web, Spring WebFlux (Project Reactor), APIs RESTful, Swagger/OpenAPI.</li>
+<li><strong>Frontend:</strong> Angular 15 o superior, RxJS, HTML5, CSS3, SASS, Flexbox, diseño responsive mobile first.</li>
+<li><strong>Microfrontends:</strong> Module Federation y web components.</li>
+<li><strong>Base de datos:</strong> MySQL.</li>
+<li><strong>Cloud:</strong> Azure Functions, Azure Service Bus, Azure Event Grid, Azure Storage Account (Blob, Table), Azure Static Web Apps.</li>
+<li><strong>DevOps / CI/CD:</strong> Docker, Azure DevOps (Repos, Pipelines).</li>
+<li><strong>Testing:</strong> JUnit, Jest.</li>
+<li><strong>Herramientas:</strong> Git (ramas, merge, rebase, resolución de conflictos), VS Code, Postman o Insomnia.</li>
+<li><strong>Prácticas:</strong> patrones de diseño, principios SOLID, programación funcional (lambdas) y reactiva.</li>
+</ul>
+
+<h4 class="jd-preferred">Requisitos técnicos deseables</h4>
+<ul class="jd-list">
+<li>Java 25 y Spring Boot 4.</li>
+<li>React y Stencil para microfrontends y web components.</li>
+<li>Progressive Web Apps (PWA) y WebSockets.</li>
+<li>LESS.</li>
+<li>Accesibilidad web formal (WCAG 2.x).</li>
+<li>Diagramación con Mermaid.</li>
+<li>Herramientas de migración automatizada (por ejemplo, OpenRewrite).</li>
+<li>Certificación Azure (AZ-204 o AZ-900).</li>
+<li>Uso de asistentes de IA para refactorización, pruebas y documentación, con control humano.</li>
+</ul>
+
+<h4>Requisitos blandos</h4>
+<ul class="jd-list">
+<li>Autonomía alta: debe producir desde la primera semana por la corta duración del servicio.</li>
+<li>Criterio técnico para tomar y sustentar decisiones de arquitectura ante el cliente.</li>
+<li>Capacidad de priorizar entre frentes (migración, Azure y portales) con un solo recurso.</li>
+<li>Comunicación clara y por escrito, propia de un trabajo remoto.</li>
+<li>Documentación técnica de las decisiones y estándares definidos.</li>
+</ul>
+
+<h4>Experiencia mínima</h4>
+<ul class="jd-list">
+<li>Mínimo exigido: 5 años como desarrollador full stack.</li>
+<li>Al menos 4 años en Java/Spring, incluida al menos una migración de versión de Spring Boot o Java.</li>
+<li>Al menos 3 años en Angular.</li>
+<li>Al menos un proyecto con microfrontends (Module Federation) y experiencia comprobable en Azure (Functions y Service Bus).</li>
+</ul>
+
+<h4>Formación, modalidad y condiciones</h4>
+<p><strong>Formación:</strong> profesional, tecnólogo o estudiante de últimos semestres con experiencia sólida en ingeniería de sistemas o afines.</p>
+<p><strong>Modalidad:</strong> remoto. Horario de 8:00 a 17:00.</p>
+<p><strong>Duración:</strong> 2,5 meses. <strong>Dedicación:</strong> 160 horas/mes (tiempo completo). <strong>Cantidad de recursos:</strong> 1.</p>
+</div>
+
+<h2 id="92-lectura-estructurada">9.2 Lectura estructurada</h2>
+<table>
+<thead>
+<tr>
+<th>Dimensión</th>
+<th>Exigencia del JD</th>
+<th>Implicación para esta prueba</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Alcance</td>
+<td>Modernización + APIs + Azure + dos portales</td>
+<td>El repositorio debe mostrar los cuatro frentes, no solo backend</td>
+</tr>
+<tr>
+<td>Autonomía</td>
+<td>Producir desde la primera semana</td>
+<td>Decisiones documentadas y ejecutables sin apoyo del cliente</td>
+</tr>
+<tr>
+<td>Prioridad</td>
+<td>Un solo recurso para tres frentes</td>
+<td>Orden explícito: flujo vertical → portales → infraestructura</td>
+</tr>
+<tr>
+<td>Riesgo</td>
+<td>Upgrade sin afectar operación</td>
+<td>Estrategia progresiva, rollback y pruebas de regresión</td>
+</tr>
+<tr>
+<td>Comunicación</td>
+<td>Sustentar decisiones ante el cliente</td>
+<td>ADR y matriz de compatibilidad, no solo código</td>
+</tr>
+</tbody>
+</table>
+<h2 id="93-cobertura-actual-del-jd">9.3 Cobertura actual del JD</h2>
+<p>Estados: <strong>Cubierto</strong> (existe y es verificable), <strong>Parcial</strong> (hay base, falta completar o ejecutar),
+<strong>Pendiente</strong> (planificado y aún no construido), <strong>Fuera del repositorio</strong> (no es un artefacto de
+código).</p>
+<table>
+<thead>
+<tr>
+<th>Requisito del JD</th>
+<th>Evidencia en el repositorio</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Upgrade Java 8 / Spring Boot 2.3.x → 17 / 3.x</td>
+<td>Estrategia y reglas en <code>03</code> (NFR-ARQ-06, NFR-ARQ-07) y fase 7 del plan</td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td><code>javax.*</code> → <code>jakarta.*</code>, Spring Security, Hibernate</td>
+<td>Decisiones D7 y matriz de compatibilidad en <code>04</code></td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>OpenRewrite</td>
+<td>Receta prevista en el plan de modernización</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>APIs REST con Spring MVC</td>
+<td>60 clases backend, controladores de afiliados y seguridad</td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>WebFlux / Project Reactor</td>
+<td>SSE con <code>Flux</code> y <code>Sinks</code>, agregación con <code>Mono</code>, reintentos con <code>Retry.backoff</code></td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>Swagger / OpenAPI</td>
+<td><code>springdoc</code> declarado en el <code>pom.xml</code> y contrato previsto</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Azure Functions</td>
+<td>Fase 5 del plan; sin código aún</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Azure Service Bus</td>
+<td>Adaptadores publicador y consumidor escritos</td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>Azure Event Grid</td>
+<td>Fase 5 del plan</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Blob Storage</td>
+<td><code>AzureBlobDocumentStorage</code> + <code>LocalFileSystemDocumentStorage</code></td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>Table Storage</td>
+<td>Evaluado y descartado para el caso de uso (documentado)</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>Modelo JPA completo; migraciones Flyway pendientes</td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>Microfrontends / Module Federation</td>
+<td>Decisión D5 y diseño §4.8; sin código</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Angular 15+ con RxJS y SASS</td>
+<td>Fase 4 del plan</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Web components</td>
+<td><code>cs-status-badge</code> diseñado, no implementado</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Accesibilidad WCAG 2.x</td>
+<td>Checklist y criterios en <code>03</code> (NFR-UX)</td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>Azure Static Web Apps</td>
+<td>Fase 6 del plan</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Docker</td>
+<td>Fase 6 del plan</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Azure DevOps Pipelines</td>
+<td>Fase 6 del plan</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>JUnit / Mockito</td>
+<td>Fase 3 del plan; sin pruebas ejecutadas</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Jest</td>
+<td>Fase 4 del plan</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Mermaid</td>
+<td>Diagramas en <code>01</code>, <code>02</code>, <code>04</code>, <code>06</code> y <code>08</code></td>
+<td>Cubierto</td>
+</tr>
+<tr>
+<td>SOLID y patrones</td>
+<td>Módulos por funcionalidad, puertos y adaptadores, DTOs</td>
+<td>Parcial</td>
+</tr>
+<tr>
+<td>Documentación de decisiones</td>
+<td>Documentos 01–08 y decisiones D1–D10</td>
+<td>Cubierto</td>
+</tr>
+<tr>
+<td>Git, Postman, VS Code</td>
+<td>Colección Postman prevista en fase 6</td>
+<td>Pendiente</td>
+</tr>
+<tr>
+<td>Java 25 / Spring Boot 4 (deseable)</td>
+<td>No usado: se fija Java 17 y Boot 3.5.x por compatibilidad</td>
+<td>Fuera del alcance</td>
+</tr>
+<tr>
+<td>React / Stencil (deseable)</td>
+<td>No aplica: la prueba usa Angular</td>
+<td>Fuera del alcance</td>
+</tr>
+<tr>
+<td>PWA / WebSockets (deseable)</td>
+<td>Se usa SSE en lugar de WebSocket</td>
+<td>Fuera del alcance</td>
+</tr>
+<tr>
+<td>Certificación AZ-204 / AZ-900</td>
+<td>No es un artefacto de repositorio</td>
+<td>Fuera del repositorio</td>
+</tr>
+<tr>
+<td>Experiencia mínima (5 años, 4 en Java, 3 en Angular)</td>
+<td>Se sustenta en la hoja de vida, no en el código</td>
+<td>Fuera del repositorio</td>
+</tr>
+</tbody>
+</table>
+<h2 id="94-brechas-declaradas">9.4 Brechas declaradas</h2>
+<ol>
+<li><strong>La migración no se ejecutó sobre una aplicación real.</strong> Hay estrategia, reglas y compatibilidad documentadas; el laboratorio de código heredado y la receta de OpenRewrite están pendientes.</li>
+<li><strong>El backend no compila todavía.</strong> Es un esqueleto avanzado; faltan servicios, migraciones y pruebas (ver documento 07).</li>
+<li><strong>No hay frontend.</strong> Los dos portales, el shell y los remotos son diseño, no implementación.</li>
+<li><strong>No hay despliegue en Azure.</strong> Existen adaptadores y decisiones, no recursos provisionados ni pipeline ejecutado.</li>
+<li><strong>Cobertura de pruebas: cero.</strong> No se declara ninguna suite en verde.</li>
+<li><strong>Table Storage</strong> se evaluó y se descartó porque el caso de uso no lo requiere; queda como decisión razonada, no como omisión.</li>
+</ol>
+<h2 id="95-contexto-para-asistentes-de-ia">9.5 Contexto para asistentes de IA</h2>
+<p>Bloque compacto para reutilizar al pedir ayuda a un asistente sobre este repositorio:</p>
+<pre><code class="language-text">Proyecto: prueba técnica Bits Americas para Colsubsidio. Prototipo independiente, datos sintéticos.
+Objetivo: modernización Java 8/Boot 2.3 -&gt; Java 17/Boot 3.x, APIs REST + Reactor,
+          Azure (Functions, Service Bus, Event Grid, Blob) y dos portales Angular con Module Federation.
+Restricciones duras:
+  - No afirmar integración con sistemas reales de Colsubsidio ni usar PII real.
+  - Las reglas de negocio son de demostración; ninguna aprobación es oficial.
+  - Ejecutable en local sin suscripción de Azure (adaptadores locales).
+  - No reportar pruebas como exitosas sin ejecutarlas.
+Fuente de verdad: docs/01..09 (alcance, FR, NFR, arquitectura, trazabilidad, plan, inventario, UC, JD).
+Backend: co.com.bits.colsubsidio, módulos por funcionalidad, MVC + JPA, Reactor en streaming y mensajería.
+Salida esperada: código compilable, pruebas ejecutadas, decisiones justificadas y documentación en español.
+</code></pre>
+<h2 id="96-uso-en-la-entrevista">9.6 Uso en la entrevista</h2>
+<ul>
+<li><strong>Minuto 0–2:</strong> el JD pide tres frentes con un solo recurso; el plan de <code>06</code> explica el orden y por qué.</li>
+<li><strong>Minuto 2–5:</strong> el flujo vertical de <code>08</code> (UC-03 → UC-13) demuestra integración, no piezas aisladas.</li>
+<li><strong>Minuto 5–8:</strong> <code>04</code> justifica decisiones incómodas: MVC con Reactor acotado, monolito modular, Module Federation con webpack.</li>
+<li><strong>Cierre:</strong> <code>9.3</code> y <code>9.4</code> muestran lo que falta sin maquillarlo; la honestidad sobre el estado es parte de la evaluación.</li>
+</ul>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>

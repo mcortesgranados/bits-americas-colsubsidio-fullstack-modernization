@@ -22,6 +22,7 @@ demostración**.
 | 06 | [Plan de entrega, riesgos y puertas de calidad](06-plan-entrega.md) | Fases, entregables, criterios de salida y riesgos |
 | 07 | [Esqueleto de código existente](07-inventario-codigo-preliminar.md) | Inventario y estado del código ya generado, sin compromiso de diseño final |
 | 08 | [Casos de uso](08-casos-de-uso.md) | Catálogo UC-01…UC-13 con actores, flujos principal y alternos, postcondiciones y requisitos |
+| 09 | [Descripción del cargo](09-descripcion-del-cargo.md) | JD original, lectura estructurada, cobertura real y brechas declaradas |
 
 Documentos previstos para fases posteriores (aún no creados):
 
