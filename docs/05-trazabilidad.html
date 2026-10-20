@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · Matriz de trazabilidad</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="05-matriz-de-trazabilidad">05 · Matriz de trazabilidad</h1>
+<p>La matriz conecta cada requisito con su implementación prevista, su prueba y su evidencia en los
+portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evidencia se considera
+<strong>no entregado</strong>.</p>
+<h2 id="51-requisitos-funcionales">5.1 Requisitos funcionales</h2>
+<table>
+<thead>
+<tr>
+<th>Requisito</th>
+<th>Módulo backend</th>
+<th>Endpoint / componente</th>
+<th>Prueba prevista</th>
+<th>Pantalla / evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-AUT-01</td>
+<td><code>auth</code></td>
+<td><code>POST /api/v1/auth/demo-token</code></td>
+<td><code>DemoTokenServiceTest</code>, <code>AuthIT</code></td>
+<td>Login del shell</td>
+</tr>
+<tr>
+<td>FR-AUT-02</td>
+<td><code>auth</code>, <code>common</code></td>
+<td>mismo endpoint + <code>GlobalExceptionHandler</code></td>
+<td><code>AuthIT.invalidCredentials</code></td>
+<td>Mensaje de error accesible</td>
+</tr>
+<tr>
+<td>FR-AUT-03</td>
+<td><code>security</code></td>
+<td><code>SecurityFilterChain</code></td>
+<td><code>SecurityIT.requiresToken</code></td>
+<td>Redirección a login</td>
+</tr>
+<tr>
+<td>FR-AUT-04</td>
+<td><code>security</code></td>
+<td><code>@PreAuthorize</code></td>
+<td><code>SecurityIT.forbiddenByRole</code></td>
+<td>Navegación condicionada por rol</td>
+</tr>
+<tr>
+<td>FR-AUT-05</td>
+<td><code>security</code></td>
+<td><code>AccessGuard</code></td>
+<td><code>SecurityIT.forbiddenByOwnership</code></td>
+<td>Mensaje 403 comprensible</td>
+</tr>
+<tr>
+<td>FR-AUT-06</td>
+<td><code>auth</code></td>
+<td><code>GET /api/v1/auth/me</code></td>
+<td><code>AuthIT.me</code></td>
+<td>Encabezado con usuario</td>
+</tr>
+<tr>
+<td>FR-AFI-01</td>
+<td><code>affiliate</code></td>
+<td><code>GET /api/v1/affiliates/me</code></td>
+<td><code>AffiliateServiceTest</code>, <code>AffiliateIT</code></td>
+<td><code>mfe-affiliates</code> · Perfil</td>
+</tr>
+<tr>
+<td>FR-AFI-02</td>
+<td><code>affiliate</code></td>
+<td><code>PATCH /api/v1/affiliates/me/contact</code></td>
+<td><code>AffiliateContactIT</code></td>
+<td>Formulario de contacto</td>
+</tr>
+<tr>
+<td>FR-AFI-03</td>
+<td><code>affiliate</code></td>
+<td><code>GET /api/v1/affiliates/me/beneficiaries</code></td>
+<td><code>AffiliateIT.beneficiaries</code></td>
+<td><code>mfe-affiliates</code> · Beneficiarios</td>
+</tr>
+<tr>
+<td>FR-AFI-04</td>
+<td><code>subsidy</code></td>
+<td><code>GET /api/v1/affiliates/me/subsidy-requests</code></td>
+<td><code>SubsidyRequestQueryIT</code></td>
+<td><code>mfe-affiliates</code> · Mis solicitudes</td>
+</tr>
+<tr>
+<td>FR-AFI-05</td>
+<td><code>subsidy</code></td>
+<td><code>GET /api/v1/subsidy-requests/{id}</code></td>
+<td><code>SubsidyRequestQueryIT.detail</code></td>
+<td>Detalle con línea de tiempo</td>
+</tr>
+<tr>
+<td>FR-AFI-06</td>
+<td><code>subsidy</code></td>
+<td>detalle + <code>GET .../documents</code></td>
+<td><code>DocumentCompletenessTest</code></td>
+<td>Lista de pendientes</td>
+</tr>
+<tr>
+<td>FR-AFI-07</td>
+<td><code>notification</code></td>
+<td><code>GET/PATCH .../notifications</code></td>
+<td><code>NotificationIT</code></td>
+<td>Campana y bandeja</td>
+</tr>
+<tr>
+<td>FR-AFI-08</td>
+<td><code>dashboard</code></td>
+<td><code>GET /api/v1/affiliates/me/dashboard</code></td>
+<td><code>DashboardServiceTest</code> (StepVerifier)</td>
+<td>Tarjetas del inicio</td>
+</tr>
+<tr>
+<td>FR-EMP-01</td>
+<td><code>company</code></td>
+<td><code>GET /api/v1/companies/me</code></td>
+<td><code>CompanyIT.profile</code></td>
+<td><code>mfe-companies</code> · Empresa</td>
+</tr>
+<tr>
+<td>FR-EMP-02</td>
+<td><code>company</code></td>
+<td><code>GET /api/v1/companies/me/workers</code></td>
+<td><code>CompanyWorkerIT.list</code></td>
+<td>Tabla de trabajadores</td>
+</tr>
+<tr>
+<td>FR-EMP-03</td>
+<td><code>company</code></td>
+<td><code>POST /api/v1/companies/me/workers</code></td>
+<td><code>CompanyWorkerIT.createAndConflict</code></td>
+<td>Formulario de alta</td>
+</tr>
+<tr>
+<td>FR-EMP-04</td>
+<td><code>company</code></td>
+<td><code>PATCH /api/v1/companies/me/workers/{id}</code></td>
+<td><code>CompanyWorkerIT.updateStatus</code></td>
+<td>Acción de estado</td>
+</tr>
+<tr>
+<td>FR-EMP-05</td>
+<td><code>company</code>, <code>subsidy</code></td>
+<td><code>GET /api/v1/companies/me/subsidy-requests</code></td>
+<td><code>CompanySubsidyIT.minimisedData</code></td>
+<td>Bandeja administrativa</td>
+</tr>
+<tr>
+<td>FR-EMP-06</td>
+<td><code>company</code></td>
+<td><code>GET /api/v1/companies/me/reports/summary</code></td>
+<td><code>CompanyReportIT</code></td>
+<td>Reporte con tarjetas</td>
+</tr>
+<tr>
+<td>FR-EMP-07</td>
+<td><code>security</code></td>
+<td><code>AccessGuard.requireCompanyAccess</code></td>
+<td><code>SecurityIT.companyIsolation</code></td>
+<td>403 en UI</td>
+</tr>
+<tr>
+<td>FR-SOL-01</td>
+<td><code>subsidy</code></td>
+<td><code>POST /api/v1/subsidy-requests</code></td>
+<td><code>SubsidyRequestServiceTest</code>, <code>SubsidyFlowIT</code></td>
+<td>Asistente de nueva solicitud</td>
+</tr>
+<tr>
+<td>FR-SOL-02</td>
+<td><code>subsidy</code></td>
+<td>generador de radicado</td>
+<td><code>RequestNumberGeneratorTest</code></td>
+<td>Radicado visible</td>
+</tr>
+<tr>
+<td>FR-SOL-03</td>
+<td><code>subsidy</code>, <code>messaging</code></td>
+<td><code>OutboxService.append</code></td>
+<td><code>OutboxPublisherTest</code></td>
+<td>Evidencia en logs/BD</td>
+</tr>
+<tr>
+<td>FR-SOL-04</td>
+<td><code>subsidy</code></td>
+<td><code>GET /api/v1/subsidy-requests</code></td>
+<td><code>SubsidyRequestQueryIT.filters</code></td>
+<td>Filtros de bandeja</td>
+</tr>
+<tr>
+<td>FR-SOL-05</td>
+<td><code>subsidy</code>, <code>storage</code></td>
+<td><code>POST .../{id}/documents</code></td>
+<td><code>DocumentUploadIT</code>, <code>LocalStorageTest</code></td>
+<td>Carga de documentos</td>
+</tr>
+<tr>
+<td>FR-SOL-06</td>
+<td><code>subsidy</code>, <code>storage</code></td>
+<td>validaciones de archivo</td>
+<td><code>DocumentUploadIT.rejectsInvalid</code></td>
+<td>Mensaje de error</td>
+</tr>
+<tr>
+<td>FR-SOL-07</td>
+<td><code>subsidy</code>, <code>storage</code></td>
+<td><code>GET .../documents/{type}/content</code></td>
+<td><code>DocumentDownloadIT</code></td>
+<td>Enlace de descarga</td>
+</tr>
+<tr>
+<td>FR-SOL-08</td>
+<td><code>subsidy</code></td>
+<td><code>GET .../{id}/history</code></td>
+<td><code>SubsidyHistoryIT</code></td>
+<td>Línea de tiempo</td>
+</tr>
+<tr>
+<td>FR-SOL-09</td>
+<td><code>subsidy</code></td>
+<td><code>POST .../{id}/cancel</code></td>
+<td><code>SubsidyRequestServiceTest.cancel</code></td>
+<td>Acción de cancelación</td>
+</tr>
+<tr>
+<td>FR-SOL-10</td>
+<td><code>subsidy</code></td>
+<td><code>POST .../{id}/review</code></td>
+<td><code>ReviewIT</code></td>
+<td>Swagger / Postman</td>
+</tr>
+<tr>
+<td>FR-SOL-11</td>
+<td><code>subsidy</code></td>
+<td>agregado <code>SubsidyRequest</code></td>
+<td><code>SubsidyRequestTest.transitions</code></td>
+<td>422 en UI</td>
+</tr>
+<tr>
+<td>FR-SOL-12</td>
+<td><code>subsidy</code></td>
+<td><code>GET .../{id}/events</code> (SSE)</td>
+<td><code>StatusStreamIT</code></td>
+<td>Actualización en vivo</td>
+</tr>
+<tr>
+<td>FR-ASY-01</td>
+<td><code>messaging</code></td>
+<td><code>SubsidyMessageHandler</code></td>
+<td><code>SubsidyFlowIT</code></td>
+<td>Estado tras registrar</td>
+</tr>
+<tr>
+<td>FR-ASY-02</td>
+<td><code>messaging</code></td>
+<td><code>TransactionalMessageExecutor</code></td>
+<td><code>IdempotencyIT</code></td>
+<td>Sin duplicados</td>
+</tr>
+<tr>
+<td>FR-ASY-03</td>
+<td><code>messaging</code></td>
+<td><code>MessageProcessingService</code></td>
+<td><code>RetryAndDlqTest</code></td>
+<td><code>failed_message</code></td>
+</tr>
+<tr>
+<td>FR-ASY-04</td>
+<td><code>messaging</code></td>
+<td><code>onDocumentUploaded</code></td>
+<td><code>SubsidyFlowIT</code></td>
+<td>Paso a <code>IN_REVIEW</code></td>
+</tr>
+<tr>
+<td>FR-ASY-05</td>
+<td><code>notification</code></td>
+<td><code>NotificationService</code></td>
+<td><code>NotificationIT</code></td>
+<td>Bandeja</td>
+</tr>
+<tr>
+<td>FR-ASY-06</td>
+<td><code>messaging</code></td>
+<td><code>GET /api/v1/ops/failed-messages</code></td>
+<td><code>OpsIT</code></td>
+<td>Swagger / Postman</td>
+</tr>
+</tbody>
+</table>
+<h2 id="52-requisitos-no-funcionales">5.2 Requisitos no funcionales</h2>
+<table>
+<thead>
+<tr>
+<th>Requisito</th>
+<th>Evidencia prevista</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-ARQ-01…06</td>
+<td><code>pom.xml</code>, estructura de paquetes, ADR, OpenAPI</td>
+</tr>
+<tr>
+<td>NFR-SEG-01…07, 09, 12</td>
+<td><code>SecurityConfig</code>, <code>AccessGuard</code>, <code>MaskingUtils</code>, <code>SecurityIT</code>, <code>DocumentUploadIT</code></td>
+</tr>
+<tr>
+<td>NFR-SEG-08, 10, 11</td>
+<td>Configuración de pipeline, documento de seguridad y hallazgos de análisis</td>
+</tr>
+<tr>
+<td>NFR-PRI-01…05</td>
+<td>Migraciones sintéticas, DTOs, <code>AuditService</code>, documento de privacidad</td>
+</tr>
+<tr>
+<td>NFR-PER-01…06</td>
+<td>Escenario k6 documentado, configuración de Hikari, revisión de consultas</td>
+</tr>
+<tr>
+<td>NFR-REL-01…07</td>
+<td><code>OutboxPublisher</code>, <code>TransactionalMessageExecutor</code>, <code>@Version</code>, Flyway e <code>IdempotencyIT</code></td>
+</tr>
+<tr>
+<td>NFR-OBS-01…05</td>
+<td><code>CorrelationIdFilter</code>, logs, Actuator, historial</td>
+</tr>
+<tr>
+<td>NFR-UX-01…05</td>
+<td>Revisión de UI, pruebas de componentes, checklist WCAG en <code>docs/demo/</code></td>
+</tr>
+<tr>
+<td>NFR-TST-01…06</td>
+<td>Suites Maven y Jest, reporte de ejecución real</td>
+</tr>
+<tr>
+<td>NFR-OPS-01…06</td>
+<td><code>docker-compose.yml</code>, Dockerfiles, pipeline, documento de despliegue</td>
+</tr>
+</tbody>
+</table>
+<h2 id="53-trazabilidad-inversa-entregable-requisitos">5.3 Trazabilidad inversa (entregable → requisitos)</h2>
+<table>
+<thead>
+<tr>
+<th>Entregable</th>
+<th>Requisitos que cubre</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>README.md</code></td>
+<td>O1–O8, NFR-ARQ-04, NFR-OPS-01</td>
+</tr>
+<tr>
+<td>Diagramas Mermaid (arquitectura y flujo)</td>
+<td>O1, O5, O7</td>
+</tr>
+<tr>
+<td>Backend Spring Boot</td>
+<td>FR-AUT, FR-AFI, FR-EMP, FR-SOL, FR-ASY</td>
+</tr>
+<tr>
+<td>Portales Angular</td>
+<td>FR-AFI, FR-EMP, FR-SOL-12, NFR-UX</td>
+</tr>
+<tr>
+<td>Esquema y migraciones</td>
+<td>NFR-REL-07, NFR-PRI-01</td>
+</tr>
+<tr>
+<td>Contrato OpenAPI</td>
+<td>NFR-ARQ-06, FR-SOL-04</td>
+</tr>
+<tr>
+<td>Pruebas JUnit/Mockito/Jest</td>
+<td>NFR-TST</td>
+</tr>
+<tr>
+<td>Docker y compose</td>
+<td>NFR-OPS-01, NFR-OPS-03</td>
+</tr>
+<tr>
+<td>Configuraciones Azure</td>
+<td>O6, NFR-OPS-02, NFR-OPS-05</td>
+</tr>
+<tr>
+<td>Pipeline CI/CD</td>
+<td>NFR-SEG-11, NFR-OPS-04, NFR-OPS-06</td>
+</tr>
+<tr>
+<td>ADR</td>
+<td>NFR-ARQ-05</td>
+</tr>
+<tr>
+<td>Plan de modernización y matriz</td>
+<td>O7</td>
+</tr>
+<tr>
+<td>Postman</td>
+<td>FR-SOL-10, FR-ASY-06</td>
+</tr>
+<tr>
+<td>Guion de demo</td>
+<td>Todos los <code>M</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="54-casos-de-uso">5.4 Casos de uso</h2>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Actor</th>
+<th>Requisitos</th>
+<th>Prueba prevista</th>
+<th>Evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01</td>
+<td>Afiliado</td>
+<td>FR-AFI-01</td>
+<td><code>AffiliateIT.profile</code></td>
+<td><code>mfe-affiliates</code> · Perfil</td>
+</tr>
+<tr>
+<td>UC-02</td>
+<td>Afiliado</td>
+<td>FR-AFI-03</td>
+<td><code>AffiliateIT.beneficiaries</code></td>
+<td><code>mfe-affiliates</code> · Beneficiarios</td>
+</tr>
+<tr>
+<td>UC-03</td>
+<td>Afiliado</td>
+<td>FR-SOL-01, FR-SOL-02, FR-SOL-03</td>
+<td><code>SubsidyFlowIT.create</code></td>
+<td>Asistente de solicitud</td>
+</tr>
+<tr>
+<td>UC-04</td>
+<td>Afiliado</td>
+<td>FR-SOL-05, FR-SOL-06</td>
+<td><code>DocumentUploadIT</code></td>
+<td>Carga de evidencias</td>
+</tr>
+<tr>
+<td>UC-05</td>
+<td>Afiliado / empresa</td>
+<td>FR-AFI-05, FR-SOL-08, FR-SOL-12</td>
+<td><code>StatusStreamIT</code></td>
+<td>Detalle con línea de tiempo</td>
+</tr>
+<tr>
+<td>UC-06</td>
+<td>Afiliado</td>
+<td>FR-SOL-09</td>
+<td><code>SubsidyRequestServiceTest.cancel</code></td>
+<td>Acción de cancelación</td>
+</tr>
+<tr>
+<td>UC-07</td>
+<td>Afiliado</td>
+<td>FR-AFI-07</td>
+<td><code>NotificationIT</code></td>
+<td>Bandeja y contador</td>
+</tr>
+<tr>
+<td>UC-08</td>
+<td>Empresa</td>
+<td>FR-EMP-01</td>
+<td><code>CompanyIT.profile</code></td>
+<td><code>mfe-companies</code> · Empresa</td>
+</tr>
+<tr>
+<td>UC-09</td>
+<td>Empresa</td>
+<td>FR-EMP-02, FR-EMP-03, FR-EMP-04</td>
+<td><code>CompanyWorkerIT</code></td>
+<td>Tabla y alta de trabajadores</td>
+</tr>
+<tr>
+<td>UC-10</td>
+<td>Empresa</td>
+<td>FR-EMP-05</td>
+<td><code>CompanySubsidyIT.minimisedData</code></td>
+<td>Bandeja administrativa</td>
+</tr>
+<tr>
+<td>UC-11</td>
+<td>Empresa / auditor</td>
+<td>FR-EMP-06</td>
+<td><code>CompanyReportIT</code></td>
+<td>Reporte agregado</td>
+</tr>
+<tr>
+<td>UC-12</td>
+<td>Back-office</td>
+<td>FR-SOL-10, FR-SOL-11</td>
+<td><code>ReviewIT</code></td>
+<td>Swagger / Postman</td>
+</tr>
+<tr>
+<td>UC-13</td>
+<td>Consumidor</td>
+<td>FR-ASY-01 a FR-ASY-04</td>
+<td><code>IdempotencyIT</code>, <code>RetryAndDlqTest</code></td>
+<td>Logs y <code>failed_message</code></td>
+</tr>
+</tbody>
+</table>
+<p>El catálogo completo, con flujos alternos y postcondiciones, está en
+<a href="08-casos-de-uso.html">08 · Casos de uso</a>.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
