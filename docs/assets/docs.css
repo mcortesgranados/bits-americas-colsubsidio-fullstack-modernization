@@ -128,3 +128,12 @@ main > h3 + dl dd { margin-left: 20px; }
 .doc-content li { margin: 5px 0; line-height: 1.5; }
 .doc-content hr { border: 0; border-top: 1px solid #e2e8f0; margin: 26px 0; }
 pre.mermaid { background: #fff; border: 1px solid #d7e3f1; border-radius: 8px; padding: 14px; text-align: center; overflow: auto; }
+
+/* Quick access bar: sticky chips generated from the page headings */
+.quick-access { position: sticky; top: 92px; z-index: 60; display: flex; align-items: center; gap: 10px; margin: 0 0 16px; padding: 8px 10px; border: 1px solid #d7e3f1; border-radius: 9px; background: rgba(255, 255, 255, .97); box-shadow: 0 2px 6px rgba(15, 23, 42, .06); }
+.quick-access-label { flex: 0 0 auto; color: #0d47a1; font-size: .78rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+.quick-access-list { display: flex; flex: 1 1 auto; gap: 6px; margin: 0; padding: 2px; overflow-x: auto; list-style: none; scrollbar-width: thin; }
+.quick-access-list li { flex: 0 0 auto; }
+.quick-access-list a { display: inline-block; padding: 4px 9px; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; color: #1565c0; font-size: .78rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.quick-access-list a:hover, .quick-access-list a:focus { border-color: #1565c0; background: #e3f2fd; outline: 2px solid #93c5fd; outline-offset: 1px; }
+@media (max-width: 600px) { .quick-access { top: 108px; flex-direction: column; align-items: stretch; gap: 4px; padding: 6px; } .quick-access-label { font-size: .7rem; } }

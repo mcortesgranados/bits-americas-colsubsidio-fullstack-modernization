@@ -8,6 +8,7 @@ render them when the CDN script is available, while the source remains readable 
 
 from __future__ import annotations
 
+import html as html_lib
 import pathlib
 import re
 
@@ -53,6 +54,7 @@ TEMPLATE = """<!DOCTYPE html>
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
+  {quick}
 {body}
   <div class="footer">
     Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
@@ -62,6 +64,27 @@ TEMPLATE = """<!DOCTYPE html>
 </body>
 </html>
 """
+
+
+def build_quick_access(body: str) -> str:
+    """Builds the sticky quick-access bar from the level-2 headings of the page."""
+    headings = re.findall(r'<h2 id="([^"]+)"[^>]*>(.*?)</h2>', body, re.S)
+    if len(headings) < 2:
+        return ""
+
+    items = []
+    for anchor, raw in headings:
+        text = html_lib.unescape(re.sub(r"<[^>]+>", "", raw)).strip()
+        if len(text) > 44:
+            text = text[:41].rstrip() + "…"
+        items.append(f'<li><a href="#{anchor}">{html_lib.escape(text)}</a></li>')
+
+    return (
+        '<nav class="quick-access" aria-label="Acceso rápido a secciones">'
+        '<span class="quick-access-label">Acceso rápido</span>'
+        f'<ul class="quick-access-list">{"".join(items)}</ul>'
+        "</nav>"
+    )
 
 
 def convert(markdown_text: str) -> tuple[str, str]:
@@ -96,6 +119,7 @@ def main() -> int:
             title=title,
             css=CSS,
             header=HEADER,
+            quick=build_quick_access(html),
             body=html,
             mermaid=MERMAID,
         )
