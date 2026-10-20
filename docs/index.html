@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentación · Plataforma de afiliados, empresas y subsidios</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo"
+       src="assets/manuela-cortes-granados.jpg"
+       alt="Fotografía de perfil de Manuela Cortés Granados"
+       width="200" height="200"
+       loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="#documentacion">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container">
+
+  <h1>Plataforma de afiliados, empresas y subsidios <span class="tag">Prueba técnica</span></h1>
+  <p class="time">Bits Americas · contexto Colsubsidio · línea base documental v1.0 · 20 de octubre de 2026</p>
+
+  <div class="note">
+    <p><strong>Aviso de alcance.</strong> Este repositorio es un prototipo técnico independiente.</p>
+    <ul>
+      <li>No reproduce la arquitectura interna de Colsubsidio ni se conecta a sus sistemas, datos o APIs.</li>
+      <li>Todos los datos son sintéticos: no hay información personal real de afiliados.</li>
+      <li>Las reglas de negocio están marcadas como reglas de demostración, no como políticas oficiales.</li>
+      <li>Ninguna decisión del prototipo equivale a una aprobación real de subsidio.</li>
+    </ul>
+  </div>
+
+  <h2 class="phase" id="documentacion">1. Documentación disponible</h2>
+
+  <dl>
+    <dt><a href="01-contexto-y-alcance.html">01 · Contexto y alcance</a></dt>
+    <dd>Problema, objetivos evaluables, personas y roles, alcance incluido y excluido, supuestos del entorno, reglas de demostración y glosario.</dd>
+
+    <dt><a href="02-requisitos-funcionales.html">02 · Requisitos funcionales</a></dt>
+    <dd>Requisitos por portal con prioridad y criterio de aceptación, flujo de extremo a extremo, máquina de estados y matriz de autorización.</dd>
+
+    <dt><a href="03-requisitos-no-funcionales.html">03 · Requisitos no funcionales</a></dt>
+    <dd>Seguridad, privacidad, rendimiento, confiabilidad, accesibilidad, compatibilidad, pruebas y límites declarados del prototipo.</dd>
+
+    <dt><a href="04-arquitectura-baseline.html">04 · Arquitectura baseline</a></dt>
+    <dd>Diagramas de contexto y contenedores, módulos, decisiones D1–D10, contrato de API, modelo de datos y estructura del repositorio.</dd>
+
+    <dt><a href="05-trazabilidad.html">05 · Trazabilidad</a></dt>
+    <dd>Relación requisito → módulo → endpoint → prueba → pantalla, y trazabilidad inversa de entregables.</dd>
+
+    <dt><a href="06-plan-entrega.html">06 · Plan de entrega</a></dt>
+    <dd>Siete fases con criterios de salida, puertas de calidad, riesgos con mitigación y convenciones de trabajo.</dd>
+
+    <dt><a href="07-inventario-codigo-preliminar.html">07 · Inventario del código</a></dt>
+    <dd>Qué existe hoy, qué falta para compilar y qué ajustes se detectaron al contrastar el esqueleto con los requisitos.</dd>
+
+    <dt><a href="08-casos-de-uso.html">08 · Casos de uso</a> <span class="tag">13 UC</span></dt>
+    <dd>Catálogo formal: actor, precondición, flujo principal, flujos alternos, postcondición y requisitos cubiertos para cada caso.</dd>
+  </dl>
+
+  <div class="note">
+    <p><strong>Casos de uso y fases.</strong> El catálogo <a href="08-casos-de-uso.html">08</a> agrupa 7 casos del afiliado, 4 de la empresa, 1 de back-office y 1 del consumidor de eventos. La implementación por fases, con diagrama de Gantt y matriz de dependencias, está en <a href="06-plan-entrega.html">06</a>.</p>
+  </div>
+
+  <h2 class="phase">2. Estado de las fases</h2>
+
+  <div class="params">
+    <table>
+      <thead>
+        <tr><th>Fase</th><th>Alcance</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Requisitos, alcance y arquitectura</td><td class="success">Completada (v1.0)</td></tr>
+        <tr><td>2</td><td>Backend, modelo de datos y APIs</td><td>En progreso (esqueleto)</td></tr>
+        <tr><td>3</td><td>Seguridad, pruebas y OpenAPI</td><td>Pendiente</td></tr>
+        <tr><td>4</td><td>Portales Angular y Module Federation</td><td>Pendiente</td></tr>
+        <tr><td>5</td><td>Mensajería asíncrona y adaptadores Azure</td><td>Parcial (esqueleto)</td></tr>
+        <tr><td>6</td><td>Docker, CI/CD y Postman</td><td>Pendiente</td></tr>
+        <tr><td>7</td><td>ADR, modernización y guion de demo</td><td>Pendiente</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="phase">3. Decisiones arquitectónicas registradas</h2>
+
+  <div class="params">
+    <table class="traceability">
+      <thead>
+        <tr><th>ID</th><th>Decisión</th><th>Motivo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="req-id">D1</td><td>Monolito modular</td><td>Límites preparados para extraer servicios sin asumir el costo operativo ahora.</td></tr>
+        <tr><td class="req-id">D2</td><td>Spring MVC + JPA, Reactor donde aporta</td><td>CRUD predecible; SSE, composición paralela y salidas con WebClient.</td></tr>
+        <tr><td class="req-id">D3</td><td>Outbox transaccional</td><td>Evita escritura dual y permite auditar y reenviar eventos.</td></tr>
+        <tr><td class="req-id">D4</td><td>JWT HS256 de demostración</td><td>Autocontenido; el resource server es el mismo que usaría un IdP real.</td></tr>
+        <tr><td class="req-id">D5</td><td>Angular 18 + Module Federation webpack</td><td>Versiones alineadas por línea mayor y matriz de compatibilidad explícita.</td></tr>
+        <tr><td class="req-id">D6</td><td>Flyway con SQL portable</td><td>Migraciones revisables y ejecutables en MySQL y H2.</td></tr>
+        <tr><td class="req-id">D7</td><td>Enmascaramiento en DTOs</td><td>El dato sin enmascarar no puede salir por un error de mapeo.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="phase">4. Cómo leer esta documentación</h2>
+
+  <div class="important">
+    <p>Los documentos 01–06 son la línea base aprobada para construir. El documento 07 describe el código que ya existe y <strong>no</strong> se considera entregado hasta contrastarlo con los requisitos.</p>
+  </div>
+
+  <ul class="checklist">
+    <li>Empiece por el documento 01 para entender el alcance y los límites del prototipo.</li>
+    <li>Use el documento 02 como contrato funcional y el 05 para ubicar dónde se prueba cada requisito.</li>
+    <li>Consulte el 04 antes de modificar módulos, contratos o el modelo de datos.</li>
+    <li>El documento 06 indica qué se considera terminado en cada fase.</li>
+  </ul>
+
+  <h2 class="phase">5. Requisitos de entorno</h2>
+
+  <div class="params">
+    <table>
+      <thead>
+        <tr><th>Herramienta</th><th>Versión objetivo</th><th>Uso</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>JDK</td><td>17 (<code>--release 17</code>)</td><td>Backend Spring Boot 3.x</td></tr>
+        <tr><td>Maven</td><td>3.9+</td><td>Construcción y pruebas</td></tr>
+        <tr><td>Node.js</td><td>20 o 22 LTS</td><td>Portales Angular</td></tr>
+        <tr><td>MySQL</td><td>8.0</td><td>Base de datos local</td></tr>
+        <tr><td>Docker</td><td>Opcional</td><td>MySQL y ejecución contenerizada</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code># Base de datos local
+docker compose -f infra/docker-compose.yml up -d mysql
+
+# Backend
+cd backend
+./mvnw spring-boot:run
+
+# Frontend (tres procesos)
+cd frontend
+npm install
+npm run start:shell      # http://localhost:4200
+npm run start:affiliates # http://localhost:4201
+npm run start:companies  # http://localhost:4202</code></pre>
+
+  <p class="time">Los comandos anteriores corresponden a la ejecución prevista al cerrar la Fase 2; el repositorio aún no compila.</p>
+
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+
+</main>
+</body>
+</html>
