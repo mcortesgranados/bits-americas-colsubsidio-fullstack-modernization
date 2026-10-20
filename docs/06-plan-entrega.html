@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Plan de entrega, riesgos y puertas de calidad</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+<h1 id="06-plan-de-entrega-riesgos-y-puertas-de-calidad">06 · Plan de entrega, riesgos y puertas de calidad</h1>
+<h2 id="61-estrategia">6.1 Estrategia</h2>
+<p>Entrega incremental con una <strong>puerta de calidad al final de cada fase</strong>. Ninguna fase se declara
+cerrada sin evidencia ejecutada (compilación, pruebas o revisión), y ninguna prueba se reporta como
+exitosa sin su salida real.</p>
+<p>Prioridad de negocio: primero el flujo vertical completo (registrar → evento → consumidor →
+documentos → consulta → decisión), después los portales y por último la infraestructura de despliegue.
+La documentación de arquitectura y requisitos se cierra antes de escribir código nuevo (fase actual).</p>
+<h2 id="62-fases">6.2 Fases</h2>
+<h3 id="fase-1-alcance-requisitos-y-arquitectura-completada-v10">Fase 1 · Alcance, requisitos y arquitectura — <strong>completada (v1.0)</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Actividad</th>
+<th>Entregable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Contexto, alcance, supuestos y reglas de demostración</td>
+<td><code>docs/01-contexto-y-alcance.md</code></td>
+</tr>
+<tr>
+<td>Requisitos funcionales con criterios de aceptación</td>
+<td><code>docs/02-requisitos-funcionales.md</code></td>
+</tr>
+<tr>
+<td>Requisitos no funcionales medibles</td>
+<td><code>docs/03-requisitos-no-funcionales.md</code></td>
+</tr>
+<tr>
+<td>Arquitectura baseline, contratos y modelo de datos</td>
+<td><code>docs/04-arquitectura-baseline.md</code></td>
+</tr>
+<tr>
+<td>Trazabilidad</td>
+<td><code>docs/05-trazabilidad.md</code></td>
+</tr>
+<tr>
+<td>Plan, riesgos y puertas</td>
+<td><code>docs/06-plan-entrega.md</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterio de salida:</strong> requisitos sin ambigüedad bloqueante, decisiones arquitectónicas registradas y
+matriz de trazabilidad completa.</p>
+<h3 id="fase-2-backend-datos-y-apis">Fase 2 · Backend, datos y APIs</h3>
+<table>
+<thead>
+<tr>
+<th>Actividad</th>
+<th>Entregable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Alinear el esqueleto existente con la arquitectura</td>
+<td>Paquetes y clases ajustados</td>
+</tr>
+<tr>
+<td>Migraciones Flyway portables (esquema + datos sintéticos)</td>
+<td><code>backend/src/main/resources/db/migration</code></td>
+</tr>
+<tr>
+<td>Servicios y controladores de solicitudes, empresas, tablero y operación</td>
+<td><code>subsidy</code>, <code>company</code>, <code>dashboard</code>, <code>ops</code></td>
+</tr>
+<tr>
+<td>Seguridad completa (token, roles, ownership)</td>
+<td><code>auth</code>, <code>security</code></td>
+</tr>
+<tr>
+<td>Contrato OpenAPI</td>
+<td><code>docs/api/openapi.yaml</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterio de salida:</strong> <code>mvn -q verify</code> compila; endpoints principales responden contra MySQL y H2;
+el contrato OpenAPI coincide con los controladores.</p>
+<h3 id="fase-3-seguridad-pruebas-y-documentacion-de-api">Fase 3 · Seguridad, pruebas y documentación de API</h3>
+<table>
+<thead>
+<tr>
+<th>Actividad</th>
+<th>Entregable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pruebas unitarias de dominio, reglas y servicios</td>
+<td>Suite JUnit + Mockito</td>
+</tr>
+<tr>
+<td>Pruebas de integración de seguridad, flujo, idempotencia y documentos</td>
+<td>Suite <code>@SpringBootTest</code></td>
+</tr>
+<tr>
+<td>Swagger UI verificado</td>
+<td>Evidencia de ejecución</td>
+</tr>
+<tr>
+<td>Revisión de enmascaramiento y auditoría</td>
+<td>Checklist de privacidad</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterio de salida:</strong> todas las suites ejecutadas con salida adjunta; cobertura medida y reportada;
+ningún endpoint crítico sin prueba.</p>
+<h3 id="fase-4-portales-angular-y-module-federation">Fase 4 · Portales Angular y Module Federation</h3>
+<table>
+<thead>
+<tr>
+<th>Actividad</th>
+<th>Entregable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Workspace Angular 18 con shell, dos remotos y dos librerías</td>
+<td><code>frontend/</code></td>
+</tr>
+<tr>
+<td>Autenticación, layout, navegación y carga de remotos con manejo de errores</td>
+<td>Shell</td>
+</tr>
+<tr>
+<td>Vistas de afiliados: perfil, beneficiarios, solicitudes, documentos, notificaciones</td>
+<td><code>mfe-affiliates</code></td>
+</tr>
+<tr>
+<td>Vistas de empresas: perfil, trabajadores, bandeja y reporte</td>
+<td><code>mfe-companies</code></td>
+</tr>
+<tr>
+<td>Web Component de estado y tokens de diseño</td>
+<td><code>shared-ui</code></td>
+</tr>
+<tr>
+<td>Pruebas Jest</td>
+<td>Suites por proyecto</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterio de salida:</strong> <code>npm run build</code> de los tres proyectos; <code>npm test</code> en verde con salida real;
+navegación completa con el backend local; checklist WCAG aplicado.</p>
+<h3 id="fase-5-mensajeria-asincrona-y-adaptadores-azure">Fase 5 · Mensajería asíncrona y adaptadores Azure</h3>
+<table>
+<thead>
+<tr>
+<th>Actividad</th>
+<th>Entregable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Outbox, publicador, consumidor, idempotencia y fallidos</td>
+<td><code>messaging</code></td>
+</tr>
+<tr>
+<td>Adaptadores Service Bus, Blob y Function</td>
+<td><code>transport</code>, <code>storage</code>, <code>notification</code></td>
+</tr>
+<tr>
+<td>Function App de ejemplo y configuración de Event Grid</td>
+<td><code>azure/functions</code></td>
+</tr>
+<tr>
+<td>Infraestructura como código</td>
+<td><code>azure/bicep</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterio de salida:</strong> flujo completo en local sin Azure; perfil <code>azure</code> validado por revisión de
+configuración; ninguna ruta local depende de servicios cloud.</p>
+<h3 id="fase-6-docker-cicd-y-operacion">Fase 6 · Docker, CI/CD y operación</h3>
+<table>
+<thead>
+<tr>
+<th>Actividad</th>
+<th>Entregable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dockerfiles multi-stage y compose</td>
+<td><code>infra/</code></td>
+</tr>
+<tr>
+<td>Pipeline con etapas, pruebas, análisis y despliegue</td>
+<td><code>pipelines/</code></td>
+</tr>
+<tr>
+<td>Colección Postman y entornos</td>
+<td><code>postman/</code></td>
+</tr>
+<tr>
+<td>Guía de ejecución y troubleshooting</td>
+<td><code>README.md</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterio de salida:</strong> <code>docker compose up</code> levanta el sistema (si el daemon está disponible);
+pipeline válido sintácticamente con etapas documentadas; colección ejecutable contra local.</p>
+<h3 id="fase-7-modernizacion-adr-y-presentacion">Fase 7 · Modernización, ADR y presentación</h3>
+<table>
+<thead>
+<tr>
+<th>Actividad</th>
+<th>Entregable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR de las decisiones D1–D10</td>
+<td><code>docs/adr/</code></td>
+</tr>
+<tr>
+<td>Plan de migración Java 8/Boot 2.3 → 17/3.x</td>
+<td><code>docs/modernizacion/plan.md</code></td>
+</tr>
+<tr>
+<td>Matriz de compatibilidad y recetas OpenRewrite</td>
+<td><code>docs/modernizacion/</code></td>
+</tr>
+<tr>
+<td>Módulo heredado de laboratorio y su equivalente migrado</td>
+<td><code>legacy-lab/</code></td>
+</tr>
+<tr>
+<td>Guion de demo y escenarios de prueba</td>
+<td><code>docs/demo/</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterio de salida:</strong> un tercero puede ejecutar la migración guiándose por la documentación; el guion
+de demo cubre todos los requisitos <code>M</code>.</p>
+<h2 id="63-puertas-de-calidad-definition-of-done">6.3 Puertas de calidad (definition of done)</h2>
+<p>Un entregable se considera terminado cuando:</p>
+<ol>
+<li>Compila o se ejecuta en el entorno documentado.</li>
+<li>Tiene pruebas automatizadas o una verificación manual reproducible registrada.</li>
+<li>No expone datos personales sin enmascarar ni secretos.</li>
+<li>Está documentado (README, OpenAPI, ADR o guion, según corresponda).</li>
+<li>Su salida real de ejecución está disponible para el evaluador.</li>
+<li>No introduce advertencias críticas de seguridad ni dependencias vulnerables conocidas.</li>
+</ol>
+<h2 id="64-riesgos">6.4 Riesgos</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Riesgo</th>
+<th>Prob.</th>
+<th>Impacto</th>
+<th>Mitigación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td>Incompatibilidad entre Angular 18, plugin de federación y builder de webpack</td>
+<td>Media</td>
+<td>Alto</td>
+<td>Versiones fijadas a la misma línea mayor; build temprano en Fase 4; alternativa documentada (Native Federation) si se cambia de versión</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>El daemon de Docker no está disponible en la máquina de evaluación</td>
+<td>Alta</td>
+<td>Medio</td>
+<td>Pruebas con H2; ejecución local con MySQL instalado; compose documentado como opción</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>Diferencias H2/MySQL en SQL portable</td>
+<td>Media</td>
+<td>Medio</td>
+<td>Evitar sintaxis específica; validar migraciones en ambos; perfil Testcontainers disponible</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>Crecimiento del alcance (back-office, pagos, IdP real)</td>
+<td>Media</td>
+<td>Alto</td>
+<td>Alcance cerrado en el documento 01 y pregunta Q1–Q4 al evaluador</td>
+</tr>
+<tr>
+<td>R5</td>
+<td>Pruebas inestables por asincronía</td>
+<td>Media</td>
+<td>Medio</td>
+<td>Awaitility con timeouts acotados; modo síncrono configurable para pruebas deterministas</td>
+</tr>
+<tr>
+<td>R6</td>
+<td>Fuga de datos personales en DTOs o logs</td>
+<td>Baja</td>
+<td>Alto</td>
+<td>Enmascaramiento por construcción, revisión de DTOs, pruebas específicas</td>
+</tr>
+<tr>
+<td>R7</td>
+<td>Tiempo insuficiente para las siete fases</td>
+<td>Media</td>
+<td>Alto</td>
+<td>Priorización por valor: Fases 1–3 y 5 completas antes que acabados visuales</td>
+</tr>
+<tr>
+<td>R8</td>
+<td>El resultado de una prueba se reporta sin ejecutarla</td>
+<td>Baja</td>
+<td>Alto</td>
+<td>Regla explícita: sin salida real no se declara verde</td>
+</tr>
+</tbody>
+</table>
+<h2 id="65-convenciones-de-trabajo">6.5 Convenciones de trabajo</h2>
+<ul>
+<li><strong>Commits</strong> en formato Conventional Commits (<code>feat:</code>, <code>fix:</code>, <code>test:</code>, <code>docs:</code>, <code>chore:</code>).</li>
+<li><strong>Ramas</strong> cortas por fase o funcionalidad; <code>main</code> siempre ejecutable.</li>
+<li><strong>Configuración</strong> por variables de entorno; sin credenciales en el repositorio.</li>
+<li><strong>Idioma</strong>: documentación y mensajes de negocio en español; código, nombres técnicos y mensajes de
+  error de API en inglés.</li>
+<li><strong>Decisiones</strong>: toda decisión que afecte contratos, seguridad o despliegue se registra en un ADR.</li>
+</ul>
+<h2 id="66-estimacion-de-esfuerzo-referencia">6.6 Estimación de esfuerzo (referencia)</h2>
+<table>
+<thead>
+<tr>
+<th>Fase</th>
+<th>Esfuerzo relativo</th>
+<th>Comentario</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Bajo</td>
+<td>Documentación (completada)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Alto</td>
+<td>Núcleo del backend y modelo de datos</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Alto</td>
+<td>Pruebas y seguridad</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Alto</td>
+<td>Tres proyectos Angular y federación</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Medio</td>
+<td>Mensajería y adaptadores</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Medio</td>
+<td>Contenedores y pipeline</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Medio</td>
+<td>Documentación técnica y guion</td>
+</tr>
+</tbody>
+</table>
+<h2 id="67-hoja-de-ruta-visual">6.7 Hoja de ruta visual</h2>
+<p>Las fechas son de referencia y suponen una dedicación de tiempo completo. La Fase 1 ya está cerrada;
+las demás se encadenan con las dependencias de la sección 6.8.</p>
+<pre class="mermaid">gantt
+    title Implementación por fases
+    dateFormat YYYY-MM-DD
+    axisFormat %d %b
+    excludes weekends
+
+    section Documentación
+    Fase 1 · Requisitos y arquitectura      :done, f1, 2026-10-13, 8d
+
+    section Backend
+    Fase 2 · Modelo de datos y APIs         :active, f2, 2026-10-21, 12d
+    Fase 3 · Seguridad y pruebas            :f3, after f2, 9d
+
+    section Frontend
+    Fase 4 · Portales y federación          :f4, after f3, 12d
+
+    section Integración
+    Fase 5 · Mensajería y Azure             :f5, after f4, 8d
+    Fase 6 · Docker y CI/CD                 :f6, after f5, 6d
+
+    section Cierre
+    Fase 7 · ADR, modernización y demo      :f7, after f6, 7d
+</pre>
+<h2 id="68-dependencias-entre-fases">6.8 Dependencias entre fases</h2>
+<table>
+<thead>
+<tr>
+<th>Fase</th>
+<th>Depende de</th>
+<th>Habilita</th>
+<th>Riesgo si se adelanta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2 · Backend y datos</td>
+<td>1</td>
+<td>3, 4, 5</td>
+<td>Contratos inestables que obligan a rehacer los portales</td>
+</tr>
+<tr>
+<td>3 · Seguridad y pruebas</td>
+<td>2</td>
+<td>4, 6</td>
+<td>Portales contra endpoints sin esquema definitivo</td>
+</tr>
+<tr>
+<td>4 · Portales y federación</td>
+<td>2, 3</td>
+<td>6</td>
+<td>Remotos que consumen DTOs que aún cambian</td>
+</tr>
+<tr>
+<td>5 · Mensajería y Azure</td>
+<td>2</td>
+<td>6</td>
+<td>Consumidores sin esquema de eventos estable</td>
+</tr>
+<tr>
+<td>6 · Docker y CI/CD</td>
+<td>3, 4, 5</td>
+<td>7</td>
+<td>Pipeline que empaqueta artefactos incompletos</td>
+</tr>
+<tr>
+<td>7 · ADR y modernización</td>
+<td>2 a 6</td>
+<td>—</td>
+<td>Decisiones documentadas sobre código que aún cambia</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Camino crítico:</strong> 1 → 2 → 3 → 4 → 6 → 7. La Fase 5 puede ejecutarse en paralelo con la 4 porque solo
+depende del esquema de eventos definido en la Fase 2.</p>
+<p><strong>Regla de solapamiento:</strong> una fase puede iniciarse cuando su predecesora haya superado su puerta de
+calidad, aunque queden tareas de pulido. Lo que no se permite es congelar un contrato de API o de evento
+sin las pruebas de la fase anterior en verde.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
