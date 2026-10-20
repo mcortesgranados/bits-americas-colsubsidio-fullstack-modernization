@@ -1,0 +1,45 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+*.log
+
+# Node / Angular
+node_modules/
+dist/
+coverage/
+.angular/
+.npm/
+npm-debug.log*
+yarn-error.log*
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local runtime data / secrets
+.env
+.env.*
+!.env.example
+target/document-storage/
+local.settings.json
+*.local.yml
+application-local.yml
+application-secret.yml
+
+# Azure / infra outputs
+.azure/
+*.publishsettings
