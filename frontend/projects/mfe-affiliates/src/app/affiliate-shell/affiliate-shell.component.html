@@ -1,0 +1,21 @@
+<nav class="portal-nav" aria-label="Secciones del portal de afiliados">
+  <ul class="portal-nav__list">
+    <li>
+      <a
+        class="portal-nav__link"
+        routerLink="."
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Mi perfil
+      </a>
+    </li>
+    <li>
+      <a class="portal-nav__link" routerLink="beneficiarios" routerLinkActive="is-active">
+        Beneficiarios
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<router-outlet />

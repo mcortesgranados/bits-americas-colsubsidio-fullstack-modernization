@@ -1,0 +1,52 @@
+// Los tokens viven en el shell y llegan al remoto por herencia del documento; se declaran aquí solo como
+// respaldo para cuando el remoto se sirve de forma aislada durante el desarrollo.
+:host {
+  --cs-graphite: #333333;
+  --cs-border: #cccccc;
+  --cs-muted: #5c636a;
+  --cs-accent: #0067b1;
+  --cs-font: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  display: block;
+}
+
+.portal-nav {
+  border-bottom: 1px solid var(--cs-border);
+  margin-bottom: 1.25rem;
+  font-family: var(--cs-font);
+
+  &__list {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 0.9rem;
+    border-bottom: 3px solid transparent;
+    color: var(--cs-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--cs-graphite);
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--cs-accent);
+      outline-offset: -3px;
+    }
+
+    &.is-active {
+      border-bottom-color: var(--cs-graphite);
+      color: var(--cs-graphite);
+    }
+  }
+}

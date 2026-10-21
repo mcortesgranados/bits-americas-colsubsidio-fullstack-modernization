@@ -1,0 +1,68 @@
+<section class="beneficiaries" aria-labelledby="beneficiaries-title" [attr.aria-busy]="loading()">
+  <header class="beneficiaries__header">
+    <div>
+      <p class="beneficiaries__eyebrow">Portal de afiliados</p>
+      <h1 id="beneficiaries-title" class="beneficiaries__title">Mis beneficiarios</h1>
+    </div>
+    <button class="beneficiaries__refresh" type="button" (click)="load()" [disabled]="loading()">
+      Actualizar
+    </button>
+  </header>
+
+  <p class="beneficiaries__status" role="status" aria-live="polite">
+    @if (loading()) {
+      <span>Cargando tus beneficiarios…</span>
+    }
+    @if (errorMessage(); as message) {
+      <span class="beneficiaries__status--error">{{ message }}</span>
+    }
+  </p>
+
+  @if (!loading() && !errorMessage()) {
+    <article class="card" aria-labelledby="list-title">
+      <h2 id="list-title" class="card__title">Personas a tu cargo</h2>
+
+      @if (beneficiaries().length > 0) {
+        <table class="table">
+          <caption class="table__caption">
+            {{ beneficiaries().length }} beneficiario(s) ordenados por nombre. Los documentos se muestran
+            enmascarados.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Parentesco</th>
+              <th scope="col">Documento</th>
+              <th scope="col">Nacimiento</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (person of beneficiaries(); track person.id) {
+              <tr>
+                <th scope="row">{{ person.fullName }}</th>
+                <td>{{ relationshipLabel(person.relationship) }}</td>
+                <td>{{ person.documentNumber ?? 'No registrado' }}</td>
+                <td>{{ person.birthDate ? (person.birthDate | date: 'dd/MM/yyyy') : 'No registrada' }}</td>
+                <td>
+                  <span class="badge" [class.badge--inactive]="person.status !== 'ACTIVE'">
+                    {{ statusLabel(person.status) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="card__empty">
+          No tienes beneficiarios registrados. Si necesitas registrar a alguien, comunícate con la línea de
+          atención; este portal de demostración no permite crear beneficiarios.
+        </p>
+      }
+    </article>
+
+    <p class="beneficiaries__note">
+      El número de documento viaja enmascarado desde la API: el portal nunca recibe el valor completo.
+    </p>
+  }
+</section>

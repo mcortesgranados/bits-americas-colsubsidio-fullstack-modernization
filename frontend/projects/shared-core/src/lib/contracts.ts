@@ -42,6 +42,21 @@ export interface AffiliateProfile {
   updatedAt: string;
 }
 
+/**
+ * Beneficiario registrado por el afiliado (`GET /api/v1/affiliates/me/beneficiaries`).
+ *
+ * `documentNumber` llega enmascarado desde la API: el portal nunca recibe el número completo, así que
+ * no hay ningún punto del frontend donde pueda filtrarse.
+ */
+export interface Beneficiary {
+  id: number;
+  fullName: string;
+  relationship: string;
+  documentNumber: string | null;
+  birthDate: string | null;
+  status: string;
+}
+
 /** Resumen de una solicitud dentro del listado del portal. */
 export interface SubsidyRequestSummary {
   requestNumber: string;
