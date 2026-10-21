@@ -18,6 +18,7 @@ public final class AuditActions {
     public static final String LOGIN_SUCCESS = "LOGIN_SUCCESS";
     public static final String LOGIN_FAILURE = "LOGIN_FAILURE";
     public static final String PII_ACCESS = "PII_ACCESS";
+    public static final String PII_ACCESS_DENIED = "PII_ACCESS_DENIED";
     public static final String AFFILIATE_CONTACT_UPDATED = "AFFILIATE_CONTACT_UPDATED";
     public static final String SUBSIDY_REQUEST_CREATED = "SUBSIDY_REQUEST_CREATED";
     public static final String SUBSIDY_REQUEST_STATUS_CHANGED = "SUBSIDY_REQUEST_STATUS_CHANGED";

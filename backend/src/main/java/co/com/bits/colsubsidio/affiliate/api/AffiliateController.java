@@ -164,7 +164,7 @@ public class AffiliateController {
     @GetMapping("/me/beneficiaries")
     @Operation(summary = "Beneficiaries registered by the authenticated affiliate")
     public List<BeneficiaryResponse> myBeneficiaries() {
-        return affiliateService.beneficiaries(affiliateService.ownProfile().id());
+        return affiliateService.myBeneficiaries();
     }
 
     /**

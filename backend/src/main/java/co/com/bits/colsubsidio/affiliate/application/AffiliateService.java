@@ -20,6 +20,7 @@ import co.com.bits.colsubsidio.security.AccessGuard;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -198,38 +199,55 @@ public class AffiliateService {
     }
 
     /**
-     * Implements the {@code beneficiaries} use case. The method coordinates the domain object, the
-     * repositories and the outbound ports required by the operation, relies on the surrounding transaction
-     * when state is modified, and leaves the HTTP concerns to the controller.
+     * Returns the beneficiaries of the authenticated affiliate (UC-02).
      *
-     * Names, literals and control flow follow the repository conventions so that new contributors can
-     * predict where a behaviour lives without navigating the whole module.
+     * <p>The affiliate id is resolved from the token and never from the request, so the portal cannot ask
+     * for another holder's list even if the client is tampered with. Both endpoints delegate here or to
+     * {@link #beneficiaries(Long)}, which keeps a single implementation of the read and of its audit.
      *
-     * The contract is intentionally narrow: callers should not depend on implementation details that are
-     * not stated in this documentation, because they may change without a breaking announcement.
+     * @return the beneficiaries of the holder, sorted by full name
+     */
+    @Transactional(readOnly = true)
+    public List<BeneficiaryResponse> myBeneficiaries() {
+        return beneficiaries(accessGuard.requireAffiliateId());
+    }
+
+    /**
+     * Lists the beneficiaries of an affiliate, sorted by name and with every document number masked.
      *
-     * Logging, when present, uses structured messages and never includes personal data, document numbers
-     * or credentials.
+     * <p>The ownership check runs before any read, so an affiliate that asks for another holder's
+     * beneficiaries receives a 403 without touching the database. The rejected attempt is audited in its
+     * own transaction, which means the record survives even though the request fails; the successful read
+     * is audited too, because a list of third-party personal data must leave a trail.
      *
-     * The transaction boundary is declared on this member: the unit of work is committed only when the
-     * method returns normally, and any runtime exception triggers a rollback of the entities and of the
-     * outbox rows written during the call.
-     *
-     * @param affiliateId identifier or numeric value resolved by the caller and checked against the
-     * current state
-     *
-     * @return an immutable list with the matching elements, ordered as documented by the query
-     *
-     * @author Manuela Cortés Granados (manuelacortesgranados@gmail)
-     * @since 2026-10-20 11:42 GMT-5 Bogotá D.C. Colombia
+     * @param affiliateId affiliate whose beneficiaries are requested
+     * @return the beneficiaries sorted by full name, never {@code null}
      */
     @Transactional(readOnly = true)
     public List<BeneficiaryResponse> beneficiaries(Long affiliateId) {
-        accessGuard.requireAffiliateAccess(affiliateId);
+        requireBeneficiaryAccess(affiliateId);
         load(affiliateId);
-        return beneficiaries.findByAffiliateIdOrderByFullNameAsc(affiliateId).stream()
+        List<BeneficiaryResponse> result = beneficiaries.findByAffiliateIdOrderByFullNameAsc(affiliateId).stream()
                 .map(BeneficiaryResponse::from)
                 .toList();
+        audit.record(AuditActions.PII_ACCESS, "Affiliate", String.valueOf(affiliateId),
+                "Beneficiary list read: " + result.size() + " record(s), documents masked");
+        return result;
+    }
+
+    /**
+     * Enforces object-level authorization for the beneficiary list and records a denied attempt.
+     *
+     * @param affiliateId affiliate the caller intends to read
+     */
+    private void requireBeneficiaryAccess(Long affiliateId) {
+        try {
+            accessGuard.requireAffiliateAccess(affiliateId);
+        } catch (AccessDeniedException ex) {
+            audit.record(AuditActions.PII_ACCESS_DENIED, "Affiliate", String.valueOf(affiliateId),
+                    "Rejected beneficiary list read: the authenticated user is not the holder");
+            throw ex;
+        }
     }
 
     /**
