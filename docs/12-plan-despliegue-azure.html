@@ -26,7 +26,7 @@
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
-  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#121-estado-actual">12.1 Estado actual</a></li><li><a href="#122-topologia-de-despliegue">12.2 Topología de despliegue</a></li><li><a href="#123-unidades-de-despliegue">12.3 Unidades de despliegue</a></li><li><a href="#124-decision-tres-static-web-apps-no-una">12.4 Decisión: tres Static Web Apps, no una</a></li><li><a href="#125-configuracion-de-las-aplicaciones-estaticas">12.5 Configuración de las aplicaciones es…</a></li><li><a href="#126-secuencia-de-despliegue-de-un-remoto">12.6 Secuencia de despliegue de un remoto</a></li><li><a href="#127-despliegue-del-backend">12.7 Despliegue del backend</a></li><li><a href="#128-orden-de-despliegue-y-compatibilidad">12.8 Orden de despliegue y compatibilidad</a></li><li><a href="#129-identidad-y-secretos">12.9 Identidad y secretos</a></li><li><a href="#1210-base-de-datos-en-el-pipeline">12.10 Base de datos en el pipeline</a></li><li><a href="#1211-pipeline-en-azure-devops">12.11 Pipeline en Azure DevOps</a></li><li><a href="#1212-ambientes-y-promocion">12.12 Ambientes y promoción</a></li><li><a href="#1213-coste-y-free-tier-del-despliegue">12.13 Coste y free tier del despliegue</a></li><li><a href="#1214-riesgos-de-despliegue">12.14 Riesgos de despliegue</a></li><li><a href="#1215-que-falta-para-ejecutar-este-plan">12.15 Qué falta para ejecutar este plan</a></li></ul></nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#121-estado-actual">12.1 Estado actual</a></li><li><a href="#122-topologia-de-despliegue">12.2 Topología de despliegue</a></li><li><a href="#123-unidades-de-despliegue">12.3 Unidades de despliegue</a></li><li><a href="#124-decision-tres-static-web-apps-no-una">12.4 Decisión: tres Static Web Apps, no una</a></li><li><a href="#125-configuracion-de-las-aplicaciones-estaticas">12.5 Configuración de las aplicaciones es…</a></li><li><a href="#126-secuencia-de-despliegue-de-un-remoto">12.6 Secuencia de despliegue de un remoto</a></li><li><a href="#127-despliegue-del-backend">12.7 Despliegue del backend</a></li><li><a href="#128-orden-de-despliegue-y-compatibilidad">12.8 Orden de despliegue y compatibilidad</a></li><li><a href="#129-identidad-y-secretos">12.9 Identidad y secretos</a></li><li><a href="#1210-base-de-datos-en-el-pipeline">12.10 Base de datos en el pipeline</a></li><li><a href="#1211-pipeline-en-azure-devops">12.11 Pipeline en Azure DevOps</a></li><li><a href="#1212-ambientes-y-promocion">12.12 Ambientes y promoción</a></li><li><a href="#1213-coste-y-free-tier-del-despliegue">12.13 Coste y free tier del despliegue</a></li><li><a href="#1214-riesgos-de-despliegue">12.14 Riesgos de despliegue</a></li><li><a href="#1215-que-falta-para-ejecutar-este-plan">12.15 Qué falta para ejecutar este plan</a></li><li><a href="#1216-variante-backend-en-aws-ec2">12.16 Variante: backend en AWS EC2</a></li></ul></nav>
 <p>﻿# 12 · Plan de despliegue en Azure: backend y microfrontends</p>
 <p>Cómo se publica el prototipo cuando exista: qué artefactos se generan, dónde aterrizan, en qué orden se
 promueven y cómo se revierte. El diseño de microfrontends del documento 04 (§4.8) ya decidió tres cosas
@@ -92,6 +92,11 @@ recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local 
 <p>Cuatro artefactos desplegables en tres planos distintos: <strong>estático</strong> (tres Static Web Apps), <strong>cómputo</strong>
 (API y Function) y <strong>datos</strong> (MySQL, Service Bus, Blob). Los tres planos se despliegan por separado
 porque fallan por razones distintas.</p>
+<blockquote>
+<p><strong>Variante en evaluación:</strong> publicar el backend en una instancia <strong>AWS EC2</strong> en lugar de App Service
+mantiene el estático en Azure y mueve solo el plano de cómputo y datos. Está detallada en la
+<a href="#1216-variante-backend-en-aws-ec2">sección 12.16</a>, con lo que se gana y lo que se deja de demostrar.</p>
+</blockquote>
 <h2 id="123-unidades-de-despliegue">12.3 Unidades de despliegue</h2>
 <table>
 <thead>
@@ -152,6 +157,13 @@ porque fallan por razones distintas.</p>
 <td>Suscripción / grupo de recursos</td>
 <td>Commit SHA</td>
 <td>Cuando cambia la topología</td>
+</tr>
+<tr>
+<td><em>Variante:</em> API en EC2</td>
+<td><code>docker compose build</code></td>
+<td>Instancia EC2 + volumen EBS</td>
+<td>SHA de la imagen</td>
+<td>Al elegir la variante 12.16</td>
 </tr>
 </tbody>
 </table>
@@ -718,6 +730,196 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.</p>
 <p>Todo ello corresponde a la Fase 6 del <a href="06-plan-entrega.html">plan de entrega</a>, con la salvedad de que los
 microfrontends se construyen en la Fase 4 y las migraciones en la Fase 2: este documento describe cómo se
 publican, no cuándo se escriben.</p>
+<h2 id="1216-variante-backend-en-aws-ec2">12.16 Variante: backend en AWS EC2</h2>
+<p>Decisión en evaluación: publicar el backend en una instancia <strong>EC2</strong> y dejar el frontend en Azure. Es una
+topología válida técnicamente, pero cambia qué se demuestra. El código no se toca: el backend corre con
+los adaptadores <code>local</code>, que ya existen y son los mismos que se usan en la demo sin Azure.</p>
+<pre class="mermaid">flowchart TB
+    U[Usuario] --&gt; SWA[Azure Static Web Apps&lt;br/&gt;shell + 2 remotos]
+    SWA --&gt;|HTTPS · /api/v1 · CORS| NGX[nginx :443&lt;br/&gt;Let's Encrypt]
+    subgraph AWS[&quot;AWS · EC2 t3.small&quot;]
+        NGX --&gt; API[Spring Boot :8080]
+        API --&gt; DB[(MySQL 8&lt;br/&gt;contenedor)]
+        API --&gt; VOL[(Volumen EBS&lt;br/&gt;documentos)]
+    end
+    SG[Security Group&lt;br/&gt;443 abierto · 22 restringido] -.-&gt; NGX
+    API -. logs .-&gt; CW[CloudWatch Logs]
+</pre>
+<h3 id="configuracion-de-la-instancia">Configuración de la instancia</h3>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Valor</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tipo</td>
+<td><code>t3.small</code> (2 vCPU, 2 GiB)</td>
+<td>Es el mínimo realista para API + MySQL + nginx; con 1 GiB el OOM killer decide por ti</td>
+</tr>
+<tr>
+<td>Sistema operativo</td>
+<td>Amazon Linux 2023 o Ubuntu 24.04 LTS</td>
+<td>Docker y <code>certbot</code> disponibles sin compilar</td>
+</tr>
+<tr>
+<td>Disco</td>
+<td>EBS <code>gp3</code> de 20–30 GB</td>
+<td>Imagen base, imágenes Docker y datos de MySQL</td>
+</tr>
+<tr>
+<td>Contenedores</td>
+<td><code>api</code>, <code>mysql:8.4</code>, <code>nginx</code></td>
+<td>Un <code>docker-compose.yml</code> con <code>restart: unless-stopped</code></td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>443 y 80 abiertos; 22 solo desde la IP del operador</td>
+<td>MySQL nunca expuesto a internet</td>
+</tr>
+<tr>
+<td>TLS</td>
+<td><code>certbot</code> + renovación programada, o ALB si se paga</td>
+<td>Sin TLS, el navegador bloquea la llamada desde Static Web Apps</td>
+</tr>
+<tr>
+<td>Secretos</td>
+<td>Variables en <code>.env</code> con permisos <code>600</code>, o SSM Parameter Store</td>
+<td>No hay identidad administrada equivalente a la de App Service</td>
+</tr>
+<tr>
+<td>Observabilidad</td>
+<td>CloudWatch Logs con el driver <code>awslogs</code></td>
+<td>Sustituye a Application Insights</td>
+</tr>
+<tr>
+<td>Copias</td>
+<td>Snapshot de EBS diario + <code>mysqldump</code> a un bucket</td>
+<td>Sin point-in-time recovery: es la limitación real de esta variante</td>
+</tr>
+</tbody>
+</table>
+<h3 id="que-se-gana-y-que-se-deja-de-demostrar">Qué se gana y qué se deja de demostrar</h3>
+<table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th>App Service (referencia)</th>
+<th>EC2 (variante)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Swap sin corte</td>
+<td>Sí, con slots</td>
+<td><strong>No</strong>: <code>docker compose up -d</code> corta 20–40 s</td>
+</tr>
+<tr>
+<td>Parcheo del sistema</td>
+<td>Gestionado por la plataforma</td>
+<td>A tu cargo</td>
+</tr>
+<tr>
+<td>Certificado TLS</td>
+<td>Gestionado</td>
+<td><code>certbot</code> o ALB de pago</td>
+</tr>
+<tr>
+<td>Secretos</td>
+<td>Key Vault con identidad administrada</td>
+<td>Fichero o SSM; sin rotación automática</td>
+</tr>
+<tr>
+<td>Observabilidad</td>
+<td>Application Insights correlacionado</td>
+<td>CloudWatch, correlación manual</td>
+</tr>
+<tr>
+<td>Infra como código</td>
+<td>Bicep</td>
+<td>Terraform o scripts; la instancia tiende a convertirse en mascota</td>
+</tr>
+<tr>
+<td>Servicios Azure ejercitados</td>
+<td>Service Bus, Blob, Event Grid, Function, Key Vault</td>
+<td><strong>Ninguno</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Ese último renglón es el que importa para la prueba: con el backend en EC2, los requisitos <code>FR-AZR-01</code> a
+<code>FR-AZR-08</code> dejan de tener evidencia ejecutable, porque el transporte local y el sistema de archivos
+local sustituyen a Service Bus y Blob. La mensajería sigue funcionando —outbox, idempotencia, reintentos—
+pero <strong>no se demuestra la integración con Azure</strong>, que es parte explícita del perfil solicitado
+(<a href="09-descripcion-del-cargo.html">09 · Descripción del cargo</a>).</p>
+<h3 id="coste">Coste</h3>
+<table>
+<thead>
+<tr>
+<th>Cuenta</th>
+<th>Esquema</th>
+<th>Consecuencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nueva (2025 en adelante)</td>
+<td>Hasta <strong>200 USD en créditos durante 6 meses</strong>; la cuenta se cierra al agotarlos o a los 6 meses</td>
+<td><code>t3.small</code> consume crédito más rápido que una micro; el EBS y los snapshots también cuentan</td>
+</tr>
+<tr>
+<td>Antigua (free tier clásico)</td>
+<td>750 h al mes de <code>t2.micro</code>/<code>t3.micro</code> durante 12 meses</td>
+<td>1 GiB: cabe la API sola o MySQL solo, no los tres contenedores</td>
+</tr>
+</tbody>
+</table>
+<p>Verificado hoy en <code>aws.amazon.com/free</code>: el modelo vigente para cuentas nuevas es de créditos por 6 meses,
+no las 750 h durante 12 meses del esquema anterior.</p>
+<h3 id="riesgos-de-esta-variante">Riesgos de esta variante</h3>
+<table>
+<thead>
+<tr>
+<th>Riesgo</th>
+<th>Mitigación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Corte en cada despliegue</td>
+<td>Ventana acordada o dos contenedores + cambio de <code>upstream</code> en nginx</td>
+</tr>
+<tr>
+<td>Deriva de configuración</td>
+<td><code>docker-compose.yml</code> versionado y arranque reproducible desde cero</td>
+</tr>
+<tr>
+<td>Pérdida de datos</td>
+<td>Snapshot diario verificado; probar la restauración al menos una vez</td>
+</tr>
+<tr>
+<td>TLS caducado</td>
+<td>Renovación con temporizador y alerta de caducidad a 15 días</td>
+</tr>
+<tr>
+<td>Latencia entre nube y nube</td>
+<td>Elegir región AWS cercana y medir; el JWT no depende del proveedor</td>
+</tr>
+<tr>
+<td>CORS mal configurado</td>
+<td>Origen exacto de Static Web Apps en <code>app.cors.allowed-origins</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="volver-a-azure-sin-reescribir">Volver a Azure sin reescribir</h3>
+<p>El <code>.jar</code> es el mismo. Volver consiste en cambiar <code>DB_URL</code>, <code>APP_MESSAGING_TRANSPORT</code>,
+<code>APP_STORAGE_PROVIDER</code> y <code>APP_NOTIFICATIONS_PROVIDER</code>, apuntar a Key Vault y desplegar en el slot. Por eso
+la variante es reversible: lo que se pierde mientras tanto es la demostración, no el trabajo.</p>
+<p><strong>Decisión pendiente de registrar:</strong> si se confirma EC2, corresponde un <code>ADR-0009</code> con el contexto, las
+consecuencias aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un
+descuido en la entrega.</p>
   <div class="footer">
     Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
   </div>

@@ -42,6 +42,10 @@ Cuatro artefactos desplegables en tres planos distintos: **estático** (tres Sta
 (API y Function) y **datos** (MySQL, Service Bus, Blob). Los tres planos se despliegan por separado
 porque fallan por razones distintas.
 
+> **Variante en evaluación:** publicar el backend en una instancia **AWS EC2** en lugar de App Service
+> mantiene el estático en Azure y mueve solo el plano de cómputo y datos. Está detallada en la
+> [sección 12.16](#1216-variante-backend-en-aws-ec2), con lo que se gana y lo que se deja de demostrar.
+
 ## 12.3 Unidades de despliegue
 
 | Artefacto | Se construye con | Destino | Versionado | Frecuencia |
@@ -53,6 +57,7 @@ porque fallan por razones distintas.
 | Function | `mvn package` del módulo `azure/functions` | Function App (Flex Consumption) | Semver | Cuando cambia la notificación |
 | Esquema | `flyway migrate` | MySQL Flexible Server | `V1`, `V2`, … | Antes del despliegue de la API |
 | Infraestructura | `az deployment sub create` (Bicep) | Suscripción / grupo de recursos | Commit SHA | Cuando cambia la topología |
+| *Variante:* API en EC2 | `docker compose build` | Instancia EC2 + volumen EBS | SHA de la imagen | Al elegir la variante 12.16 |
 
 ## 12.4 Decisión: tres Static Web Apps, no una
 
@@ -405,3 +410,85 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.
 Todo ello corresponde a la Fase 6 del [plan de entrega](06-plan-entrega.md), con la salvedad de que los
 microfrontends se construyen en la Fase 4 y las migraciones en la Fase 2: este documento describe cómo se
 publican, no cuándo se escriben.
+
+## 12.16 Variante: backend en AWS EC2
+
+Decisión en evaluación: publicar el backend en una instancia **EC2** y dejar el frontend en Azure. Es una
+topología válida técnicamente, pero cambia qué se demuestra. El código no se toca: el backend corre con
+los adaptadores `local`, que ya existen y son los mismos que se usan en la demo sin Azure.
+
+```mermaid
+flowchart TB
+    U[Usuario] --> SWA[Azure Static Web Apps<br/>shell + 2 remotos]
+    SWA -->|HTTPS · /api/v1 · CORS| NGX[nginx :443<br/>Let's Encrypt]
+    subgraph AWS["AWS · EC2 t3.small"]
+        NGX --> API[Spring Boot :8080]
+        API --> DB[(MySQL 8<br/>contenedor)]
+        API --> VOL[(Volumen EBS<br/>documentos)]
+    end
+    SG[Security Group<br/>443 abierto · 22 restringido] -.-> NGX
+    API -. logs .-> CW[CloudWatch Logs]
+```
+
+### Configuración de la instancia
+
+| Atributo | Valor | Por qué |
+|----------|-------|---------|
+| Tipo | `t3.small` (2 vCPU, 2 GiB) | Es el mínimo realista para API + MySQL + nginx; con 1 GiB el OOM killer decide por ti |
+| Sistema operativo | Amazon Linux 2023 o Ubuntu 24.04 LTS | Docker y `certbot` disponibles sin compilar |
+| Disco | EBS `gp3` de 20–30 GB | Imagen base, imágenes Docker y datos de MySQL |
+| Contenedores | `api`, `mysql:8.4`, `nginx` | Un `docker-compose.yml` con `restart: unless-stopped` |
+| Entrada | 443 y 80 abiertos; 22 solo desde la IP del operador | MySQL nunca expuesto a internet |
+| TLS | `certbot` + renovación programada, o ALB si se paga | Sin TLS, el navegador bloquea la llamada desde Static Web Apps |
+| Secretos | Variables en `.env` con permisos `600`, o SSM Parameter Store | No hay identidad administrada equivalente a la de App Service |
+| Observabilidad | CloudWatch Logs con el driver `awslogs` | Sustituye a Application Insights |
+| Copias | Snapshot de EBS diario + `mysqldump` a un bucket | Sin point-in-time recovery: es la limitación real de esta variante |
+
+### Qué se gana y qué se deja de demostrar
+
+| Criterio | App Service (referencia) | EC2 (variante) |
+|----------|--------------------------|----------------|
+| Swap sin corte | Sí, con slots | **No**: `docker compose up -d` corta 20–40 s |
+| Parcheo del sistema | Gestionado por la plataforma | A tu cargo |
+| Certificado TLS | Gestionado | `certbot` o ALB de pago |
+| Secretos | Key Vault con identidad administrada | Fichero o SSM; sin rotación automática |
+| Observabilidad | Application Insights correlacionado | CloudWatch, correlación manual |
+| Infra como código | Bicep | Terraform o scripts; la instancia tiende a convertirse en mascota |
+| Servicios Azure ejercitados | Service Bus, Blob, Event Grid, Function, Key Vault | **Ninguno** |
+
+Ese último renglón es el que importa para la prueba: con el backend en EC2, los requisitos `FR-AZR-01` a
+`FR-AZR-08` dejan de tener evidencia ejecutable, porque el transporte local y el sistema de archivos
+local sustituyen a Service Bus y Blob. La mensajería sigue funcionando —outbox, idempotencia, reintentos—
+pero **no se demuestra la integración con Azure**, que es parte explícita del perfil solicitado
+([09 · Descripción del cargo](09-descripcion-del-cargo.md)).
+
+### Coste
+
+| Cuenta | Esquema | Consecuencia |
+|--------|---------|--------------|
+| Nueva (2025 en adelante) | Hasta **200 USD en créditos durante 6 meses**; la cuenta se cierra al agotarlos o a los 6 meses | `t3.small` consume crédito más rápido que una micro; el EBS y los snapshots también cuentan |
+| Antigua (free tier clásico) | 750 h al mes de `t2.micro`/`t3.micro` durante 12 meses | 1 GiB: cabe la API sola o MySQL solo, no los tres contenedores |
+
+Verificado hoy en `aws.amazon.com/free`: el modelo vigente para cuentas nuevas es de créditos por 6 meses,
+no las 750 h durante 12 meses del esquema anterior.
+
+### Riesgos de esta variante
+
+| Riesgo | Mitigación |
+|--------|------------|
+| Corte en cada despliegue | Ventana acordada o dos contenedores + cambio de `upstream` en nginx |
+| Deriva de configuración | `docker-compose.yml` versionado y arranque reproducible desde cero |
+| Pérdida de datos | Snapshot diario verificado; probar la restauración al menos una vez |
+| TLS caducado | Renovación con temporizador y alerta de caducidad a 15 días |
+| Latencia entre nube y nube | Elegir región AWS cercana y medir; el JWT no depende del proveedor |
+| CORS mal configurado | Origen exacto de Static Web Apps en `app.cors.allowed-origins` |
+
+### Volver a Azure sin reescribir
+
+El `.jar` es el mismo. Volver consiste en cambiar `DB_URL`, `APP_MESSAGING_TRANSPORT`,
+`APP_STORAGE_PROVIDER` y `APP_NOTIFICATIONS_PROVIDER`, apuntar a Key Vault y desplegar en el slot. Por eso
+la variante es reversible: lo que se pierde mientras tanto es la demostración, no el trabajo.
+
+**Decisión pendiente de registrar:** si se confirma EC2, corresponde un `ADR-0009` con el contexto, las
+consecuencias aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un
+descuido en la entrega.
