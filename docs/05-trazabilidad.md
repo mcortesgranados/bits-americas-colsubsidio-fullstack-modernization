@@ -16,7 +16,7 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 | FR-AUT-06 | `auth` | `GET /api/v1/auth/me` | `AuthIT.me` | Encabezado con usuario |
 | FR-AFI-01 | `affiliate` | `GET /api/v1/affiliates/me` | `AffiliateServiceTest`, `AffiliateIT` | `mfe-affiliates` · Perfil |
 | FR-AFI-02 | `affiliate` | `PATCH /api/v1/affiliates/me/contact` | `AffiliateContactIT` | Formulario de contacto |
-| FR-AFI-03 | `affiliate` | `GET /api/v1/affiliates/me/beneficiaries` | `AffiliateIT.beneficiaries` | `mfe-affiliates` · Beneficiarios |
+| FR-AFI-03 | `affiliate` | `GET /api/v1/affiliates/me/beneficiaries` | `AffiliateServiceBeneficiariesTest` | `mfe-affiliates` · Beneficiarios |
 | FR-AFI-04 | `subsidy` | `GET /api/v1/affiliates/me/subsidy-requests` | `SubsidyRequestQueryIT` | `mfe-affiliates` · Mis solicitudes |
 | FR-AFI-05 | `subsidy` | `GET /api/v1/subsidy-requests/{id}` | `SubsidyRequestQueryIT.detail` | Detalle con línea de tiempo |
 | FR-AFI-06 | `subsidy` | detalle + `GET .../documents` | `DocumentCompletenessTest` | Lista de pendientes |
@@ -87,7 +87,7 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 | Caso | Actor | Requisitos | Prueba prevista | Evidencia |
 |------|-------|------------|-----------------|-----------|
 | UC-01 | Afiliado | FR-AFI-01 | `AffiliateIT.profile` | `mfe-affiliates` · Perfil |
-| UC-02 | Afiliado | FR-AFI-03 | `AffiliateIT.beneficiaries` | `mfe-affiliates` · Beneficiarios |
+| UC-02 | Afiliado | FR-AFI-03 | `AffiliateServiceBeneficiariesTest` | `mfe-affiliates` · Beneficiarios |
 | UC-03 | Afiliado | FR-SOL-01, FR-SOL-02, FR-SOL-03 | `SubsidyFlowIT.create` | Asistente de solicitud |
 | UC-04 | Afiliado | FR-SOL-05, FR-SOL-06 | `DocumentUploadIT` | Carga de evidencias |
 | UC-05 | Afiliado / empresa | FR-AFI-05, FR-SOL-08, FR-SOL-12 | `StatusStreamIT` | Detalle con línea de tiempo |

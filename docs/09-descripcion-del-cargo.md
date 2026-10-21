@@ -134,14 +134,14 @@ código).
 | Table Storage | Evaluado y descartado para el caso de uso (documentado) | Pendiente |
 | MySQL | Modelo JPA completo; migraciones Flyway pendientes | Parcial |
 | Microfrontends / Module Federation | Decisión D5 y diseño §4.8; sin código | Pendiente |
-| Angular 15+ con RxJS y SASS | Fase 4 del plan | Pendiente |
+| Angular 15+ con RxJS y SASS | Workspace Angular 18.2: shell, remoto de afiliados, perfil (UC-01) y beneficiarios (UC-02) | Parcial |
 | Web components | `cs-status-badge` diseñado, no implementado | Pendiente |
 | Accesibilidad WCAG 2.x | Checklist y criterios en `03` (NFR-UX) | Parcial |
 | Azure Static Web Apps | Fase 6 del plan | Pendiente |
 | Docker | Fase 6 del plan | Pendiente |
 | Azure DevOps Pipelines | Fase 6 del plan | Pendiente |
-| JUnit / Mockito | Fase 3 del plan; sin pruebas ejecutadas | Pendiente |
-| Jest | Fase 4 del plan | Pendiente |
+| JUnit / Mockito | 14 pruebas unitarias en verde (auth, perfil, beneficiarios y solicitudes) | Parcial |
+| Jest | 10 pruebas en verde (auth, perfil, beneficiarios y contratos) | Parcial |
 | Mermaid | Diagramas en `01`, `02`, `04`, `06` y `08` | Cubierto |
 | SOLID y patrones | Módulos por funcionalidad, puertos y adaptadores, DTOs | Parcial |
 | Documentación de decisiones | Documentos 01–08 y decisiones D1–D10 | Cubierto |
@@ -158,7 +158,7 @@ código).
 2. **El backend no compila todavía.** Es un esqueleto avanzado; faltan servicios, migraciones y pruebas (ver documento 07).
 3. **No hay frontend.** Los dos portales, el shell y los remotos son diseño, no implementación.
 4. **No hay despliegue en Azure.** Existen adaptadores y decisiones, no recursos provisionados ni pipeline ejecutado.
-5. **Cobertura de pruebas: cero.** No se declara ninguna suite en verde.
+5. **La cobertura se limita a pruebas unitarias.** Hay 14 pruebas de backend y 10 de frontend en verde, pero no hay pruebas de integración con MySQL ni E2E automatizado.
 6. **Table Storage** se evaluó y se descartó porque el caso de uso no lo requiere; queda como decisión razonada, no como omisión.
 
 ## 9.5 Contexto para asistentes de IA
@@ -167,7 +167,7 @@ Bloque compacto para reutilizar al pedir ayuda a un asistente sobre este reposit
 
 ```text
 Proyecto: prueba técnica Bits Americas para Colsubsidio. Prototipo independiente, datos sintéticos.
-Estado del repositorio: 2026-10-20. UC-01 operativo de punta a punta.
+Estado del repositorio: 2026-10-21. UC-01 y UC-02 operativos de punta a punta.
 Objetivo: modernización Java 8/Boot 2.3 -> Java 17/Boot 3.x, APIs REST + Reactor,
           Azure (Functions, Service Bus, Event Grid, Blob) y dos portales Angular con Module Federation.
 
@@ -186,6 +186,9 @@ Backend (implementado): co.com.bits.colsubsidio, monolito modular por funcionali
   Auth: POST /api/v1/auth/demo-token emite JWT HS256 con claims roles/affiliateId/companyId.
   DemoUserInitializer crea las cuentas desde app.security.demo-users al arrancar (BCrypt).
   UC-01: GET /api/v1/affiliates/me y GET /api/v1/affiliates/me/subsidy-requests.
+  UC-02: GET /api/v1/affiliates/me/beneficiaries y /{id}/beneficiaries, ordenados por nombre,
+    documento enmascarado en el DTO, pertenencia validada por AccessGuard y auditoría
+    PII_ACCESS / PII_ACCESS_DENIED.
   Mensajería: outbox transaccional, idempotencia (message_id, consumer), dead-letter local.
   Adaptadores Azure escritos para Service Bus y Blob; no ejecutados.
 
@@ -195,11 +198,13 @@ Base de datos (implementada): MySQL 8.0.46 local, base colsubsidio_demo.
 
 Frontend (implementado): workspace Angular 18.2 en frontend/.
   shell (4200) + mfe-affiliates (4201) + shared-core (contratos). Module Federation con webpack.
+  Pantallas: perfil (UC-01) y beneficiarios (UC-02); la navegación entre secciones vive en el remoto.
   Manifiesto en runtime (assets/mf.manifest.json) y contractVersion validada antes de montar.
   remoto se carga con loadRemoteModule type:'module' porque remoteEntry.js es ESM.
   URL de API en assets/config.json, inyectada por interceptor; token en sessionStorage.
   Estilos tomados de colsubsidio.com: Poppins, #333333, #212529, #F6F7FC, botones píldora 80px/44px.
-  Sin logotipo de la marca: el portal se declara demostración en cabecera y pie.
+  Logotipo oficial sin modificar (assets/logo-colsubsidio.svg, tomado de colsubsidio.com);
+  el portal se declara demostración en cabecera y pie.
 
 Azure:
   Topología vigente: frontend en 3 Static Web Apps (Free), backend en EC2 t3.small con Docker
@@ -212,7 +217,7 @@ Azure:
     Key Vault sin cuota. MySQL gratis 12 meses. Crédito de 200 USD válido 30 días.
   Nada de Event Grid ni de Functions está implementado todavía: es diseño.
 
-Pruebas ejecutadas: 9 backend (JUnit 5 + Mockito) y 7 frontend (Jest). Ambas suites en verde.
+Pruebas ejecutadas: 14 backend (JUnit 5 + Mockito) y 10 frontend (Jest). Ambas suites en verde.
   Sin prueba de integración con MySQL ni E2E automatizado.
 
 Entorno local, trampas conocidas:

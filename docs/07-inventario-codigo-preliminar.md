@@ -33,8 +33,8 @@ Ningún archivo se elimina sin dejar constancia aquí de la razón y del reempla
 | `audit` | Entidad, repositorio, servicio y catálogo de acciones | Completo | Transacción independiente documentada |
 | `config` | Propiedades tipadas y `WebClient` | Completo | Revisar validación de propiedades obligatorias |
 | `db/migration` | `V1` esquema, `V2` índices, `V3` datos sintéticos | **Completo** | Historial de Flyway marcado en la versión 3 |
-| Pruebas | 9 pruebas de backend (JUnit/Mockito) y 7 de frontend (Jest) | **Parcial** | Faltan integración con MySQL real y E2E |
-| Frontend | Workspace Angular 18 con `shell`, `mfe-affiliates` y `shared-core`; login y perfil implementados | **Parcial** | Faltan el remoto de empresas, los demás UC y el pipeline |
+| Pruebas | 14 pruebas de backend (JUnit/Mockito) y 10 de frontend (Jest) | **Parcial** | Faltan integración con MySQL real y E2E |
+| Frontend | Workspace Angular 18 con `shell`, `mfe-affiliates` y `shared-core`; login, perfil (UC-01) y beneficiarios (UC-02) implementados | **Parcial** | Faltan el remoto de empresas, los demás UC y el pipeline |
 
 ## 7.3 Brechas para que el backend compile
 

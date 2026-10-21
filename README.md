@@ -13,16 +13,17 @@ camino de despliegue en Azure.
 | Fase | Alcance | Estado |
 |------|---------|--------|
 | 1 | Requisitos, alcance y arquitectura | Completada (v1.0) |
-| 2 | Backend, modelo de datos y APIs | En progreso: esquema, semilla y **UC-01 de punta a punta** |
-| 3 | Seguridad, pruebas y OpenAPI | Parcial: JWT, autorización por token y 9 pruebas de backend |
-| 4 | Portales Angular y Module Federation | Parcial: shell, remoto de afiliados, login y perfil |
+| 2 | Backend, modelo de datos y APIs | En progreso: esquema, semilla y **UC-01 y UC-02 de punta a punta** |
+| 3 | Seguridad, pruebas y OpenAPI | Parcial: JWT, autorización por token y 14 pruebas de backend |
+| 4 | Portales Angular y Module Federation | Parcial: shell, remoto de afiliados, login, perfil y beneficiarios |
 | 5 | Mensajería asíncrona y adaptadores Azure | Parcial (esqueleto) |
 | 6 | Docker, CI/CD y Postman | Pendiente |
 | 7 | ADR, modernización y guion de demo | Pendiente |
 
-El backend compila y arranca contra MySQL. El caso de uso **UC-01 (consultar el perfil del afiliado)**
-funciona de punta a punta: login con JWT, perfil enmascarado y listado de solicitudes, verificado en
-navegador. Lo que sigue pendiente está en
+El backend compila y arranca contra MySQL. Los casos de uso **UC-01 (consultar el perfil del afiliado)** y
+**UC-02 (consultar beneficiarios)** funcionan de punta a punta: login con JWT, perfil enmascarado, listado
+de solicitudes y beneficiarios con documento enmascarado, auditoría de la consulta y 403 cuando el
+afiliado pide los beneficiarios de otro. Lo que sigue pendiente está en
 [07 · Inventario del código preliminar](docs/07-inventario-codigo-preliminar.md). No se declara ninguna
 prueba como exitosa sin su ejecución real.
 
@@ -87,7 +88,9 @@ Los estilos del portal se tomaron de los **valores computados del sitio real** (
 
 El azul `#0067B1` se usa solo como acento de foco: aparece como color de marca en la ficha pública, pero no en la portada inspeccionada.
 
-**No se usa el logotipo ni se imita la marca.** El prototipo se identifica como demostración en la cabecera y en el pie, y todos los datos son sintéticos.
+**Logotipo:** se usa el logo oficial de Colsubsidio sin modificarlo (`assets/logo-colsubsidio.svg`,
+181 × 36, descargado de `colsubsidio.com` el 2026-10-21). No se imita la marca: el prototipo se identifica
+como demostración en la cabecera y en el pie, y todos los datos son sintéticos.
 ## Requisitos de entorno (objetivo)
 
 | Herramienta | Versión |
