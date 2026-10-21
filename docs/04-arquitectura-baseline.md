@@ -1,4 +1,4 @@
-# 04 · Arquitectura baseline
+﻿# 04 · Arquitectura baseline
 
 Esta sección fija la arquitectura **antes** de continuar la implementación. Cualquier cambio posterior
 debe reflejarse aquí y en un ADR.
@@ -152,25 +152,13 @@ erDiagram
     PROCESSED_MESSAGE }o--|| OUTBOX_EVENT : "consume"
 ```
 
-| Tabla | Propósito | Claves e índices relevantes |
-|-------|-----------|-----------------------------|
-| `company` | Empresa aportante | PK `id`; único `nit` |
-| `affiliate` | Afiliado | PK `id`; único `document_number`; índice `company_id`, `status` |
-| `beneficiary` | Beneficiario | FK lógica `affiliate_id`; índice por afiliado |
-| `company_worker` | Trabajador de demostración | único `(company_id, document_number)` |
-| `subsidy_request` | Agregado de solicitud | único `request_number`; índices `(affiliate_id, status)`, `(company_id, status)`, `submitted_at`; `version` para concurrencia |
-| `required_document` | Documento exigido | único `(request_id, document_type)` |
-| `request_status_history` | Trazabilidad | índice `request_id, occurred_at` |
-| `notification` | Notificaciones | índice `(affiliate_id, read_flag)` |
-| `app_user` | Identidad de demostración | único `username`; FK lógica a afiliado/empresa |
-| `outbox_event` | Outbox transaccional | PK UUID; índice `(status, created_at)`; `version` |
-| `processed_message` | Idempotencia | único `(message_id, consumer)` |
-| `failed_message` | Cola de fallidos | índice `(resolved, failed_at)` |
-| `audit_log` | Auditoría | índices `occurred_at`, `entity_id`, `action` |
+El detalle —13 tablas, columna por columna, enumeraciones, índices, estado y clasificación de datos
+personales— está en el [11 · Diccionario de datos y modelo entidad-relación](11-diccionario-de-datos.md),
+que es la fuente de verdad del esquema.
 
-Convenciones: `snake_case`, `BIGINT AUTO_INCREMENT` para identidades, `TIMESTAMP` en UTC, `DECIMAL(14,2)`
-para montos, `VARCHAR` para enums (legibilidad y evolución), sin `ON UPDATE CURRENT_TIMESTAMP` para
-mantener portabilidad con H2.
+**Integridad:** las relaciones se modelan con identificadores y las claves foráneas se declaran en la
+migración. La aplicación no usa `@ManyToOne`: valida la pertenencia antes de escribir y nunca borra en
+cascada.
 
 ## 4.8 Frontend y microfrontends
 

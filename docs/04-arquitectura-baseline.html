@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>04 · Arquitectura baseline</title>
+<title>Documentación</title>
 <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
@@ -27,7 +27,7 @@
     <a href="index.html">← Índice de documentación</a>
   </nav>
   <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#41-principios">4.1 Principios</a></li><li><a href="#42-contexto-del-sistema">4.2 Contexto del sistema</a></li><li><a href="#43-contenedores-y-despliegue">4.3 Contenedores y despliegue</a></li><li><a href="#44-modulos-del-backend">4.4 Módulos del backend</a></li><li><a href="#45-decisiones-de-arquitectura-resumen">4.5 Decisiones de arquitectura (resumen)</a></li><li><a href="#46-contrato-de-api">4.6 Contrato de API</a></li><li><a href="#47-modelo-de-datos">4.7 Modelo de datos</a></li><li><a href="#48-frontend-y-microfrontends">4.8 Frontend y microfrontends</a></li><li><a href="#49-correspondencia-azure-local">4.9 Correspondencia Azure ↔ local</a></li><li><a href="#410-estructura-del-repositorio">4.10 Estructura del repositorio</a></li><li><a href="#411-entornos-y-puertos">4.11 Entornos y puertos</a></li><li><a href="#412-estrategia-de-pruebas">4.12 Estrategia de pruebas</a></li><li><a href="#413-modernizacion-resumen-detalle-en-fase-7">4.13 Modernización (resumen; detalle en f…</a></li></ul></nav>
-<h1 id="04-arquitectura-baseline">04 · Arquitectura baseline</h1>
+<p>﻿# 04 · Arquitectura baseline</p>
 <p>Esta sección fija la arquitectura <strong>antes</strong> de continuar la implementación. Cualquier cambio posterior
 debe reflejarse aquí y en un ADR.</p>
 <h2 id="41-principios">4.1 Principios</h2>
@@ -324,85 +324,12 @@ aplicación o una consulta explícita y documentada.</p>
     OUTBOX_EVENT }o--|| SUBSIDY_REQUEST : &quot;publica&quot;
     PROCESSED_MESSAGE }o--|| OUTBOX_EVENT : &quot;consume&quot;
 </pre>
-<table>
-<thead>
-<tr>
-<th>Tabla</th>
-<th>Propósito</th>
-<th>Claves e índices relevantes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>company</code></td>
-<td>Empresa aportante</td>
-<td>PK <code>id</code>; único <code>nit</code></td>
-</tr>
-<tr>
-<td><code>affiliate</code></td>
-<td>Afiliado</td>
-<td>PK <code>id</code>; único <code>document_number</code>; índice <code>company_id</code>, <code>status</code></td>
-</tr>
-<tr>
-<td><code>beneficiary</code></td>
-<td>Beneficiario</td>
-<td>FK lógica <code>affiliate_id</code>; índice por afiliado</td>
-</tr>
-<tr>
-<td><code>company_worker</code></td>
-<td>Trabajador de demostración</td>
-<td>único <code>(company_id, document_number)</code></td>
-</tr>
-<tr>
-<td><code>subsidy_request</code></td>
-<td>Agregado de solicitud</td>
-<td>único <code>request_number</code>; índices <code>(affiliate_id, status)</code>, <code>(company_id, status)</code>, <code>submitted_at</code>; <code>version</code> para concurrencia</td>
-</tr>
-<tr>
-<td><code>required_document</code></td>
-<td>Documento exigido</td>
-<td>único <code>(request_id, document_type)</code></td>
-</tr>
-<tr>
-<td><code>request_status_history</code></td>
-<td>Trazabilidad</td>
-<td>índice <code>request_id, occurred_at</code></td>
-</tr>
-<tr>
-<td><code>notification</code></td>
-<td>Notificaciones</td>
-<td>índice <code>(affiliate_id, read_flag)</code></td>
-</tr>
-<tr>
-<td><code>app_user</code></td>
-<td>Identidad de demostración</td>
-<td>único <code>username</code>; FK lógica a afiliado/empresa</td>
-</tr>
-<tr>
-<td><code>outbox_event</code></td>
-<td>Outbox transaccional</td>
-<td>PK UUID; índice <code>(status, created_at)</code>; <code>version</code></td>
-</tr>
-<tr>
-<td><code>processed_message</code></td>
-<td>Idempotencia</td>
-<td>único <code>(message_id, consumer)</code></td>
-</tr>
-<tr>
-<td><code>failed_message</code></td>
-<td>Cola de fallidos</td>
-<td>índice <code>(resolved, failed_at)</code></td>
-</tr>
-<tr>
-<td><code>audit_log</code></td>
-<td>Auditoría</td>
-<td>índices <code>occurred_at</code>, <code>entity_id</code>, <code>action</code></td>
-</tr>
-</tbody>
-</table>
-<p>Convenciones: <code>snake_case</code>, <code>BIGINT AUTO_INCREMENT</code> para identidades, <code>TIMESTAMP</code> en UTC, <code>DECIMAL(14,2)</code>
-para montos, <code>VARCHAR</code> para enums (legibilidad y evolución), sin <code>ON UPDATE CURRENT_TIMESTAMP</code> para
-mantener portabilidad con H2.</p>
+<p>El detalle —13 tablas, columna por columna, enumeraciones, índices, estado y clasificación de datos
+personales— está en el <a href="11-diccionario-de-datos.html">11 · Diccionario de datos y modelo entidad-relación</a>,
+que es la fuente de verdad del esquema.</p>
+<p><strong>Integridad:</strong> las relaciones se modelan con identificadores y las claves foráneas se declaran en la
+migración. La aplicación no usa <code>@ManyToOne</code>: valida la pertenencia antes de escribir y nunca borra en
+cascada.</p>
 <h2 id="48-frontend-y-microfrontends">4.8 Frontend y microfrontends</h2>
 <pre class="mermaid">flowchart LR
     SHELL[app-shell&lt;br/&gt;layout + auth + router] --&gt;|loadRemoteModule| AFF[mfe-affiliates]

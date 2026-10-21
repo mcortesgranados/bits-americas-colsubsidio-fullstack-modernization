@@ -36,6 +36,10 @@ prueba como exitosa sin su ejecución real.
 | [05 · Trazabilidad](docs/05-trazabilidad.md) | Requisito → módulo → endpoint → prueba → pantalla |
 | [06 · Plan de entrega](docs/06-plan-entrega.md) | Fases, puertas de calidad, riesgos y convenciones |
 | [07 · Inventario del código](docs/07-inventario-codigo-preliminar.md) | Qué existe, qué falta y qué se ajustará |
+| [08 · Casos de uso](docs/08-casos-de-uso.md) | UC-01…UC-13 con flujos, postcondiciones y servicios de Azure |
+| [09 · Descripción del cargo](docs/09-descripcion-del-cargo.md) | JD original, lectura estructurada y cobertura real |
+| [10 · Tecnologías de Azure](docs/10-tecnologias-azure.md) | Inventario de servicios, paridad local y estado |
+| [11 · Diccionario de datos y modelo ER](docs/11-diccionario-de-datos.md) | 13 tablas, columnas, índices, estados y datos personales |
 
 ## Estructura prevista
 

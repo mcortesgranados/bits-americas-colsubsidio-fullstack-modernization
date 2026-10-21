@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentación</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#111-convenciones-del-esquema">11.1 Convenciones del esquema</a></li><li><a href="#112-modelo-entidad-relacion">11.2 Modelo entidad-relación</a></li><li><a href="#113-diccionario-de-datos">11.3 Diccionario de datos</a></li><li><a href="#114-enumeraciones-y-maquina-de-estados">11.4 Enumeraciones y máquina de estados</a></li><li><a href="#115-indices-y-restricciones">11.5 Índices y restricciones</a></li><li><a href="#116-integridad-concurrencia-y-retencion">11.6 Integridad, concurrencia y retención</a></li><li><a href="#117-datos-personales-y-enmascarado">11.7 Datos personales y enmascarado</a></li><li><a href="#118-correspondencia-tabla-modulo-caso-de-uso">11.8 Correspondencia tabla ↔ módulo ↔ cas…</a></li><li><a href="#119-migraciones">11.9 Migraciones</a></li><li><a href="#1110-lo-que-falta-para-que-este-modelo-sea-ejecutable">11.10 Lo que falta para que este modelo s…</a></li></ul></nav>
+<p>﻿# 11 · Diccionario de datos y modelo entidad-relación</p>
+<p>Detalle del modelo relacional del prototipo: qué tablas existen, qué guarda cada columna, qué
+restricciones la protegen y qué columnas contienen datos personales. El diagrama de arquitectura del
+documento 04 muestra el modelo en contexto; <strong>este documento es la fuente de verdad del esquema</strong>.</p>
+<blockquote>
+<p>Derivado de las 13 entidades JPA de <code>backend/src/main/java/.../**/domain</code>. Cuando existan las
+migraciones Flyway, el DDL pasará a ser la fuente de verdad y este diccionario deberá validarse contra
+él. Hoy <strong>no hay migraciones</strong>: la carpeta <code>db/migration</code> no existe (ver 11.9).</p>
+</blockquote>
+<h2 id="111-convenciones-del-esquema">11.1 Convenciones del esquema</h2>
+<table>
+<thead>
+<tr>
+<th>Convención</th>
+<th>Decisión</th>
+<th>Motivo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombres</td>
+<td><code>snake_case</code> en tablas y columnas; <code>camelCase</code> en Java</td>
+<td>El mapeo es explícito con <code>@Column(name = ...)</code>, sin depender de la estrategia de Hibernate</td>
+</tr>
+<tr>
+<td>Claves primarias</td>
+<td><code>BIGINT AUTO_INCREMENT</code>; <code>CHAR(36)</code> UUID en <code>outbox_event</code></td>
+<td>El outbox necesita un id estable generado en la aplicación antes de persistir</td>
+</tr>
+<tr>
+<td>Fechas</td>
+<td><code>TIMESTAMP</code> en UTC (<code>Instant</code>), <code>DATE</code> para fechas sin hora</td>
+<td>Evita ambigüedad horaria entre Bogotá y los servidores</td>
+</tr>
+<tr>
+<td>Montos</td>
+<td><code>DECIMAL(14,2)</code> + columna <code>currency</code></td>
+<td>Precisión exacta; nunca <code>FLOAT</code></td>
+</tr>
+<tr>
+<td>Enumeraciones</td>
+<td><code>VARCHAR(n)</code> con <code>@Enumerated(STRING)</code></td>
+<td>Legible en la base y evolutivo sin <code>ALTER</code> del tipo</td>
+</tr>
+<tr>
+<td>Marcas de tiempo</td>
+<td><code>created_at</code> / <code>updated_at</code> en tablas de negocio, gestionadas por la entidad</td>
+<td>Portabilidad con H2: sin <code>ON UPDATE CURRENT_TIMESTAMP</code></td>
+</tr>
+<tr>
+<td>Concurrencia</td>
+<td><code>version BIGINT</code> con <code>@Version</code> en <code>subsidy_request</code> y <code>outbox_event</code></td>
+<td>Bloqueo optimista; dos analistas no pueden decidir a la vez</td>
+</tr>
+<tr>
+<td>Borrado</td>
+<td>Lógico por estado (<code>INACTIVE</code>, <code>CANCELLED</code>); sin <code>DELETE</code> físico</td>
+<td>La trazabilidad y la auditoría lo exigen</td>
+</tr>
+<tr>
+<td>Charset</td>
+<td><code>utf8mb4</code> / <code>utf8mb4_0900_ai_ci</code></td>
+<td>Acentos y nombres compuestos sin pérdida</td>
+</tr>
+</tbody>
+</table>
+<h2 id="112-modelo-entidad-relacion">11.2 Modelo entidad-relación</h2>
+<pre class="mermaid">erDiagram
+    COMPANY ||--o{ AFFILIATE : &quot;vincula&quot;
+    COMPANY ||--o{ COMPANY_WORKER : &quot;registra&quot;
+    AFFILIATE ||--o{ BENEFICIARY : &quot;tiene&quot;
+    AFFILIATE ||--o{ SUBSIDY_REQUEST : &quot;solicita&quot;
+    AFFILIATE ||--o{ NOTIFICATION : &quot;recibe&quot;
+    SUBSIDY_REQUEST ||--o{ REQUIRED_DOCUMENT : &quot;exige&quot;
+    SUBSIDY_REQUEST ||--o{ REQUEST_STATUS_HISTORY : &quot;traza&quot;
+    SUBSIDY_REQUEST ||--o{ NOTIFICATION : &quot;origina&quot;
+    APP_USER }o--|| AFFILIATE : &quot;representa (opcional)&quot;
+    APP_USER }o--|| COMPANY : &quot;representa (opcional)&quot;
+    OUTBOX_EVENT }o--|| SUBSIDY_REQUEST : &quot;publica&quot;
+    PROCESSED_MESSAGE }o--|| OUTBOX_EVENT : &quot;consume&quot;
+    FAILED_MESSAGE }o--|| OUTBOX_EVENT : &quot;falla&quot;
+    AUDIT_LOG }o--|| SUBSIDY_REQUEST : &quot;audita&quot;
+</pre>
+<table>
+<thead>
+<tr>
+<th>Relación</th>
+<th>Cardinalidad</th>
+<th>Regla de negocio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>company</code> → <code>affiliate</code></td>
+<td>1 : N (opcional)</td>
+<td>Un afiliado puede no tener empresa aportante</td>
+</tr>
+<tr>
+<td><code>company</code> → <code>company_worker</code></td>
+<td>1 : N</td>
+<td>El documento es único dentro de la empresa, no en el sistema</td>
+</tr>
+<tr>
+<td><code>affiliate</code> → <code>beneficiary</code></td>
+<td>1 : N</td>
+<td>Un beneficiario pertenece a un solo afiliado</td>
+</tr>
+<tr>
+<td><code>affiliate</code> → <code>subsidy_request</code></td>
+<td>1 : N</td>
+<td>Un afiliado puede tener varias solicitudes, pero solo una abierta por tipo</td>
+</tr>
+<tr>
+<td><code>subsidy_request</code> → <code>required_document</code></td>
+<td>1 : N</td>
+<td>Un documento por tipo y solicitud (<code>uk_required_document_request_type</code>)</td>
+</tr>
+<tr>
+<td><code>subsidy_request</code> → <code>request_status_history</code></td>
+<td>1 : N</td>
+<td>Toda transición deja una fila; el historial es inmutable</td>
+</tr>
+<tr>
+<td><code>app_user</code> → <code>affiliate</code> / <code>company</code></td>
+<td>N : 1 (opcional)</td>
+<td>La identidad de demostración se vincula a un afiliado, a una empresa o a ninguno (back-office)</td>
+</tr>
+<tr>
+<td><code>outbox_event</code> → <code>processed_message</code></td>
+<td>1 : N</td>
+<td>Un evento puede consumirse por varios consumidores, cada uno idempotente</td>
+</tr>
+<tr>
+<td><code>failed_message</code></td>
+<td>—</td>
+<td>Copia del payload agotados los reintentos; no sustituye al outbox</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Integridad referencial:</strong> las relaciones se modelan con identificadores (<code>affiliate_id</code>, <code>request_id</code>)
+y <strong>no</strong> con <code>@ManyToOne</code>. Las claves foráneas físicas se declaran en la migración, pero la aplicación
+valida la pertenencia antes de escribir (<code>AccessGuard</code>). Es una decisión consciente para mantener los
+agregados pequeños y evitar cargas en cascada.</p>
+<h2 id="113-diccionario-de-datos">11.3 Diccionario de datos</h2>
+<h3 id="1131-identidad">11.3.1 Identidad</h3>
+<p><strong><code>app_user</code></strong> — credenciales de demostración. No representa el directorio corporativo real.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td><code>VARCHAR(60)</code></td>
+<td>No</td>
+<td><code>UNIQUE</code></td>
+<td>Usuario de demostración; coincide con el <code>sub</code> del JWT</td>
+</tr>
+<tr>
+<td><code>password_hash</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Hash BCrypt; <strong>nunca</strong> la contraseña en claro</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td><code>ROLE_AFFILIATE</code>, <code>ROLE_COMPANY</code>, <code>ROLE_BACKOFFICE</code>, <code>ROLE_AUDITOR</code></td>
+<td>Autoridad que viaja en el token</td>
+</tr>
+<tr>
+<td><code>affiliate_id</code></td>
+<td><code>BIGINT</code></td>
+<td>Sí</td>
+<td>FK lógica → <code>affiliate.id</code></td>
+<td>Vínculo cuando el rol es de afiliado</td>
+</tr>
+<tr>
+<td><code>company_id</code></td>
+<td><code>BIGINT</code></td>
+<td>Sí</td>
+<td>FK lógica → <code>company.id</code></td>
+<td>Vínculo cuando el rol es de empresa</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Alta del usuario</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1132-afiliacion">11.3.2 Afiliación</h3>
+<p><strong><code>company</code></strong> — empresa aportante.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>nit</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>UNIQUE</code></td>
+<td>NIT con dígito de verificación; se enmascara al exponerlo</td>
+</tr>
+<tr>
+<td><code>legal_name</code></td>
+<td><code>VARCHAR(160)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Razón social</td>
+</tr>
+<tr>
+<td><code>sector</code></td>
+<td><code>VARCHAR(60)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Sector económico</td>
+</tr>
+<tr>
+<td><code>company_size</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>Sí</td>
+<td><code>MICRO</code>, <code>SMALL</code>, <code>MEDIUM</code>, <code>LARGE</code></td>
+<td>Tamaño declarado</td>
+</tr>
+<tr>
+<td><code>city</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Ciudad de operación</td>
+</tr>
+<tr>
+<td><code>contact_email</code></td>
+<td><code>VARCHAR(120)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Correo de contacto; dato personal</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>ACTIVE</code>, <code>INACTIVE</code>; por defecto <code>ACTIVE</code></td>
+<td>Estado de la empresa</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Alta</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Última modificación</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>affiliate</code></strong> — afiliado titular.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>document_type</code></td>
+<td><code>VARCHAR(10)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Tipo de documento (<code>CC</code>, <code>CE</code>, <code>PA</code>, <code>TI</code>)</td>
+</tr>
+<tr>
+<td><code>document_number</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td><code>UNIQUE</code></td>
+<td>Documento; <strong>dato personal</strong>, se enmascara</td>
+</tr>
+<tr>
+<td><code>first_name</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Nombres</td>
+</tr>
+<tr>
+<td><code>last_name</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Apellidos</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td><code>VARCHAR(120)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Correo; <strong>dato personal</strong></td>
+</tr>
+<tr>
+<td><code>phone</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Teléfono; <strong>dato personal</strong></td>
+</tr>
+<tr>
+<td><code>birth_date</code></td>
+<td><code>DATE</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Fecha de nacimiento; <strong>dato personal</strong></td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td><code>VARCHAR(10)</code></td>
+<td>Sí</td>
+<td><code>A</code>, <code>B</code>, <code>C</code> (regla de demostración)</td>
+<td>Categoría de afiliación</td>
+</tr>
+<tr>
+<td><code>company_id</code></td>
+<td><code>BIGINT</code></td>
+<td>Sí</td>
+<td>FK lógica → <code>company.id</code></td>
+<td>Empresa aportante</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>ACTIVE</code>, <code>SUSPENDED</code>, <code>INACTIVE</code>; por defecto <code>ACTIVE</code></td>
+<td>Estado</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Alta</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Última modificación</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>beneficiary</code></strong> — beneficiario del afiliado.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>affiliate_id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>FK lógica → <code>affiliate.id</code></td>
+<td>Titular</td>
+</tr>
+<tr>
+<td><code>full_name</code></td>
+<td><code>VARCHAR(160)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Nombre completo; <strong>dato personal</strong></td>
+</tr>
+<tr>
+<td><code>relationship</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>HIJO</code>, <code>CONYUGE</code>, <code>COMPANERO_PERMANENTE</code>, <code>PADRE</code>, <code>MADRE</code>, <code>HERMANO</code></td>
+<td>Parentesco</td>
+</tr>
+<tr>
+<td><code>document_number</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Documento; <strong>dato personal</strong>, se enmascara</td>
+</tr>
+<tr>
+<td><code>birth_date</code></td>
+<td><code>DATE</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Fecha de nacimiento; <strong>dato personal</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>company_worker</code></strong> — trabajador de demostración de una empresa.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>company_id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>FK lógica → <code>company.id</code></td>
+<td>Empresa</td>
+</tr>
+<tr>
+<td><code>document_type</code></td>
+<td><code>VARCHAR(10)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Tipo de documento</td>
+</tr>
+<tr>
+<td><code>document_number</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td>Único junto a <code>company_id</code></td>
+<td>Documento; <strong>dato personal</strong></td>
+</tr>
+<tr>
+<td><code>first_name</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Nombres</td>
+</tr>
+<tr>
+<td><code>last_name</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Apellidos</td>
+</tr>
+<tr>
+<td><code>position</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Cargo</td>
+</tr>
+<tr>
+<td><code>hired_at</code></td>
+<td><code>DATE</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Fecha de ingreso</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>ACTIVE</code>, <code>INACTIVE</code>; por defecto <code>ACTIVE</code></td>
+<td>Estado del vínculo</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Alta</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Última modificación</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1133-solicitudes">11.3.3 Solicitudes</h3>
+<p><strong><code>subsidy_request</code></strong> — agregado raíz del flujo. Es la tabla que gobierna el estado.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno; nunca se expone en la API</td>
+</tr>
+<tr>
+<td><code>request_number</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td><code>UNIQUE</code></td>
+<td>Radicado legible que ve el afiliado</td>
+</tr>
+<tr>
+<td><code>affiliate_id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>FK lógica → <code>affiliate.id</code></td>
+<td>Titular que solicita</td>
+</tr>
+<tr>
+<td><code>company_id</code></td>
+<td><code>BIGINT</code></td>
+<td>Sí</td>
+<td>FK lógica → <code>company.id</code></td>
+<td>Empresa asociada al momento de radicar</td>
+</tr>
+<tr>
+<td><code>subsidy_type</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td><code>VIVIENDA</code>, <code>EDUCACION</code>, <code>RECREACION</code>, <code>CREDITO</code></td>
+<td>Tipo de subsidio</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td>Ver 11.4; por defecto <code>DRAFT</code></td>
+<td>Estado vigente</td>
+</tr>
+<tr>
+<td><code>requested_amount</code></td>
+<td><code>DECIMAL(14,2)</code></td>
+<td>No</td>
+<td><code>&gt; 0</code> (validado en <code>SubsidyDemoRules</code>)</td>
+<td>Monto solicitado</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td><code>VARCHAR(3)</code></td>
+<td>No</td>
+<td>Por defecto <code>COP</code></td>
+<td>Moneda</td>
+</tr>
+<tr>
+<td><code>purpose</code></td>
+<td><code>VARCHAR(400)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Motivo declarado por el afiliado</td>
+</tr>
+<tr>
+<td><code>submitted_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Momento de radicación</td>
+</tr>
+<tr>
+<td><code>decided_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Momento de la decisión de demostración</td>
+</tr>
+<tr>
+<td><code>decision_reason</code></td>
+<td><code>VARCHAR(400)</code></td>
+<td>Sí</td>
+<td>10–400 caracteres si hay decisión</td>
+<td>Motivo obligatorio al decidir</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td><code>@Version</code></td>
+<td>Bloqueo optimista</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Alta del registro</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Última modificación</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>required_document</code></strong> — evidencia exigida y su estado.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>request_id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>FK lógica → <code>subsidy_request.id</code>; único junto a <code>document_type</code></td>
+<td>Solicitud</td>
+</tr>
+<tr>
+<td><code>document_type</code></td>
+<td><code>VARCHAR(40)</code></td>
+<td>No</td>
+<td><code>ID_DOCUMENT</code>, <code>INCOME_CERTIFICATE</code>, <code>BANK_CERTIFICATE</code>, <code>ENROLLMENT_CERTIFICATE</code>, <code>FAMILY_COMPOSITION_CERTIFICATE</code></td>
+<td>Tipo exigido</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>PENDING</code>, <code>RECEIVED</code>, <code>VALIDATED</code>, <code>REJECTED</code>; por defecto <code>PENDING</code></td>
+<td>Estado del documento</td>
+</tr>
+<tr>
+<td><code>file_name</code></td>
+<td><code>VARCHAR(200)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Nombre original saneado</td>
+</tr>
+<tr>
+<td><code>storage_key</code></td>
+<td><code>VARCHAR(300)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Clave opaca <code>{requestId}/{uuid}.{ext}</code>; nunca la ruta del afiliado</td>
+</tr>
+<tr>
+<td><code>content_type</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>Sí</td>
+<td>Lista permitida</td>
+<td>MIME validado en la carga</td>
+</tr>
+<tr>
+<td><code>size_bytes</code></td>
+<td><code>BIGINT</code></td>
+<td>Sí</td>
+<td>≤ 5 MB</td>
+<td>Tamaño real</td>
+</tr>
+<tr>
+<td><code>checksum</code></td>
+<td><code>VARCHAR(64)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>SHA-256 hexadecimal calculado en streaming</td>
+</tr>
+<tr>
+<td><code>uploaded_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Momento de la carga</td>
+</tr>
+<tr>
+<td><code>reviewed_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Momento de la revisión</td>
+</tr>
+<tr>
+<td><code>rejection_reason</code></td>
+<td><code>VARCHAR(300)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Motivo si el documento se rechaza</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>request_status_history</code></strong> — trazabilidad inmutable de cada transición.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>request_id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>FK lógica → <code>subsidy_request.id</code></td>
+<td>Solicitud trazada</td>
+</tr>
+<tr>
+<td><code>from_status</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>Sí</td>
+<td>Valores de 11.4; nulo en el alta</td>
+<td>Estado anterior</td>
+</tr>
+<tr>
+<td><code>to_status</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td>Valores de 11.4</td>
+<td>Estado nuevo</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td><code>VARCHAR(400)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Motivo del cambio</td>
+</tr>
+<tr>
+<td><code>actor</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Quién ejecutó la transición (<code>username</code> o <code>system:subsidy-consumer</code>)</td>
+</tr>
+<tr>
+<td><code>correlation_id</code></td>
+<td><code>VARCHAR(64)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Hilo de correlación del request</td>
+</tr>
+<tr>
+<td><code>occurred_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Momento del cambio</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>notification</code></strong> — bandeja in-app del afiliado.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>affiliate_id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>FK lógica → <code>affiliate.id</code></td>
+<td>Destinatario</td>
+</tr>
+<tr>
+<td><code>request_id</code></td>
+<td><code>BIGINT</code></td>
+<td>Sí</td>
+<td>FK lógica → <code>subsidy_request.id</code></td>
+<td>Solicitud que la origina</td>
+</tr>
+<tr>
+<td><code>channel</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>IN_APP</code>, <code>EMAIL_DEMO</code>; por defecto <code>IN_APP</code></td>
+<td>Canal; <code>EMAIL_DEMO</code> se registra, no se envía</td>
+</tr>
+<tr>
+<td><code>subject</code></td>
+<td><code>VARCHAR(160)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Asunto</td>
+</tr>
+<tr>
+<td><code>body</code></td>
+<td><code>VARCHAR(1000)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Cuerpo; sin datos personales completos</td>
+</tr>
+<tr>
+<td><code>read_flag</code></td>
+<td><code>BOOLEAN</code></td>
+<td>No</td>
+<td>—</td>
+<td>Leída o no (la columna no se llama <code>read</code> por ser palabra reservada)</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Alta</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1134-mensajeria-y-auditoria">11.3.4 Mensajería y auditoría</h3>
+<p><strong><code>outbox_event</code></strong> — outbox transaccional. Se escribe en la misma transacción que el agregado.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>CHAR(36)</code></td>
+<td>No</td>
+<td>PK, UUID generado en la aplicación</td>
+<td>Es también el <code>messageId</code> del envelope</td>
+</tr>
+<tr>
+<td><code>aggregate_type</code></td>
+<td><code>VARCHAR(40)</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>SubsidyRequest</code>, <code>Document</code>, …</td>
+</tr>
+<tr>
+<td><code>aggregate_id</code></td>
+<td><code>VARCHAR(40)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Id del agregado afectado</td>
+</tr>
+<tr>
+<td><code>event_type</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td><code>subsidy.request.submitted</code>, <code>subsidy.document.uploaded</code>, …</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td><code>VARCHAR(4000)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Envelope serializado</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>VARCHAR(20)</code></td>
+<td>No</td>
+<td><code>PENDING</code>, <code>PUBLISHED</code>, <code>FAILED</code>; por defecto <code>PENDING</code></td>
+<td>Estado de publicación</td>
+</tr>
+<tr>
+<td><code>attempts</code></td>
+<td><code>INT</code></td>
+<td>No</td>
+<td>—</td>
+<td>Intentos de publicación</td>
+</tr>
+<tr>
+<td><code>correlation_id</code></td>
+<td><code>VARCHAR(64)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Correlación extremo a extremo</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Momento de creación</td>
+</tr>
+<tr>
+<td><code>published_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Momento de publicación efectiva</td>
+</tr>
+<tr>
+<td><code>last_error</code></td>
+<td><code>VARCHAR(500)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Último error de publicación</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td><code>@Version</code></td>
+<td>Evita que dos publicadores tomen la misma fila</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>processed_message</code></strong> — libro de idempotencia del consumidor.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>message_id</code></td>
+<td><code>CHAR(36)</code></td>
+<td>No</td>
+<td>Único junto a <code>consumer</code> (<code>uk_processed_message_id_consumer</code>)</td>
+<td>Id del mensaje ya procesado</td>
+</tr>
+<tr>
+<td><code>consumer</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>Único junto a <code>message_id</code></td>
+<td>Consumidor que lo procesó</td>
+</tr>
+<tr>
+<td><code>outcome</code></td>
+<td><code>VARCHAR(30)</code></td>
+<td>No</td>
+<td><code>PROCESSED</code>, <code>IGNORED</code></td>
+<td>Resultado registrado</td>
+</tr>
+<tr>
+<td><code>processed_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Momento del procesamiento</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>failed_message</code></strong> — dead letter local tras agotar reintentos.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>message_id</code></td>
+<td><code>CHAR(36)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Mensaje que falló</td>
+</tr>
+<tr>
+<td><code>consumer</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Consumidor que agotó los intentos</td>
+</tr>
+<tr>
+<td><code>event_type</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Tipo de evento</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td><code>VARCHAR(4000)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Copia del envelope para reproceso manual</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td><code>VARCHAR(1000)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Último error</td>
+</tr>
+<tr>
+<td><code>attempts</code></td>
+<td><code>INT</code></td>
+<td>No</td>
+<td>—</td>
+<td>Intentos consumidos</td>
+</tr>
+<tr>
+<td><code>failed_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Momento del fallo definitivo</td>
+</tr>
+<tr>
+<td><code>resolved</code></td>
+<td><code>BOOLEAN</code></td>
+<td>No</td>
+<td>—</td>
+<td>Si ya se reprocesó o se descartó</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>audit_log</code></strong> — auditoría append-only de accesos y decisiones.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Tipo</th>
+<th>Nulo</th>
+<th>Restricción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>PK, autoincrement</td>
+<td>Identificador interno</td>
+</tr>
+<tr>
+<td><code>actor</code></td>
+<td><code>VARCHAR(80)</code></td>
+<td>No</td>
+<td>—</td>
+<td>Quién ejecutó la acción</td>
+</tr>
+<tr>
+<td><code>action</code></td>
+<td><code>VARCHAR(60)</code></td>
+<td>No</td>
+<td>Valores de <code>AuditActions</code></td>
+<td><code>PII_ACCESS</code>, <code>SUBSIDY_DECISION</code>, <code>LOGIN_FAILED</code>, …</td>
+</tr>
+<tr>
+<td><code>entity_type</code></td>
+<td><code>VARCHAR(50)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Tipo de entidad afectada</td>
+</tr>
+<tr>
+<td><code>entity_id</code></td>
+<td><code>VARCHAR(50)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Id afectado</td>
+</tr>
+<tr>
+<td><code>correlation_id</code></td>
+<td><code>VARCHAR(64)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Correlación con el request</td>
+</tr>
+<tr>
+<td><code>details</code></td>
+<td><code>VARCHAR(1000)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>Detalle saneado; sin datos personales completos</td>
+</tr>
+<tr>
+<td><code>ip_address</code></td>
+<td><code>VARCHAR(45)</code></td>
+<td>Sí</td>
+<td>—</td>
+<td>IPv4 o IPv6; dato personal de contexto</td>
+</tr>
+<tr>
+<td><code>occurred_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>No</td>
+<td>—</td>
+<td>Momento del evento</td>
+</tr>
+</tbody>
+</table>
+<h2 id="114-enumeraciones-y-maquina-de-estados">11.4 Enumeraciones y máquina de estados</h2>
+<p>Los enums se persisten como texto: si mañana aparece un valor nuevo, la migración es un <code>ALTER</code> de
+longitud, no un cambio de tipo.</p>
+<table>
+<thead>
+<tr>
+<th>Enum</th>
+<th>Valores</th>
+<th>Columna</th>
+<th>Longitud</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AffiliateStatus</code></td>
+<td><code>ACTIVE</code>, <code>SUSPENDED</code>, <code>INACTIVE</code></td>
+<td><code>affiliate.status</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>CompanyStatus</code></td>
+<td><code>ACTIVE</code>, <code>INACTIVE</code></td>
+<td><code>company.status</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>WorkerStatus</code></td>
+<td><code>ACTIVE</code>, <code>INACTIVE</code></td>
+<td><code>company_worker.status</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>CompanySize</code></td>
+<td><code>MICRO</code>, <code>SMALL</code>, <code>MEDIUM</code>, <code>LARGE</code></td>
+<td><code>company.company_size</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>Relationship</code></td>
+<td><code>HIJO</code>, <code>CONYUGE</code>, <code>COMPANERO_PERMANENTE</code>, <code>PADRE</code>, <code>MADRE</code>, <code>HERMANO</code></td>
+<td><code>beneficiary.relationship</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>SubsidyType</code></td>
+<td><code>VIVIENDA</code>, <code>EDUCACION</code>, <code>RECREACION</code>, <code>CREDITO</code></td>
+<td><code>subsidy_request.subsidy_type</code></td>
+<td>30</td>
+</tr>
+<tr>
+<td><code>SubsidyRequestStatus</code></td>
+<td><code>DRAFT</code>, <code>SUBMITTED</code>, <code>PENDING_DOCUMENTS</code>, <code>IN_REVIEW</code>, <code>APPROVED_DEMO</code>, <code>REJECTED_DEMO</code>, <code>CANCELLED</code></td>
+<td><code>subsidy_request.status</code></td>
+<td>30</td>
+</tr>
+<tr>
+<td><code>DocumentType</code></td>
+<td><code>ID_DOCUMENT</code>, <code>INCOME_CERTIFICATE</code>, <code>BANK_CERTIFICATE</code>, <code>ENROLLMENT_CERTIFICATE</code>, <code>FAMILY_COMPOSITION_CERTIFICATE</code></td>
+<td><code>required_document.document_type</code></td>
+<td>40</td>
+</tr>
+<tr>
+<td><code>DocumentStatus</code></td>
+<td><code>PENDING</code>, <code>RECEIVED</code>, <code>VALIDATED</code>, <code>REJECTED</code></td>
+<td><code>required_document.status</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>OutboxStatus</code></td>
+<td><code>PENDING</code>, <code>PUBLISHED</code>, <code>FAILED</code></td>
+<td><code>outbox_event.status</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>Role</code></td>
+<td><code>ROLE_AFFILIATE</code>, <code>ROLE_COMPANY</code>, <code>ROLE_BACKOFFICE</code>, <code>ROLE_AUDITOR</code></td>
+<td><code>app_user.role</code></td>
+<td>30</td>
+</tr>
+<tr>
+<td><code>NotificationChannel</code></td>
+<td><code>IN_APP</code>, <code>EMAIL_DEMO</code></td>
+<td><code>notification.channel</code></td>
+<td>20</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Transiciones de <code>subsidy_request.status</code>.</strong> La tabla replica <code>SubsidyRequest.ALLOWED_TRANSITIONS</code>;
+una transición fuera de esta matriz devuelve <code>422 INVALID_STATUS_TRANSITION</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Desde</th>
+<th>Hacia</th>
+<th>Disparador</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DRAFT</code></td>
+<td><code>SUBMITTED</code></td>
+<td>Radicación del afiliado</td>
+</tr>
+<tr>
+<td><code>SUBMITTED</code></td>
+<td><code>PENDING_DOCUMENTS</code></td>
+<td>El consumidor detecta evidencias faltantes</td>
+</tr>
+<tr>
+<td><code>SUBMITTED</code></td>
+<td><code>IN_REVIEW</code></td>
+<td>El consumidor detecta la evidencia completa</td>
+</tr>
+<tr>
+<td><code>SUBMITTED</code></td>
+<td><code>CANCELLED</code></td>
+<td>Cancelación del afiliado</td>
+</tr>
+<tr>
+<td><code>PENDING_DOCUMENTS</code></td>
+<td><code>IN_REVIEW</code></td>
+<td>Carga del último documento requerido</td>
+</tr>
+<tr>
+<td><code>PENDING_DOCUMENTS</code></td>
+<td><code>CANCELLED</code></td>
+<td>Cancelación del afiliado</td>
+</tr>
+<tr>
+<td><code>IN_REVIEW</code></td>
+<td><code>PENDING_DOCUMENTS</code></td>
+<td>Rechazo de un documento en la revisión</td>
+</tr>
+<tr>
+<td><code>IN_REVIEW</code></td>
+<td><code>APPROVED_DEMO</code></td>
+<td>Decisión de demostración del back-office</td>
+</tr>
+<tr>
+<td><code>IN_REVIEW</code></td>
+<td><code>REJECTED_DEMO</code></td>
+<td>Decisión de demostración del back-office</td>
+</tr>
+<tr>
+<td><code>IN_REVIEW</code></td>
+<td><code>CANCELLED</code></td>
+<td>Cancelación antes de decidir</td>
+</tr>
+<tr>
+<td><code>APPROVED_DEMO</code></td>
+<td>—</td>
+<td>Estado terminal</td>
+</tr>
+<tr>
+<td><code>REJECTED_DEMO</code></td>
+<td>—</td>
+<td>Estado terminal</td>
+</tr>
+<tr>
+<td><code>CANCELLED</code></td>
+<td>—</td>
+<td>Estado terminal</td>
+</tr>
+</tbody>
+</table>
+<p>Los nombres <code>APPROVED_DEMO</code> y <code>REJECTED_DEMO</code> son deliberados: <strong>ninguna decisión del prototipo
+equivale a una aprobación real de subsidio</strong> (regla RD-01 del documento 01).</p>
+<h2 id="115-indices-y-restricciones">11.5 Índices y restricciones</h2>
+<table>
+<thead>
+<tr>
+<th>Tabla</th>
+<th>Nombre</th>
+<th>Columnas</th>
+<th>Tipo</th>
+<th>Origen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app_user</code></td>
+<td><code>uk_app_user_username</code></td>
+<td><code>username</code></td>
+<td>Único</td>
+<td>Entidad</td>
+</tr>
+<tr>
+<td><code>company</code></td>
+<td><code>uk_company_nit</code></td>
+<td><code>nit</code></td>
+<td>Único</td>
+<td>Entidad</td>
+</tr>
+<tr>
+<td><code>affiliate</code></td>
+<td><code>uk_affiliate_document</code></td>
+<td><code>document_number</code></td>
+<td>Único</td>
+<td>Entidad</td>
+</tr>
+<tr>
+<td><code>affiliate</code></td>
+<td><code>idx_affiliate_company_status</code></td>
+<td><code>company_id</code>, <code>status</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>company_worker</code></td>
+<td><code>uk_worker_company_document</code></td>
+<td><code>company_id</code>, <code>document_number</code></td>
+<td>Único</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>subsidy_request</code></td>
+<td><code>uk_request_number</code></td>
+<td><code>request_number</code></td>
+<td>Único</td>
+<td>Entidad</td>
+</tr>
+<tr>
+<td><code>subsidy_request</code></td>
+<td><code>idx_request_affiliate_status</code></td>
+<td><code>affiliate_id</code>, <code>status</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>subsidy_request</code></td>
+<td><code>idx_request_company_status</code></td>
+<td><code>company_id</code>, <code>status</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>subsidy_request</code></td>
+<td><code>idx_request_submitted_at</code></td>
+<td><code>submitted_at</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>required_document</code></td>
+<td><code>uk_required_document_request_type</code></td>
+<td><code>request_id</code>, <code>document_type</code></td>
+<td>Único</td>
+<td>Entidad</td>
+</tr>
+<tr>
+<td><code>request_status_history</code></td>
+<td><code>idx_history_request_occurred</code></td>
+<td><code>request_id</code>, <code>occurred_at</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>notification</code></td>
+<td><code>idx_notification_affiliate_read</code></td>
+<td><code>affiliate_id</code>, <code>read_flag</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>outbox_event</code></td>
+<td><code>idx_outbox_status_created</code></td>
+<td><code>status</code>, <code>created_at</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>processed_message</code></td>
+<td><code>uk_processed_message_id_consumer</code></td>
+<td><code>message_id</code>, <code>consumer</code></td>
+<td>Único</td>
+<td>Entidad</td>
+</tr>
+<tr>
+<td><code>failed_message</code></td>
+<td><code>idx_failed_resolved_at</code></td>
+<td><code>resolved</code>, <code>failed_at</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>audit_log</code></td>
+<td><code>idx_audit_occurred</code></td>
+<td><code>occurred_at</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>audit_log</code></td>
+<td><code>idx_audit_entity</code></td>
+<td><code>entity_type</code>, <code>entity_id</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+<tr>
+<td><code>audit_log</code></td>
+<td><code>idx_audit_action</code></td>
+<td><code>action</code></td>
+<td>Índice</td>
+<td>Migración (pendiente)</td>
+</tr>
+</tbody>
+</table>
+<p>«Entidad» significa que la restricción ya está declarada en el código (<code>unique = true</code> o
+<code>@UniqueConstraint</code>) y Hibernate la conoce. «Migración (pendiente)» son índices de rendimiento que solo
+existen en el diseño: <strong>no están creados en ninguna parte</strong>, porque no hay migraciones todavía.</p>
+<p>Tres índices merecen justificación explícita:</p>
+<ul>
+<li><code>uk_processed_message_id_consumer</code> es el mecanismo de idempotencia. Sin ese único, un reenvío del
+  broker produce doble efecto y la garantía «al menos una vez» se convierte en «al menos dos».</li>
+<li><code>idx_outbox_status_created</code> sostiene el publicador, que consulta <code>PENDING</code> ordenado por antigüedad.</li>
+<li><code>idx_request_affiliate_status</code> resuelve el listado del portal y la regla «una solicitud abierta por
+  tipo» sin recorrer la tabla.</li>
+</ul>
+<h2 id="116-integridad-concurrencia-y-retencion">11.6 Integridad, concurrencia y retención</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Regla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claves foráneas</td>
+<td>Se declaran en la migración con <code>ON DELETE RESTRICT</code>; la aplicación nunca borra en cascada</td>
+</tr>
+<tr>
+<td>Borrado</td>
+<td>No hay <code>DELETE</code> físico de solicitudes ni de historial. <code>CANCELLED</code> e <code>INACTIVE</code> son estados</td>
+</tr>
+<tr>
+<td>Concurrencia</td>
+<td><code>subsidy_request.version</code> y <code>outbox_event.version</code> con bloqueo optimista; el segundo analista recibe <code>409</code></td>
+</tr>
+<tr>
+<td>Transaccionalidad</td>
+<td>Solicitud + documentos + historial + evento de outbox se escriben en <strong>una</strong> transacción</td>
+</tr>
+<tr>
+<td>Retención</td>
+<td><code>outbox_event</code> publicados: 7 días. <code>processed_message</code>: 30 días. <code>failed_message</code> resueltos: 90 días. <code>audit_log</code>: sin purga automática</td>
+</tr>
+<tr>
+<td>Purga</td>
+<td>Tarea programada en Fase 5; hoy no existe</td>
+</tr>
+</tbody>
+</table>
+<h2 id="117-datos-personales-y-enmascarado">11.7 Datos personales y enmascarado</h2>
+<p>El prototipo <strong>no contiene datos reales</strong>: la carga inicial es sintética. Aun así, el modelo se trata
+como si lo fueran, porque el objetivo es demostrar el control.</p>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Clasificación</th>
+<th>Cómo se expone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>affiliate.document_number</code></td>
+<td>Personal identificable</td>
+<td>Enmascarado: <code>****1234</code></td>
+</tr>
+<tr>
+<td><code>affiliate.email</code></td>
+<td>Personal identificable</td>
+<td>Enmascarado: <code>a***@dominio.com</code></td>
+</tr>
+<tr>
+<td><code>affiliate.phone</code></td>
+<td>Personal identificable</td>
+<td>Enmascarado: <code>*** *** 45</code></td>
+</tr>
+<tr>
+<td><code>affiliate.first_name</code>, <code>last_name</code></td>
+<td>Personal</td>
+<td>Visibles solo al titular y al back-office autorizado</td>
+</tr>
+<tr>
+<td><code>affiliate.birth_date</code></td>
+<td>Personal</td>
+<td>Visible al titular; en reportes se usa solo el rango de edad</td>
+</tr>
+<tr>
+<td><code>beneficiary.full_name</code>, <code>document_number</code>, <code>birth_date</code></td>
+<td>Personal de tercero</td>
+<td>Enmascarado en la API de empresa; visible al afiliado titular</td>
+</tr>
+<tr>
+<td><code>company_worker.document_number</code>, <code>first_name</code>, <code>last_name</code></td>
+<td>Personal</td>
+<td>Visible a la empresa propietaria; enmascarado fuera de ella</td>
+</tr>
+<tr>
+<td><code>company.contact_email</code>, <code>company.nit</code></td>
+<td>Corporativo con dato de contacto</td>
+<td>NIT con dígito de verificación enmascarado</td>
+</tr>
+<tr>
+<td><code>app_user.password_hash</code></td>
+<td>Secreto</td>
+<td>Nunca sale de la base</td>
+</tr>
+<tr>
+<td><code>audit_log.ip_address</code></td>
+<td>Personal de contexto</td>
+<td>No se expone por API; solo consulta de auditoría</td>
+</tr>
+<tr>
+<td><code>required_document.storage_key</code></td>
+<td>Metadato sensible</td>
+<td>No se expone: la descarga pasa por la API con control de propiedad</td>
+</tr>
+</tbody>
+</table>
+<p>El enmascarado ocurre en el mapper del DTO (<code>MaskingUtils</code>), no en la consulta. Así, un error de mapeo
+produce un <code>500</code> y no una fuga de datos en claro.</p>
+<h2 id="118-correspondencia-tabla-modulo-caso-de-uso">11.8 Correspondencia tabla ↔ módulo ↔ caso de uso</h2>
+<table>
+<thead>
+<tr>
+<th>Tabla</th>
+<th>Módulo</th>
+<th>Casos de uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app_user</code></td>
+<td><code>auth</code></td>
+<td>Todos (autenticación)</td>
+</tr>
+<tr>
+<td><code>company</code></td>
+<td><code>company</code></td>
+<td>UC-08, UC-09, UC-10, UC-11</td>
+</tr>
+<tr>
+<td><code>affiliate</code></td>
+<td><code>affiliate</code></td>
+<td>UC-01, UC-02, UC-03</td>
+</tr>
+<tr>
+<td><code>beneficiary</code></td>
+<td><code>affiliate</code></td>
+<td>UC-02, UC-03</td>
+</tr>
+<tr>
+<td><code>company_worker</code></td>
+<td><code>company</code></td>
+<td>UC-09, UC-11</td>
+</tr>
+<tr>
+<td><code>subsidy_request</code></td>
+<td><code>subsidy</code></td>
+<td>UC-03, UC-05, UC-06, UC-10, UC-11, UC-12</td>
+</tr>
+<tr>
+<td><code>required_document</code></td>
+<td><code>subsidy</code></td>
+<td>UC-04, UC-12</td>
+</tr>
+<tr>
+<td><code>request_status_history</code></td>
+<td><code>subsidy</code></td>
+<td>UC-05, UC-12, UC-13</td>
+</tr>
+<tr>
+<td><code>notification</code></td>
+<td><code>notification</code></td>
+<td>UC-07, UC-13</td>
+</tr>
+<tr>
+<td><code>outbox_event</code></td>
+<td><code>messaging</code></td>
+<td>UC-03, UC-04, UC-12, UC-13</td>
+</tr>
+<tr>
+<td><code>processed_message</code></td>
+<td><code>messaging</code></td>
+<td>UC-13</td>
+</tr>
+<tr>
+<td><code>failed_message</code></td>
+<td><code>messaging</code></td>
+<td>UC-13</td>
+</tr>
+<tr>
+<td><code>audit_log</code></td>
+<td><code>audit</code></td>
+<td>Transversal (accesos, decisiones, fallos)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="119-migraciones">11.9 Migraciones</h2>
+<p>Flyway está configurado (<code>flyway-core</code> + <code>flyway-mysql</code>, <code>ddl-auto: none</code>, <code>baseline-on-migrate: false</code>)
+pero <strong>la carpeta <code>backend/src/main/resources/db/migration</code> no existe</strong>: no hay una sola migración
+escrita. El esquema de este documento es, por tanto, el objetivo a crear en la Fase 2.</p>
+<table>
+<thead>
+<tr>
+<th>Convención</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ubicación</td>
+<td><code>backend/src/main/resources/db/migration</code></td>
+</tr>
+<tr>
+<td>Nombres</td>
+<td><code>V1__esquema_inicial.sql</code>, <code>V2__indices_de_consulta.sql</code>, <code>V3__datos_sinteticos.sql</code></td>
+</tr>
+<tr>
+<td>Cambios repetibles</td>
+<td><code>R__vista_resumen.sql</code> para vistas y funciones</td>
+</tr>
+<tr>
+<td>Semilla</td>
+<td><code>V3</code> con datos sintéticos; nunca en <code>V1</code></td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Migración compensatoria nueva; no se usa <code>flyway undo</code> (solo disponible en Teams)</td>
+</tr>
+<tr>
+<td>Verificación</td>
+<td><code>mvn flyway:validate</code> en CI antes de empaquetar</td>
+</tr>
+<tr>
+<td>H2</td>
+<td>Mismo DDL donde sea posible; las diferencias de dialecto se aíslan en un <code>application-test.yml</code></td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo del tipo de DDL esperado (extracto, no la migración completa):</p>
+<pre><code class="language-sql">CREATE TABLE subsidy_request (
+    id                BIGINT        NOT NULL AUTO_INCREMENT,
+    request_number    VARCHAR(30)   NOT NULL,
+    affiliate_id      BIGINT        NOT NULL,
+    company_id        BIGINT        NULL,
+    subsidy_type      VARCHAR(30)   NOT NULL,
+    status            VARCHAR(30)   NOT NULL DEFAULT 'DRAFT',
+    requested_amount  DECIMAL(14,2) NOT NULL,
+    currency          VARCHAR(3)    NOT NULL DEFAULT 'COP',
+    purpose           VARCHAR(400)  NULL,
+    submitted_at      TIMESTAMP     NULL,
+    decided_at        TIMESTAMP     NULL,
+    decision_reason   VARCHAR(400)  NULL,
+    version           BIGINT        NOT NULL DEFAULT 0,
+    created_at        TIMESTAMP     NOT NULL,
+    updated_at        TIMESTAMP     NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_request_number (request_number),
+    KEY idx_request_affiliate_status (affiliate_id, status),
+    KEY idx_request_company_status (company_id, status),
+    CONSTRAINT fk_request_affiliate FOREIGN KEY (affiliate_id) REFERENCES affiliate (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+</code></pre>
+<h2 id="1110-lo-que-falta-para-que-este-modelo-sea-ejecutable">11.10 Lo que falta para que este modelo sea ejecutable</h2>
+<table>
+<thead>
+<tr>
+<th>Pendiente</th>
+<th>Impacto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Migraciones <code>V1</code>–<code>V3</code></td>
+<td>Sin ellas no hay tablas: el backend no arranca contra MySQL</td>
+</tr>
+<tr>
+<td>Índices marcados «Migración (pendiente)»</td>
+<td>El esquema funciona pero las consultas del portal hacen recorrido completo</td>
+</tr>
+<tr>
+<td><code>beneficiary</code> sin <code>created_at</code>/<code>updated_at</code></td>
+<td>Inconsistente con el resto de tablas de negocio; decidir si se añaden</td>
+</tr>
+<tr>
+<td><code>company_worker</code> sin <code>unique</code> en la entidad</td>
+<td>La unicidad <code>(company_id, document_number)</code> solo existirá si la crea la migración</td>
+</tr>
+<tr>
+<td>Sin restricciones <code>CHECK</code> en <code>requested_amount &gt; 0</code> y longitudes de motivo</td>
+<td>La validación vive solo en la capa de aplicación</td>
+</tr>
+<tr>
+<td>Sin datos sintéticos versionados</td>
+<td>La demo depende de una carga manual</td>
+</tr>
+<tr>
+<td>Sin prueba de integración contra MySQL real</td>
+<td>H2 no valida el DDL específico del motor (ver 11.9)</td>
+</tr>
+</tbody>
+</table>
+<p>Estos puntos están alineados con las brechas B1–B7 del <a href="07-inventario-codigo-preliminar.html">documento 07</a>
+y con la Fase 2 del <a href="06-plan-entrega.html">plan de entrega</a>.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
