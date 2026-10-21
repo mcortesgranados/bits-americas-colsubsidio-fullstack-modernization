@@ -99,9 +99,9 @@ recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local 
 </pre>
 <p>Línea continua: <strong>topología vigente</strong>. Línea punteada: <strong>alternativa en Azure</strong>, que se activa cambiando
 las variables de entorno del backend y publicándolo en App Service.</p>
-<p>Cuatro artefactos desplegables en tres planos distintos: <strong>estático</strong> (tres Static Web Apps), <strong>cómputo</strong>
-(la API) y <strong>datos</strong> (MySQL y el volumen de evidencias). Los planos se despliegan por separado porque
-fallan por razones distintas. En la topología vigente no hay Service Bus, ni Blob, ni Function: el
+<p>Los artefactos se agrupan en tres planos: <strong>estático</strong> (tres Static Web Apps), <strong>cómputo</strong> (la API) y
+<strong>datos</strong> (MySQL y el volumen de evidencias). Se despliegan por separado porque fallan por razones
+distintas. En la topología vigente no hay Service Bus, ni Blob, ni Function: el
 backend usa los adaptadores locales —outbox en proceso y sistema de archivos— y por eso el
 <code>docker-compose.yml</code> es a la vez entorno local y artefacto de despliegue.</p>
 <blockquote>
@@ -549,6 +549,38 @@ stages:
                     app_location: frontend/dist/mfe-companies
                     azure_static_web_apps_api_token: $(SWA_MFE_COMPANIES_TOKEN)
 </code></pre>
+<blockquote>
+<p>El YAML anterior publica en App Service: corresponde a la <strong>alternativa Azure</strong>. La topología vigente
+sustituye la etapa <code>DeployApi</code> por la de la sección 12.11.1; el resto del pipeline no cambia.</p>
+</blockquote>
+<h3 id="12111-etapa-de-despliegue-en-ec2">12.11.1 Etapa de despliegue en EC2</h3>
+<pre><code class="language-yaml">  - stage: DeployEc2
+    dependsOn: Migrate
+    jobs:
+      - deployment: Api
+        environment: colsubsidio-demo-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: docker build -t api:$(Build.BuildId) backend/
+                - script: |
+                    aws ecr get-login-password | docker login --username AWS --password-stdin $(ECR_HOST)
+                    docker tag api:$(Build.BuildId) $(ECR_HOST)/api:$(Build.BuildId)
+                    docker push $(ECR_HOST)/api:$(Build.BuildId)
+                - task: SSH@0            # sustituible por SSM Run Command si no se quiere abrir el 22
+                  inputs:
+                    sshEndpoint: ec2-demo
+                    runOptions: inline
+                    inline: |
+                      cd /opt/colsubsidio
+                      sed -i &quot;s/^API_TAG=.*/API_TAG=$(Build.BuildId)/&quot; .env
+                      docker compose pull api &amp;&amp; docker compose up -d api
+                      curl -fsS --retry 12 --retry-delay 5 http://localhost:8080/actuator/health
+</code></pre>
+<p>La imagen se etiqueta con el número de build, y el <code>.env</code> de la instancia fija qué etiqueta corre: volver
+a la anterior es cambiar <code>API_TAG</code> y repetir <code>docker compose up -d api</code>. MySQL no se recrea en cada
+despliegue, solo la API.</p>
 <p><strong>Puertas:</strong> la etapa <code>Migrate</code> y la <code>DeployApi</code> usan un <code>environment</code> con aprobación, de modo que la
 migración de esquema nunca se ejecuta sola. Los tokens de Static Web Apps son secretos de pipeline y se
 rotan desde el portal.</p>
@@ -576,16 +608,16 @@ module</code> en consola—. Un despliegue que compila pero rompe la federación
 </tr>
 <tr>
 <td>Staging</td>
-<td>Build servido localmente o app de preproducción</td>
-<td>Slot <code>staging</code></td>
-<td>Misma base, datos sintéticos</td>
-<td>Validar antes del swap</td>
+<td>Build servido localmente</td>
+<td><code>docker compose</code> en la instancia de pruebas o en local</td>
+<td>Base de pruebas con datos sintéticos</td>
+<td>Validar antes de publicar</td>
 </tr>
 <tr>
 <td>Producción</td>
 <td>Tres Static Web Apps</td>
-<td>Slot <code>production</code></td>
-<td>MySQL Flexible + Blob + Service Bus</td>
+<td>EC2 <code>t3.small</code> con Docker Compose (alternativa: slot <code>production</code>)</td>
+<td>MySQL en contenedor + volumen EBS (alternativa: MySQL Flexible + Blob)</td>
 <td>Demo desplegada</td>
 </tr>
 </tbody>
@@ -608,7 +640,7 @@ configuración (<code>DB_URL</code>, orígenes del manifiesto, cadenas de Applic
 <td>100 GB de banda al mes <strong>por suscripción</strong>, compartidos por las tres apps; 0,5 GB por app; sin SLA</td>
 </tr>
 <tr>
-<td>EC2   3.small (API + MySQL + nginx)</td>
+<td>EC2 <code>t3.small</code> (API + MySQL + nginx)</td>
 <td>Según cuenta</td>
 <td>Cuentas nuevas: hasta 200 USD en créditos por 6 meses. Cuentas antiguas: 750 h de micro, insuficientes para los tres contenedores</td>
 </tr>
@@ -706,8 +738,13 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.</p>
 </tr>
 <tr>
 <td>Una sola instancia en producción</td>
-<td>El swap o un reinicio deja sin servicio</td>
-<td>Mínimo dos instancias en el plan Standard</td>
+<td>Un reinicio o el swap deja sin servicio</td>
+<td>En Azure, mínimo dos instancias; en EC2, <code>restart: unless-stopped</code> y health check</td>
+</tr>
+<tr>
+<td>Instancia EC2 sin aprovisionamiento versionado</td>
+<td>Deriva imposible de reconstruir</td>
+<td><code>docker-compose.yml</code> y <code>user-data</code> en el repositorio</td>
 </tr>
 <tr>
 <td>Límite de 100 GB de banda</td>
@@ -753,10 +790,6 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.</p>
 <tr>
 <td><code>infra/</code> con Bicep (SWA × 3 y App Service, para la alternativa Azure)</td>
 <td>La vuelta a Azure en un comando</td>
-</tr>
-<tr>
-<td>Migraciones Flyway <code>V1</code>–<code>V3</code></td>
-<td>La etapa <code>Migrate</code></td>
 </tr>
 <tr>
 <td>Migraciones Flyway <code>V1</code>–<code>V3</code></td>
@@ -889,8 +922,8 @@ URL no está en <code>environment.ts</code>, está en un JSON que se sirve con e
 <thead>
 <tr>
 <th>Criterio</th>
-<th>App Service (referencia)</th>
-<th>EC2 (variante)</th>
+<th>App Service (alternativa)</th>
+<th>EC2 (vigente)</th>
 </tr>
 </thead>
 <tbody>
@@ -960,7 +993,7 @@ pero <strong>no se demuestra la integración con Azure</strong>, que es parte ex
 </table>
 <p>Verificado hoy en <code>aws.amazon.com/free</code>: el modelo vigente para cuentas nuevas es de créditos por 6 meses,
 no las 750 h durante 12 meses del esquema anterior.</p>
-<h3 id="riesgos-de-esta-variante">Riesgos de esta variante</h3>
+<h3 id="riesgos-de-la-topologia-vigente">Riesgos de la topología vigente</h3>
 <table>
 <thead>
 <tr>
@@ -999,9 +1032,9 @@ no las 750 h durante 12 meses del esquema anterior.</p>
 <p>El <code>.jar</code> es el mismo. Volver consiste en cambiar <code>DB_URL</code>, <code>APP_MESSAGING_TRANSPORT</code>,
 <code>APP_STORAGE_PROVIDER</code> y <code>APP_NOTIFICATIONS_PROVIDER</code>, apuntar a Key Vault y desplegar en el slot. Por eso
 la variante es reversible: lo que se pierde mientras tanto es la demostración, no el trabajo.</p>
-<p><strong>Decisión pendiente de registrar:</strong> si se confirma EC2, corresponde un <code>ADR-0009</code> con el contexto, las
-consecuencias aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un
-descuido en la entrega.</p>
+<p>La decisión está registrada en <a href="adr-0009-despliegue-backend-ec2.html">ADR-0009</a>, con las consecuencias
+aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un descuido en la
+entrega. El resumen ejecutivo está en la <a href="#1217-decision-registrada">sección 12.17</a>.</p>
 <h2 id="1217-decision-registrada">12.17 Decisión registrada</h2>
 <table>
 <thead>

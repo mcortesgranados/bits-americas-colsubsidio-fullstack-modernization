@@ -46,9 +46,9 @@ flowchart TB
 Línea continua: **topología vigente**. Línea punteada: **alternativa en Azure**, que se activa cambiando
 las variables de entorno del backend y publicándolo en App Service.
 
-Cuatro artefactos desplegables en tres planos distintos: **estático** (tres Static Web Apps), **cómputo**
-(la API) y **datos** (MySQL y el volumen de evidencias). Los planos se despliegan por separado porque
-fallan por razones distintas. En la topología vigente no hay Service Bus, ni Blob, ni Function: el
+Los artefactos se agrupan en tres planos: **estático** (tres Static Web Apps), **cómputo** (la API) y
+**datos** (MySQL y el volumen de evidencias). Se despliegan por separado porque fallan por razones
+distintas. En la topología vigente no hay Service Bus, ni Blob, ni Function: el
 backend usa los adaptadores locales —outbox en proceso y sistema de archivos— y por eso el
 `docker-compose.yml` es a la vez entorno local y artefacto de despliegue.
 
@@ -353,6 +353,41 @@ stages:
                     azure_static_web_apps_api_token: $(SWA_MFE_COMPANIES_TOKEN)
 ```
 
+> El YAML anterior publica en App Service: corresponde a la **alternativa Azure**. La topología vigente
+> sustituye la etapa `DeployApi` por la de la sección 12.11.1; el resto del pipeline no cambia.
+
+### 12.11.1 Etapa de despliegue en EC2
+
+```yaml
+  - stage: DeployEc2
+    dependsOn: Migrate
+    jobs:
+      - deployment: Api
+        environment: colsubsidio-demo-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: docker build -t api:$(Build.BuildId) backend/
+                - script: |
+                    aws ecr get-login-password | docker login --username AWS --password-stdin $(ECR_HOST)
+                    docker tag api:$(Build.BuildId) $(ECR_HOST)/api:$(Build.BuildId)
+                    docker push $(ECR_HOST)/api:$(Build.BuildId)
+                - task: SSH@0            # sustituible por SSM Run Command si no se quiere abrir el 22
+                  inputs:
+                    sshEndpoint: ec2-demo
+                    runOptions: inline
+                    inline: |
+                      cd /opt/colsubsidio
+                      sed -i "s/^API_TAG=.*/API_TAG=$(Build.BuildId)/" .env
+                      docker compose pull api && docker compose up -d api
+                      curl -fsS --retry 12 --retry-delay 5 http://localhost:8080/actuator/health
+```
+
+La imagen se etiqueta con el número de build, y el `.env` de la instancia fija qué etiqueta corre: volver
+a la anterior es cambiar `API_TAG` y repetir `docker compose up -d api`. MySQL no se recrea en cada
+despliegue, solo la API.
+
 **Puertas:** la etapa `Migrate` y la `DeployApi` usan un `environment` con aprobación, de modo que la
 migración de esquema nunca se ejecuta sola. Los tokens de Static Web Apps son secretos de pipeline y se
 rotan desde el portal.
@@ -366,8 +401,8 @@ module` en consola—. Un despliegue que compila pero rompe la federación no cu
 | Ambiente | Frontend | Backend | Datos | Propósito |
 |----------|----------|---------|-------|-----------|
 | Local | `ng serve` en 4200 / 4201 / 4202 | `spring-boot:run` en 8080 | MySQL en contenedor (o H2) | Desarrollo y demo sin Azure |
-| Staging | Build servido localmente o app de preproducción | Slot `staging` | Misma base, datos sintéticos | Validar antes del swap |
-| Producción | Tres Static Web Apps | Slot `production` | MySQL Flexible + Blob + Service Bus | Demo desplegada |
+| Staging | Build servido localmente | `docker compose` en la instancia de pruebas o en local | Base de pruebas con datos sintéticos | Validar antes de publicar |
+| Producción | Tres Static Web Apps | EC2 `t3.small` con Docker Compose (alternativa: slot `production`) | MySQL en contenedor + volumen EBS (alternativa: MySQL Flexible + Blob) | Demo desplegada |
 
 La promoción es **el mismo artefacto**: no se recompila entre ambientes. Lo único que cambia es la
 configuración (`DB_URL`, orígenes del manifiesto, cadenas de Application Insights).
@@ -377,7 +412,7 @@ configuración (`DB_URL`, orígenes del manifiesto, cadenas de Application Insig
 | Pieza | Free tier | Nota |
 |-------|-----------|------|
 | Static Web Apps × 3 | **Sí, plan Free** | 100 GB de banda al mes **por suscripción**, compartidos por las tres apps; 0,5 GB por app; sin SLA |
-| EC2 	3.small (API + MySQL + nginx) | Según cuenta | Cuentas nuevas: hasta 200 USD en créditos por 6 meses. Cuentas antiguas: 750 h de micro, insuficientes para los tres contenedores |
+| EC2 `t3.small` (API + MySQL + nginx) | Según cuenta | Cuentas nuevas: hasta 200 USD en créditos por 6 meses. Cuentas antiguas: 750 h de micro, insuficientes para los tres contenedores |
 | EBS, snapshots y IP pública | **No** | Se facturan aparte del cómputo |
 | Azure Functions | Sí, permanente | 1 000 000 de ejecuciones y 400 000 GB-s al mes |
 | Application Insights | Parcial | 5 GB de ingesta al mes por cuenta de facturación |
@@ -410,7 +445,8 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.
 | Desfase de contrato | El shell monta una ruta con un DTO que cambió | `contractVersion` validado antes de montar; `MAJOR` obliga a nueva URL |
 | Migración destructiva | La versión anterior falla durante el swap | Expandir/contraer en dos despliegues |
 | Flyway en el arranque | Reinicios compitiendo por el bloqueo | `spring.flyway.enabled=false` en producción |
-| Una sola instancia en producción | El swap o un reinicio deja sin servicio | Mínimo dos instancias en el plan Standard |
+| Una sola instancia en producción | Un reinicio o el swap deja sin servicio | En Azure, mínimo dos instancias; en EC2, `restart: unless-stopped` y health check |
+| Instancia EC2 sin aprovisionamiento versionado | Deriva imposible de reconstruir | `docker-compose.yml` y `user-data` en el repositorio |
 | Límite de 100 GB de banda | El sitio deja de servirse hasta el siguiente ciclo | Presupuesto de imágenes y compresión; vigilar la métrica |
 | Sin SLA en plan Free | Caída sin compromiso contractual | Aceptado para una demo; documentado como límite |
 
@@ -424,7 +460,6 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.
 | Reglas de Security Group y renovación de TLS | Abrir el servicio sin exponer MySQL ni caducar el certificado |
 | Copias: snapshot de EBS y `mysqldump` | Recuperación ante pérdida de datos |
 | `infra/` con Bicep (SWA × 3 y App Service, para la alternativa Azure) | La vuelta a Azure en un comando |
-| Migraciones Flyway `V1`–`V3` | La etapa `Migrate` |
 | Migraciones Flyway `V1`–`V3` | La etapa `Migrate` |
 | `azure-pipelines.yml` y los tres tokens de Static Web Apps | La automatización |
 | Pruebas E2E de humo | La puerta de calidad posterior al despliegue |
@@ -482,7 +517,7 @@ URL no está en `environment.ts`, está en un JSON que se sirve con el shell.
 
 ### Qué se gana y qué se deja de demostrar
 
-| Criterio | App Service (referencia) | EC2 (variante) |
+| Criterio | App Service (alternativa) | EC2 (vigente) |
 |----------|--------------------------|----------------|
 | Swap sin corte | Sí, con slots | **No**: `docker compose up -d` corta 20–40 s |
 | Parcheo del sistema | Gestionado por la plataforma | A tu cargo |
@@ -508,7 +543,7 @@ pero **no se demuestra la integración con Azure**, que es parte explícita del 
 Verificado hoy en `aws.amazon.com/free`: el modelo vigente para cuentas nuevas es de créditos por 6 meses,
 no las 750 h durante 12 meses del esquema anterior.
 
-### Riesgos de esta variante
+### Riesgos de la topología vigente
 
 | Riesgo | Mitigación |
 |--------|------------|
@@ -525,9 +560,9 @@ El `.jar` es el mismo. Volver consiste en cambiar `DB_URL`, `APP_MESSAGING_TRANS
 `APP_STORAGE_PROVIDER` y `APP_NOTIFICATIONS_PROVIDER`, apuntar a Key Vault y desplegar en el slot. Por eso
 la variante es reversible: lo que se pierde mientras tanto es la demostración, no el trabajo.
 
-**Decisión pendiente de registrar:** si se confirma EC2, corresponde un `ADR-0009` con el contexto, las
-consecuencias aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un
-descuido en la entrega.
+La decisión está registrada en [ADR-0009](adr/ADR-0009-despliegue-backend-ec2.md), con las consecuencias
+aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un descuido en la
+entrega. El resumen ejecutivo está en la [sección 12.17](#1217-decision-registrada).
 
 ## 12.17 Decisión registrada
 
