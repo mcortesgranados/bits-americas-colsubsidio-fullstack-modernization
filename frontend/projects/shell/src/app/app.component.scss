@@ -63,26 +63,17 @@
   text-decoration: none;
   color: var(--cs-graphite);
 
-  &__mark {
-    display: grid;
-    place-items: center;
-    width: 2.25rem;
+  // Logotipo oficial (colsubsidio.com) sin modificaciones: se fija la altura y se deja que el ancho
+  // acompañe la proporción 181:36 del SVG original.
+  &__logo {
+    display: block;
     height: 2.25rem;
-    border-radius: var(--cs-radius);
-    background: var(--cs-graphite);
-    color: var(--cs-white);
-    font-weight: 700;
-    font-size: 0.85rem;
+    width: auto;
   }
 
   &__text {
     display: grid;
     line-height: 1.15;
-
-    strong {
-      font-size: 1.05rem;
-      font-weight: 700;
-    }
 
     small {
       color: var(--cs-muted);
