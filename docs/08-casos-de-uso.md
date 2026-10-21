@@ -457,9 +457,9 @@ Azure. Las cuotas cambian con el tiempo: hay que reconfirmarlas antes de despleg
 | Application Insights | Sí, parcial | 5 GB al mes por cuenta de facturación | 2,30 USD por GB |
 
 **Conclusión:** el flujo de la prueba cabe en free tier salvo **Service Bus**, **Blob Storage**,
-**Key Vault** y MySQL tras los primeros 12 meses. Para una demo de 2,5 meses el crédito de 200 USD de
-la cuenta gratuita cubre esos tres servicios con holgura, y el consumo esperado se mide en centavos por
-operaciones.
+**Key Vault** y MySQL tras los primeros 12 meses. El crédito de 200 USD de la cuenta gratuita es válido
+**solo 30 días**: dentro de esa ventana cubre esos servicios con holgura —el consumo se mide en centavos
+por operación—, y al vencer pasa a facturación por uso.
 
 **Aviso sobre el alojamiento del backend:** App Service no está en la lista anterior porque no participa
 en ningún caso de uso, pero publicar la API sí cuesta. Su cuota gratuita permanente (hasta 10 apps con
@@ -510,8 +510,8 @@ ofrece consumidores competidores, sesiones ni transacciones, y su cola de mensaj
 contenedor de Blob (de pago). Se puede usar para el fan-out de la demo; no para una cola de trabajo real.
 
 **Lo que no entra en free tier:** Service Bus, Blob Storage y Key Vault no tienen cuota gratuita, y
-MySQL Flexible solo es gratuito 12 meses en cuentas nuevas. Para una demo de 2,5 meses los cubre el
-crédito de 200 USD; para producción son coste fijo.
+MySQL Flexible solo es gratuito 12 meses en cuentas nuevas. El crédito de 200 USD cubre únicamente los
+primeros 30 días; a partir de ahí son coste fijo.
 
 **Estado:** la columna «se podría añadir» es diseño previsto, no implementación. Hoy lo único
 desplegable es el hosting en Static Web Apps; Functions y Event Grid están en el plan y marcados como
