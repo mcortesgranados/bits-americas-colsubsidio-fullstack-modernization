@@ -25,6 +25,7 @@ demostración**.
 | 09 | [Descripción del cargo](09-descripcion-del-cargo.md) | JD original, lectura estructurada, cobertura real y brechas declaradas |
 | 10 | [Tecnologías de Azure](10-tecnologias-azure.md) | Inventario de servicios, contratos, paridad local, FR-AZR y estado real |
 | 11 | [Diccionario de datos y modelo ER](11-diccionario-de-datos.md) | 13 tablas, columna por columna, enumeraciones, índices, datos personales y migraciones |
+| 12 | [Plan de despliegue en Azure](12-plan-despliegue-azure.md) | Tres Static Web Apps para los microfrontends, App Service con slots, pipeline y rollback |
 
 Documentos previstos para fases posteriores (aún no creados):
 

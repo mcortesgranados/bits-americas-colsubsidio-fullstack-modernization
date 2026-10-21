@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentación</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#121-estado-actual">12.1 Estado actual</a></li><li><a href="#122-topologia-de-despliegue">12.2 Topología de despliegue</a></li><li><a href="#123-unidades-de-despliegue">12.3 Unidades de despliegue</a></li><li><a href="#124-decision-tres-static-web-apps-no-una">12.4 Decisión: tres Static Web Apps, no una</a></li><li><a href="#125-configuracion-de-las-aplicaciones-estaticas">12.5 Configuración de las aplicaciones es…</a></li><li><a href="#126-secuencia-de-despliegue-de-un-remoto">12.6 Secuencia de despliegue de un remoto</a></li><li><a href="#127-despliegue-del-backend">12.7 Despliegue del backend</a></li><li><a href="#128-orden-de-despliegue-y-compatibilidad">12.8 Orden de despliegue y compatibilidad</a></li><li><a href="#129-identidad-y-secretos">12.9 Identidad y secretos</a></li><li><a href="#1210-base-de-datos-en-el-pipeline">12.10 Base de datos en el pipeline</a></li><li><a href="#1211-pipeline-en-azure-devops">12.11 Pipeline en Azure DevOps</a></li><li><a href="#1212-ambientes-y-promocion">12.12 Ambientes y promoción</a></li><li><a href="#1213-coste-y-free-tier-del-despliegue">12.13 Coste y free tier del despliegue</a></li><li><a href="#1214-riesgos-de-despliegue">12.14 Riesgos de despliegue</a></li><li><a href="#1215-que-falta-para-ejecutar-este-plan">12.15 Qué falta para ejecutar este plan</a></li></ul></nav>
+<p>﻿# 12 · Plan de despliegue en Azure: backend y microfrontends</p>
+<p>Cómo se publica el prototipo cuando exista: qué artefactos se generan, dónde aterrizan, en qué orden se
+promueven y cómo se revierte. El diseño de microfrontends del documento 04 (§4.8) ya decidió tres cosas
+que aquí se materializan: <strong>tres aplicaciones independientes</strong>, un <strong>manifiesto de remotos leído en
+runtime</strong> y un <strong><code>contractVersion</code> que el shell valida</strong> antes de montar una ruta.</p>
+<blockquote>
+<p><strong>Nada de este documento se ha ejecutado.</strong> No hay suscripción, ni <code>frontend/</code>, ni <code>infra/</code>, ni
+pipeline: la Fase 6 del <a href="06-plan-entrega.html">plan de entrega</a> es la que los crea. Los nombres de
+recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local sin Azure.</p>
+</blockquote>
+<h2 id="121-estado-actual">12.1 Estado actual</h2>
+<table>
+<thead>
+<tr>
+<th>Pieza</th>
+<th>Existe hoy</th>
+<th>Consecuencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/</code></td>
+<td>Sí: 92 archivos Java, <code>pom.xml</code>, <code>application.yml</code></td>
+<td>Comila como proyecto Maven, pero sin migraciones Flyway no arranca contra MySQL</td>
+</tr>
+<tr>
+<td><code>frontend/</code></td>
+<td><strong>No existe</strong></td>
+<td>El shell y los dos remotos son diseño, no código</td>
+</tr>
+<tr>
+<td><code>infra/</code> (Bicep)</td>
+<td><strong>No existe</strong></td>
+<td>No hay infraestructura como código</td>
+</tr>
+<tr>
+<td>Pipeline</td>
+<td><strong>No existe</strong></td>
+<td>Ningún despliegue automatizado</td>
+</tr>
+<tr>
+<td><code>docker-compose.yml</code></td>
+<td><strong>No existe</strong></td>
+<td>El entorno local se levanta a mano</td>
+</tr>
+</tbody>
+</table>
+<p>Por eso este plan es prospectivo: describe el destino y el orden, no un estado alcanzado.</p>
+<h2 id="122-topologia-de-despliegue">12.2 Topología de despliegue</h2>
+<pre class="mermaid">flowchart TB
+    U[Usuario] --&gt; SHELL[Static Web Apps&lt;br/&gt;shell]
+    SHELL --&gt;|remoteEntry.js| MFA[Static Web Apps&lt;br/&gt;mfe-affiliates]
+    SHELL --&gt;|remoteEntry.js| MFC[Static Web Apps&lt;br/&gt;mfe-companies]
+    SHELL --&gt;|/api/v1| API[App Service Linux&lt;br/&gt;API Spring Boot]
+    API --&gt; DB[(MySQL Flexible)]
+    API --&gt; SB[(Service Bus)]
+    API --&gt; BLOB[(Blob Storage)]
+    SB --&gt; CON[Consumidor&lt;br/&gt;mismo App Service]
+    API -.-&gt; KV[Key Vault]
+    API -.-&gt; AI[Application Insights]
+    FN[Function&lt;br/&gt;notificaciones] --&gt; AI
+</pre>
+<p>Cuatro artefactos desplegables en tres planos distintos: <strong>estático</strong> (tres Static Web Apps), <strong>cómputo</strong>
+(API y Function) y <strong>datos</strong> (MySQL, Service Bus, Blob). Los tres planos se despliegan por separado
+porque fallan por razones distintas.</p>
+<h2 id="123-unidades-de-despliegue">12.3 Unidades de despliegue</h2>
+<table>
+<thead>
+<tr>
+<th>Artefacto</th>
+<th>Se construye con</th>
+<th>Destino</th>
+<th>Versionado</th>
+<th>Frecuencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shell</td>
+<td><code>ng build shell --configuration production</code></td>
+<td>Static Web Apps <code>swa-demo-shell</code></td>
+<td>Semver propio + manifiesto</td>
+<td>Cuando cambia layout, auth o rutas</td>
+</tr>
+<tr>
+<td><code>mfe-affiliates</code></td>
+<td><code>ng build mfe-affiliates</code></td>
+<td>Static Web Apps <code>swa-demo-mfe-affiliates</code></td>
+<td>Semver independiente</td>
+<td>Con cada cambio del portal de afiliados</td>
+</tr>
+<tr>
+<td><code>mfe-companies</code></td>
+<td><code>ng build mfe-companies</code></td>
+<td>Static Web Apps <code>swa-demo-mfe-companies</code></td>
+<td>Semver independiente</td>
+<td>Con cada cambio del portal de empresas</td>
+</tr>
+<tr>
+<td>API</td>
+<td><code>mvn -B verify</code> → <code>.jar</code></td>
+<td>App Service <code>app-demo-api</code> (slot <code>staging</code> → <code>production</code>)</td>
+<td>Semver + SHA</td>
+<td>Con cada cambio de backend</td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>mvn package</code> del módulo <code>azure/functions</code></td>
+<td>Function App (Flex Consumption)</td>
+<td>Semver</td>
+<td>Cuando cambia la notificación</td>
+</tr>
+<tr>
+<td>Esquema</td>
+<td><code>flyway migrate</code></td>
+<td>MySQL Flexible Server</td>
+<td><code>V1</code>, <code>V2</code>, …</td>
+<td>Antes del despliegue de la API</td>
+</tr>
+<tr>
+<td>Infraestructura</td>
+<td><code>az deployment sub create</code> (Bicep)</td>
+<td>Suscripción / grupo de recursos</td>
+<td>Commit SHA</td>
+<td>Cuando cambia la topología</td>
+</tr>
+</tbody>
+</table>
+<h2 id="124-decision-tres-static-web-apps-no-una">12.4 Decisión: tres Static Web Apps, no una</h2>
+<p>Hay dos formas de publicar tres microfrontends y la elección condiciona todo lo demás.</p>
+<table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th>Una sola Static Web Apps</th>
+<th>Tres Static Web Apps (elegida)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pipelines independientes</td>
+<td>Difícil: cada deploy reemplaza el contenido completo del sitio</td>
+<td>Sí: cada remoto tiene el suyo</td>
+</tr>
+<tr>
+<td>Radio de impacto de un fallo</td>
+<td>Un despliegue malo tumba shell y remotos</td>
+<td>Un remoto roto solo afecta a sus rutas</td>
+</tr>
+<tr>
+<td>Aislamiento de versiones</td>
+<td>Se fuerza a publicar los tres a la vez</td>
+<td>Cada remoto avanza a su ritmo</td>
+</tr>
+<tr>
+<td>CORS</td>
+<td>Innecesario (mismo origen)</td>
+<td>Obligatorio: el shell carga scripts de otro origen</td>
+</tr>
+<tr>
+<td>Coste</td>
+<td>1 app</td>
+<td>3 apps del plan Free</td>
+</tr>
+<tr>
+<td>Complejidad operativa</td>
+<td>Menor</td>
+<td>Mayor: tres configuraciones, tres manifiestos</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Se eligen tres</strong> porque el objetivo declarado del ejercicio es demostrar despliegue independiente y
+aislamiento de fallos, no minimizar el número de recursos. El precio de esa decisión es explícito: CORS,
+CSP y caché pasan a ser responsabilidad del equipo, y están resueltos en 12.5.</p>
+<p><strong>Vuelta atrás barata:</strong> si el equipo prefiere un solo host, se cambia el manifiesto a rutas relativas
+(<code>/mfe/affiliates/remoteEntry.js</code>), se publica un artefacto que contenga las tres compilaciones y se
+eliminan dos apps. El código de los remotos no cambia: solo la resolución de URLs.</p>
+<h2 id="125-configuracion-de-las-aplicaciones-estaticas">12.5 Configuración de las aplicaciones estáticas</h2>
+<p>El archivo <code>staticwebapp.config.json</code> viaja dentro de cada artefacto. Estos son los dos mínimos viables.</p>
+<p><strong>Shell</strong> — fallback de rutas, CSP y política de referencia:</p>
+<pre><code class="language-json">{
+  &quot;navigationFallback&quot;: {
+    &quot;rewrite&quot;: &quot;/index.html&quot;,
+    &quot;exclude&quot;: [&quot;/assets/*&quot;, &quot;/*.{js,css,json,ico,svg,woff2}&quot;, &quot;/remoteEntry*&quot;]
+  },
+  &quot;globalHeaders&quot;: {
+    &quot;X-Content-Type-Options&quot;: &quot;nosniff&quot;,
+    &quot;Referrer-Policy&quot;: &quot;strict-origin-when-cross-origin&quot;,
+    &quot;Content-Security-Policy&quot;: &quot;default-src 'self'; connect-src 'self' https://api-demo.azurewebsites.net; script-src 'self' https://swa-demo-mfe-affiliates.azurestaticapps.net https://swa-demo-mfe-companies.azurestaticapps.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:&quot;
+  },
+  &quot;routes&quot;: [
+    { &quot;route&quot;: &quot;/assets/mf.manifest.json&quot;, &quot;headers&quot;: { &quot;cache-control&quot;: &quot;no-cache, must-revalidate&quot; } }
+  ]
+}
+</code></pre>
+<p><strong>Cada remoto</strong> — CORS hacia el shell y <code>remoteEntry.js</code> sin caché:</p>
+<pre><code class="language-json">{
+  &quot;globalHeaders&quot;: {
+    &quot;Access-Control-Allow-Origin&quot;: &quot;https://swa-demo-shell.azurestaticapps.net&quot;,
+    &quot;Access-Control-Allow-Methods&quot;: &quot;GET&quot;,
+    &quot;X-Content-Type-Options&quot;: &quot;nosniff&quot;
+  },
+  &quot;routes&quot;: [
+    { &quot;route&quot;: &quot;/remoteEntry.js&quot;, &quot;headers&quot;: { &quot;cache-control&quot;: &quot;no-cache, must-revalidate&quot; } },
+    { &quot;route&quot;: &quot;/remoteEntry.json&quot;, &quot;headers&quot;: { &quot;cache-control&quot;: &quot;no-cache, must-revalidate&quot; } }
+  ],
+  &quot;navigationFallback&quot;: {
+    &quot;rewrite&quot;: &quot;/index.html&quot;,
+    &quot;exclude&quot;: [&quot;/remoteEntry*&quot;, &quot;/*.{js,css,json,ico,svg,woff2}&quot;]
+  }
+}
+</code></pre>
+<p>Tres detalles que rompen microfrontends en producción y no en local:</p>
+<ol>
+<li><strong><code>navigationFallback</code> sin exclusiones</strong> devuelve <code>index.html</code> cuando falta un chunk; el navegador
+   intenta ejecutar HTML como JavaScript y el error que ves es de sintaxis, no un 404.</li>
+<li><strong><code>remoteEntry.js</code> cacheado</strong> deja al shell apuntando a chunks de una versión anterior. El
+   <code>remoteEntry</code> es el único archivo que no debe cachearse; los chunks con hash sí son inmutables.</li>
+<li><strong>CSP sin los orígenes de los remotos</strong> bloquea el <code>script-src</code> y el síntoma es una pantalla en
+   blanco sin error de red.</li>
+</ol>
+<p>Sin <code>Access-Control-Allow-Origin</code>, el navegador descarta la respuesta del <code>remoteEntry</code> y el fallo
+aparece como <code>TypeError: Failed to fetch dynamically imported module</code>.</p>
+<h2 id="126-secuencia-de-despliegue-de-un-remoto">12.6 Secuencia de despliegue de un remoto</h2>
+<ol>
+<li><strong>Build reproducible:</strong> <code>ng build mfe-affiliates --configuration production</code> con <code>outputPath</code>
+   <code>dist/mfe-affiliates</code>. El artefacto se guarda con el SHA del commit, no con «latest».</li>
+<li><strong>Verificación local:</strong> el shell en <code>ng serve</code> apunta al <code>remoteEntry</code> del build recién generado
+   (<code>ng serve --configuration local-remote</code>). Se prueba antes de publicar.</li>
+<li><strong>Publicación:</strong> <code>AzureStaticWebApps@1</code> sube el artefacto a <code>swa-demo-mfe-affiliates</code>. El contenido
+   se reemplaza de forma atómica: no hay mezcla de versiones a mitad de subida.</li>
+<li><strong>Comprobación de contrato:</strong> <code>curl</code> al <code>remoteEntry</code> + lectura del <code>Metadata</code> expuesto; se valida
+   <code>contractVersion</code> contra el rango que acepta el shell en producción.</li>
+<li><strong>Manifiesto:</strong> solo se toca si cambia la URL del remoto o el <code>contractVersion</code> mínimo. Un cambio de
+   implementación que respeta el contrato <strong>no requiere republicar el shell</strong>.</li>
+<li><strong>Humo en producción:</strong> cargar la ruta del portal, comprobar que el remoto monta y que no hay error de
+   federación en consola.</li>
+</ol>
+<p><strong>Rollback:</strong> se vuelve a desplegar el artefacto anterior, que el pipeline retiene 30 días, y se revierte
+el manifiesto si se había tocado. Tarda lo que tarda una publicación estática (del orden de uno a tres
+minutos), <strong>no es instantáneo</strong>: Static Web Apps del plan Free no mantiene versiones activas en paralelo.
+Si se exige cambio instantáneo y preproducción simultánea, hace falta el plan Standard o un CDN con dos
+orígenes; ninguna de las dos está en el alcance actual.</p>
+<p><strong>Contrato entre shell y remoto:</strong> un remoto puede avanzar en <code>MINOR</code>/<code>PATCH</code> sin tocar el shell. Un
+<code>MAJOR</code> obliga a publicar una segunda instancia del remoto en otra URL, cambiar el manifiesto y retirar
+la anterior cuando el tráfico confirme. El shell nunca se despliega esperando un contrato que aún no
+existe.</p>
+<h2 id="127-despliegue-del-backend">12.7 Despliegue del backend</h2>
+<p><strong>Destino:</strong> App Service Linux, Java 17, plan <strong>Standard S1</strong>. No se usa el nivel gratuito porque su
+cuota es de una hora al día y el servicio debe estar disponible; tampoco se usa Container Apps, descartado
+en el <a href="10-tecnologias-azure.html#109-servicios-evaluados-y-descartados">documento 10</a>. El plan Standard es el mínimo que
+ofrece <strong>deployment slots</strong>, y sin slots no hay promoción con swap.</p>
+<p><strong>Configuración de la aplicación:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Ajuste</th>
+<th>Valor</th>
+<th>Motivo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WEBSITES_PORT</code></td>
+<td><code>8080</code></td>
+<td>Puerto que App Service expone al frontal</td>
+</tr>
+<tr>
+<td><code>JAVA_OPTS</code></td>
+<td><code>-XX:MaxRAMPercentage=75</code></td>
+<td>Ajusta la JVM al tamaño del plan en vez de a un <code>-Xmx</code> fijo</td>
+</tr>
+<tr>
+<td><code>SPRING_PROFILES_ACTIVE</code></td>
+<td><code>prod</code></td>
+<td>Activa el perfil sin secretos embebidos</td>
+</tr>
+<tr>
+<td><code>DB_URL</code></td>
+<td><code>jdbc:mysql://…:3306/colsubsidio_demo?sslMode=REQUIRED</code></td>
+<td>TLS obligatorio contra MySQL Flexible</td>
+</tr>
+<tr>
+<td><code>DB_PASSWORD</code></td>
+<td><code>@Microsoft.KeyVault(SecretUri=…)</code></td>
+<td>Referencia, no valor</td>
+</tr>
+<tr>
+<td><code>APP_MESSAGING_TRANSPORT</code></td>
+<td><code>azure</code></td>
+<td>Service Bus real</td>
+</tr>
+<tr>
+<td><code>APP_STORAGE_PROVIDER</code></td>
+<td><code>azure</code></td>
+<td>Blob real</td>
+</tr>
+<tr>
+<td><code>APP_NOTIFICATIONS_PROVIDER</code></td>
+<td><code>azure-function</code></td>
+<td>Function real</td>
+</tr>
+<tr>
+<td><code>SPRING_FLYWAY_ENABLED</code></td>
+<td><code>false</code></td>
+<td>Las migraciones las ejecuta el pipeline, no el arranque</td>
+</tr>
+<tr>
+<td><code>APPLICATIONINSIGHTS_CONNECTION_STRING</code></td>
+<td>Referencia a Key Vault</td>
+<td>Telemetría</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Por qué Flyway se apaga en producción:</strong> con dos o más instancias, cada arranque intenta migrar y
+compite por el bloqueo de Flyway; una migración lenta retrasa el arranque y el health check falla. La
+migración se ejecuta una vez, como paso previo del pipeline (12.10).</p>
+<p><strong>Secuencia:</strong></p>
+<ol>
+<li><code>mvn -B verify</code> (pruebas + JaCoCo) y publicación del <code>.jar</code> como artefacto.</li>
+<li><code>az webapp deploy --slot staging</code> con el <code>.jar</code>.</li>
+<li>Espera a <code>GET /actuator/health</code> en <code>staging</code> hasta <code>UP</code> (máximo 120 s).</li>
+<li>Smoke test contra <code>staging</code> con el mismo contrato de API.</li>
+<li><code>az webapp deployment slot swap --slot staging --target-slot production</code>.</li>
+<li>Smoke test contra producción y comprobación de que la versión desplegada es la esperada.</li>
+</ol>
+<p>El swap es la razón de pagar Standard: la nueva versión se calienta en <code>staging</code> mientras producción
+sigue sirviendo, y el cambio de tráfico es un intercambio de DNS interno, no un reinicio.</p>
+<h2 id="128-orden-de-despliegue-y-compatibilidad">12.8 Orden de despliegue y compatibilidad</h2>
+<table>
+<thead>
+<tr>
+<th>Cambio</th>
+<th>Orden</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Corrección en un remoto que respeta el contrato</td>
+<td>Remoto</td>
+<td>El shell no se entera; sin ventana de incompatibilidad</td>
+</tr>
+<tr>
+<td>Nuevo campo opcional en la API</td>
+<td>API primero</td>
+<td>El frontend tolera campos que aún no usa</td>
+</tr>
+<tr>
+<td>Campo obligatorio nuevo o cambio de tipo</td>
+<td>API con versión nueva, luego clientes</td>
+<td>Nunca romper a un cliente desplegado</td>
+</tr>
+<tr>
+<td>Nuevo remoto</td>
+<td>Shell primero (ruta + manifiesto)</td>
+<td>El shell debe conocer la ruta antes de que exista el remoto</td>
+</tr>
+<tr>
+<td>Retirada de un remoto</td>
+<td>Shell primero</td>
+<td>Al contrario, el shell pediría un <code>remoteEntry</code> que ya no existe</td>
+</tr>
+<tr>
+<td>Migración de esquema destructiva</td>
+<td>Prohibida en un solo paso</td>
+<td>Se aplica expandir/contraer en dos despliegues</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regla de oro:</strong> ningún despliegue puede dejar al sistema en un estado donde una versión desplegada
+llame a un contrato que no existe. Es la misma regla que se pide para el bus de eventos, aplicada al
+frontend.</p>
+<h2 id="129-identidad-y-secretos">12.9 Identidad y secretos</h2>
+<ul>
+<li><strong>Azure DevOps → Azure:</strong> federación de identidad de carga de trabajo (OIDC). Sin secretos de service
+  principal en el pipeline ni caducidad manual.</li>
+<li><strong>App Service → Key Vault:</strong> identidad administrada asignada al recurso; rol <em>Key Vault Secrets User</em>.
+  La configuración usa referencias <code>@Microsoft.KeyVault(...)</code>, así que rotar un secreto no obliga a
+  redesplegar.</li>
+<li><strong>App Service → Blob:</strong> <em>Storage Blob Data Contributor</em> sobre el contenedor de evidencias, no la clave
+  de la cuenta.</li>
+<li><strong>Consumidor → Service Bus:</strong> <em>Azure Service Bus Data Receiver</em> en la cola; el publicador usa
+  <em>Data Sender</em>. Roles separados: el consumidor no puede publicar.</li>
+<li><strong>Nada de secretos en el repositorio.</strong> El <code>.env</code> local está en <code>.gitignore</code> y el pipeline no imprime
+  variables.</li>
+</ul>
+<h2 id="1210-base-de-datos-en-el-pipeline">12.10 Base de datos en el pipeline</h2>
+<p>La migración es un paso propio, con identidad propia:</p>
+<ol>
+<li>Paso <code>FlywayMigrate</code> con el usuario de migración (DDL) y <code>flyway.url</code> apuntando al servidor real.</li>
+<li><code>flyway info</code> para dejar en el log qué versión había y qué versión queda.</li>
+<li>Solo si la migración termina en <code>Success</code> se despliega la API.</li>
+</ol>
+<p>Reglas para que el despliegue sea reversible:</p>
+<ul>
+<li><strong>Expandir/contraer:</strong> primero se añade la columna o tabla nueva (compatible con la versión anterior),
+  después se despliega el código que la usa, y en un despliegue posterior se elimina lo viejo.</li>
+<li><strong>Nunca</strong> <code>DROP COLUMN</code> en la misma entrega que deja de usarla.</li>
+<li>Migraciones idempotentes donde sea posible (<code>CREATE TABLE IF NOT EXISTS</code>) para que un reintento no
+  deje el esquema a medias.</li>
+<li>El script de reversión es una migración nueva hacia adelante, no <code>flyway undo</code> (solo disponible en la
+  edición de pago).</li>
+</ul>
+<h2 id="1211-pipeline-en-azure-devops">12.11 Pipeline en Azure DevOps</h2>
+<p>Un solo pipeline con etapas encadenadas y puertas entre ellas. Extracto de la estructura, no el archivo
+completo:</p>
+<pre><code class="language-yaml">trigger:
+  branches: { include: [main] }
+  paths: { include: [backend/*, frontend/*, infra/*] }
+
+variables:
+  - group: colsubsidio-demo-nonprod   # sin secretos: solo nombres de recursos
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Backend
+        steps:
+          - task: Maven@4
+            inputs: { goals: 'verify', publishJUnitResults: true }
+          - publish: backend/target
+            artifact: api
+      - job: Frontend
+        steps:
+          - script: npm ci &amp;&amp; npm run build:all
+            workingDirectory: frontend
+          - publish: frontend/dist
+            artifact: frontend
+
+  - stage: Migrate
+    dependsOn: Build
+    jobs:
+      - deployment: Flyway
+        environment: colsubsidio-demo-prod   # habilita la aprobación manual
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: mvn -B flyway:migrate -Dflyway.url=$(DB_URL) -Dflyway.user=$(DB_MIGRATION_USER)
+                  env:
+                    FLYWAY_PASSWORD: $(DB_MIGRATION_PASSWORD)
+
+  - stage: DeployApi
+    dependsOn: Migrate
+    jobs:
+      - deployment: Api
+        environment: colsubsidio-demo-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  inputs:
+                    appName: app-demo-api
+                    slotName: staging
+                    package: $(Pipeline.Workspace)/api/*.jar
+                - script: curl -f --retry 12 --retry-delay 10 https://app-demo-api-staging.azurewebsites.net/actuator/health
+                - task: AzureAppServiceManage@0
+                  inputs:
+                    action: Swap Slots
+                    sourceSlot: staging
+                    targetSlot: production
+
+  - stage: DeployFrontend
+    dependsOn: DeployApi
+    jobs:
+      - deployment: Shell
+        environment: colsubsidio-demo-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureStaticWebApp@0
+                  inputs:
+                    app_location: frontend/dist/shell
+                    azure_static_web_apps_api_token: $(SWA_SHELL_TOKEN)
+      - deployment: Remotes
+        dependsOn: Shell
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureStaticWebApp@0
+                  inputs:
+                    app_location: frontend/dist/mfe-affiliates
+                    azure_static_web_apps_api_token: $(SWA_MFE_AFFILIATES_TOKEN)
+                - task: AzureStaticWebApp@0
+                  inputs:
+                    app_location: frontend/dist/mfe-companies
+                    azure_static_web_apps_api_token: $(SWA_MFE_COMPANIES_TOKEN)
+</code></pre>
+<p><strong>Puertas:</strong> la etapa <code>Migrate</code> y la <code>DeployApi</code> usan un <code>environment</code> con aprobación, de modo que la
+migración de esquema nunca se ejecuta sola. Los tokens de Static Web Apps son secretos de pipeline y se
+rotan desde el portal.</p>
+<p><strong>Smoke tests después del despliegue:</strong> Playwright contra la URL de producción con tres comprobaciones
+mínimas —el shell carga, la ruta del remoto monta y no aparece <code>Failed to fetch dynamically imported
+module</code> en consola—. Un despliegue que compila pero rompe la federación no cuenta como verde.</p>
+<h2 id="1212-ambientes-y-promocion">12.12 Ambientes y promoción</h2>
+<table>
+<thead>
+<tr>
+<th>Ambiente</th>
+<th>Frontend</th>
+<th>Backend</th>
+<th>Datos</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local</td>
+<td><code>ng serve</code> en 4200 / 4201 / 4202</td>
+<td><code>spring-boot:run</code> en 8080</td>
+<td>MySQL en contenedor (o H2)</td>
+<td>Desarrollo y demo sin Azure</td>
+</tr>
+<tr>
+<td>Staging</td>
+<td>Build servido localmente o app de preproducción</td>
+<td>Slot <code>staging</code></td>
+<td>Misma base, datos sintéticos</td>
+<td>Validar antes del swap</td>
+</tr>
+<tr>
+<td>Producción</td>
+<td>Tres Static Web Apps</td>
+<td>Slot <code>production</code></td>
+<td>MySQL Flexible + Blob + Service Bus</td>
+<td>Demo desplegada</td>
+</tr>
+</tbody>
+</table>
+<p>La promoción es <strong>el mismo artefacto</strong>: no se recompila entre ambientes. Lo único que cambia es la
+configuración (<code>DB_URL</code>, orígenes del manifiesto, cadenas de Application Insights).</p>
+<h2 id="1213-coste-y-free-tier-del-despliegue">12.13 Coste y free tier del despliegue</h2>
+<table>
+<thead>
+<tr>
+<th>Pieza</th>
+<th>Free tier</th>
+<th>Nota</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Static Web Apps × 3</td>
+<td>Sí, plan Free</td>
+<td>100 GB de banda al mes <strong>por suscripción</strong>, compartidos por las tres apps; 0,5 GB por app; sin SLA</td>
+</tr>
+<tr>
+<td>Azure Functions</td>
+<td>Sí, permanente</td>
+<td>1 000 000 de ejecuciones y 400 000 GB-s al mes</td>
+</tr>
+<tr>
+<td>Application Insights</td>
+<td>Parcial</td>
+<td>5 GB de ingesta al mes por cuenta de facturación</td>
+</tr>
+<tr>
+<td>App Service (API)</td>
+<td><strong>No sirve</strong></td>
+<td>El nivel gratuito da 1 hora al día; se requiere Standard para slots y disponibilidad</td>
+</tr>
+<tr>
+<td>MySQL Flexible</td>
+<td>Solo 12 meses</td>
+<td>750 h B1MS y 32 GB en cuentas nuevas; después, pago por uso</td>
+</tr>
+<tr>
+<td>Service Bus</td>
+<td>No</td>
+<td>Se paga por operaciones</td>
+</tr>
+<tr>
+<td>Blob Storage</td>
+<td>No</td>
+<td>Se paga por GB y operaciones</td>
+</tr>
+<tr>
+<td>Key Vault</td>
+<td>No</td>
+<td>Se paga por operaciones</td>
+</tr>
+</tbody>
+</table>
+<p>Traducción práctica: <strong>el frontend puede vivir en free tier; el backend no.</strong> Publicar la API y la base
+es el coste real del despliegue, y es la razón por la que el requisito de «corre en local sin Azure» está
+en el centro del ejercicio: la demo se puede evaluar completa sin gastar.</p>
+<h2 id="1214-riesgos-de-despliegue">12.14 Riesgos de despliegue</h2>
+<table>
+<thead>
+<tr>
+<th>Riesgo</th>
+<th>Síntoma</th>
+<th>Mitigación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>navigationFallback</code> captura assets</td>
+<td><code>Failed to fetch dynamically imported module</code></td>
+<td>Excluir <code>*.js</code>, <code>*.json</code> y <code>remoteEntry*</code> del fallback</td>
+</tr>
+<tr>
+<td>CORS mal configurado en el remoto</td>
+<td>El <code>remoteEntry</code> no carga solo en producción</td>
+<td><code>Access-Control-Allow-Origin</code> con el origen exacto del shell, sin comodín</td>
+</tr>
+<tr>
+<td><code>remoteEntry.js</code> cacheado</td>
+<td>El shell mezcla chunks de dos versiones</td>
+<td><code>no-cache</code> solo en <code>remoteEntry</code>; chunks con hash e inmutables</td>
+</tr>
+<tr>
+<td>Desfase de contrato</td>
+<td>El shell monta una ruta con un DTO que cambió</td>
+<td><code>contractVersion</code> validado antes de montar; <code>MAJOR</code> obliga a nueva URL</td>
+</tr>
+<tr>
+<td>Migración destructiva</td>
+<td>La versión anterior falla durante el swap</td>
+<td>Expandir/contraer en dos despliegues</td>
+</tr>
+<tr>
+<td>Flyway en el arranque</td>
+<td>Reinicios compitiendo por el bloqueo</td>
+<td><code>spring.flyway.enabled=false</code> en producción</td>
+</tr>
+<tr>
+<td>Una sola instancia en producción</td>
+<td>El swap o un reinicio deja sin servicio</td>
+<td>Mínimo dos instancias en el plan Standard</td>
+</tr>
+<tr>
+<td>Límite de 100 GB de banda</td>
+<td>El sitio deja de servirse hasta el siguiente ciclo</td>
+<td>Presupuesto de imágenes y compresión; vigilar la métrica</td>
+</tr>
+<tr>
+<td>Sin SLA en plan Free</td>
+<td>Caída sin compromiso contractual</td>
+<td>Aceptado para una demo; documentado como límite</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1215-que-falta-para-ejecutar-este-plan">12.15 Qué falta para ejecutar este plan</h2>
+<table>
+<thead>
+<tr>
+<th>Pendiente</th>
+<th>Bloquea</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/</code> con shell y dos remotos</td>
+<td>Todo el plano estático</td>
+</tr>
+<tr>
+<td><code>infra/</code> con Bicep (SWA × 3, App Service, MySQL, Service Bus, Blob, Key Vault, Function)</td>
+<td>Cualquier despliegue reproducible</td>
+</tr>
+<tr>
+<td><code>docker-compose.yml</code></td>
+<td>La paridad local que este plan promete</td>
+</tr>
+<tr>
+<td>Migraciones Flyway <code>V1</code>–<code>V3</code></td>
+<td>La etapa <code>Migrate</code></td>
+</tr>
+<tr>
+<td><code>azure-pipelines.yml</code> y los tres tokens de Static Web Apps</td>
+<td>La automatización</td>
+</tr>
+<tr>
+<td>Pruebas E2E de humo</td>
+<td>La puerta de calidad posterior al despliegue</td>
+</tr>
+</tbody>
+</table>
+<p>Todo ello corresponde a la Fase 6 del <a href="06-plan-entrega.html">plan de entrega</a>, con la salvedad de que los
+microfrontends se construyen en la Fase 4 y las migraciones en la Fase 2: este documento describe cómo se
+publican, no cuándo se escriben.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>
