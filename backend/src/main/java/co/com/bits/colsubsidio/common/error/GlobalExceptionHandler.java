@@ -225,6 +225,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Translates the application-level size check into the same 413 the container produces.
+     *
+     * <p>Two limits exist: the multipart cap of the servlet container and the business ceiling configured in
+     * {@code app.storage.max-size-bytes}. When the second is lower, or when the container cap is raised for
+     * another endpoint, the service raises this exception and the client must still receive 413 with the same
+     * code, so the portal has a single case to handle.
+     *
+     * @param ex exception raised by the application service when the file exceeds the business ceiling
+     * @return problem detail with status 413 and the code declared by the exception
+     *
+     * @author Manuela Cortés Granados (manuelacortesgranados@gmail)
+     * @since 2026-10-21 11:20 GMT-5 Bogotá D.C. Colombia
+     */
+    @ExceptionHandler(PayloadTooLargeException.class)
+    public ProblemDetail handlePayloadTooLarge(PayloadTooLargeException ex) {
+        return problem(HttpStatus.PAYLOAD_TOO_LARGE, "File too large", ex.getMessage(), ex.getCode());
+    }
+
+    /**
      * Translates a database integrity failure into a 409 problem detail.
      *
      * <p>The exception is logged at warn level with the correlation identifier, but the response does

@@ -193,7 +193,10 @@ public class SubsidyMessageHandler {
     private void onDocumentUploaded(DomainEventEnvelope envelope) {
         SubsidyDocumentUploadedEvent event = read(envelope, SubsidyDocumentUploadedEvent.class);
         SubsidyRequest request = request(event.requestId());
-        if (request.getStatus() != SubsidyRequestStatus.PENDING_DOCUMENTS) {
+        // SUBMITTED is accepted as well: the affiliate may upload the evidence before the consumer has
+        // classified the request, and in that case the upload is what completes it.
+        if (request.getStatus() != SubsidyRequestStatus.PENDING_DOCUMENTS
+                && request.getStatus() != SubsidyRequestStatus.SUBMITTED) {
             log.debug("subsidy.document.processed requestId={} status={}", request.getId(), request.getStatus());
             return;
         }
