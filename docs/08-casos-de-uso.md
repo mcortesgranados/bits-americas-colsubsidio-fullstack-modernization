@@ -66,7 +66,9 @@ flowchart LR
 1. El portal obtiene el token del almacenamiento de sesión y lo adjunta como `Bearer`.
 2. El backend valida firma, expiración y autoridad `ROLE_AFFILIATE`.
 3. El servicio resuelve el afiliado a partir del claim, no de un parámetro de la ruta.
-4. El mapper construye el DTO enmascarando documento, correo y teléfono.
+4. El mapper construye el DTO enmascarando el número de documento; el correo y el teléfono se enmascaran
+   solo cuando la consulta es de back-office o auditoría, porque el titular puede ver sus propios datos
+   de contacto.
 5. El portal muestra nombre, categoría, estado, empresa y fechas.
 
 **Flujos alternos**
@@ -75,7 +77,8 @@ flowchart LR
 - **A2 Afiliado inexistente o inactivo** → 404 o 403 sin revelar si el registro existe.
 - **A3 El afiliado intenta leer otro identificador** → 403 `ACCESS_DENIED` y registro en auditoría.
 
-**Postcondición:** el afiliado ve únicamente su información, con datos personales enmascarados.
+**Postcondición:** el afiliado ve únicamente su información, con el número de documento enmascarado y sus
+datos de contacto completos porque es el titular.
 
 ---
 

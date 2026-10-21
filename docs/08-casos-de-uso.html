@@ -137,7 +137,9 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <li>El portal obtiene el token del almacenamiento de sesión y lo adjunta como <code>Bearer</code>.</li>
 <li>El backend valida firma, expiración y autoridad <code>ROLE_AFFILIATE</code>.</li>
 <li>El servicio resuelve el afiliado a partir del claim, no de un parámetro de la ruta.</li>
-<li>El mapper construye el DTO enmascarando documento, correo y teléfono.</li>
+<li>El mapper construye el DTO enmascarando el número de documento; el correo y el teléfono se enmascaran
+   solo cuando la consulta es de back-office o auditoría, porque el titular puede ver sus propios datos
+   de contacto.</li>
 <li>El portal muestra nombre, categoría, estado, empresa y fechas.</li>
 </ol>
 <p><strong>Flujos alternos</strong></p>
@@ -146,7 +148,8 @@ usarse como guion de demostración y como base de las pruebas de aceptación.</p
 <li><strong>A2 Afiliado inexistente o inactivo</strong> → 404 o 403 sin revelar si el registro existe.</li>
 <li><strong>A3 El afiliado intenta leer otro identificador</strong> → 403 <code>ACCESS_DENIED</code> y registro en auditoría.</li>
 </ul>
-<p><strong>Postcondición:</strong> el afiliado ve únicamente su información, con datos personales enmascarados.</p>
+<p><strong>Postcondición:</strong> el afiliado ve únicamente su información, con el número de documento enmascarado y sus
+datos de contacto completos porque es el titular.</p>
 <hr>
 <h2 id="uc-02-consultar-beneficiarios">UC-02 · Consultar beneficiarios</h2>
 <table>
