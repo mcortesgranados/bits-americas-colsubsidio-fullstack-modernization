@@ -137,3 +137,8 @@ pre.mermaid { background: #fff; border: 1px solid #d7e3f1; border-radius: 8px; p
 .quick-access-list a { display: inline-block; padding: 4px 9px; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; color: #1565c0; font-size: .78rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .quick-access-list a:hover, .quick-access-list a:focus { border-color: #1565c0; background: #e3f2fd; outline: 2px solid #93c5fd; outline-offset: 1px; }
 @media (max-width: 600px) { .quick-access { top: 108px; flex-direction: column; align-items: stretch; gap: 4px; padding: 6px; } .quick-access-label { font-size: .7rem; } }
+
+/* Free tier badges used in the Azure comparison table */
+.ft { display: inline-flex; align-items: center; gap: .35rem; padding: 2px 9px; border-radius: 999px; font-size: .82rem; font-weight: 800; white-space: nowrap; }
+.ft--yes { background: #e6f4ea; color: #1b5e20; border: 1px solid #a5d6a7; }
+.ft--no { background: #fdecea; color: #a1151b; border: 1px solid #f5b5b0; }

@@ -46,3 +46,6 @@ application-secret.yml
 
 # capturas de verificación (no son entregables)
 capturas/
+
+# artefactos de verificación generados por el agente
+.artifacts/
