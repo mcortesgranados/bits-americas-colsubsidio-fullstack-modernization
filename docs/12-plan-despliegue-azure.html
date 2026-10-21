@@ -345,17 +345,17 @@ ofrece <strong>deployment slots</strong>, y sin slots no hay promoción con swap
 <td>Referencia, no valor</td>
 </tr>
 <tr>
-<td><code>APP_MESSAGING_TRANSPORT</code></td>
+<td><code>MESSAGING_TRANSPORT</code></td>
 <td><code>azure</code></td>
 <td>Service Bus real</td>
 </tr>
 <tr>
-<td><code>APP_STORAGE_PROVIDER</code></td>
+<td><code>STORAGE_PROVIDER</code></td>
 <td><code>azure</code></td>
 <td>Blob real</td>
 </tr>
 <tr>
-<td><code>APP_NOTIFICATIONS_PROVIDER</code></td>
+<td><code>NOTIFICATION_PROVIDER</code></td>
 <td><code>azure-function</code></td>
 <td>Function real</td>
 </tr>
@@ -969,6 +969,10 @@ URL no está en <code>environment.ts</code>, está en un JSON que se sirve con e
 local sustituyen a Service Bus y Blob. La mensajería sigue funcionando —outbox, idempotencia, reintentos—
 pero <strong>no se demuestra la integración con Azure</strong>, que es parte explícita del perfil solicitado
 (<a href="09-descripcion-del-cargo.html">09 · Descripción del cargo</a>).</p>
+<p>Esa pérdida se compensa en parte ejecutando el backend <strong>en local contra Azure real</strong>
+(<a href="10-tecnologias-azure.html#1012-ejecucion-local-contra-servicios-de-azure">10 · §10.12</a>): con los
+interruptores de configuración se puede enseñar Service Bus, Blob y la Function funcionando sin desplegar
+nada. Lo que no se recupera por esa vía es la parte de plataforma —slots, swap e identidad administrada—.</p>
 <h3 id="coste">Coste</h3>
 <table>
 <thead>
@@ -1029,8 +1033,8 @@ no las 750 h durante 12 meses del esquema anterior.</p>
 </tbody>
 </table>
 <h3 id="volver-a-azure-sin-reescribir">Volver a Azure sin reescribir</h3>
-<p>El <code>.jar</code> es el mismo. Volver consiste en cambiar <code>DB_URL</code>, <code>APP_MESSAGING_TRANSPORT</code>,
-<code>APP_STORAGE_PROVIDER</code> y <code>APP_NOTIFICATIONS_PROVIDER</code>, apuntar a Key Vault y desplegar en el slot. Por eso
+<p>El <code>.jar</code> es el mismo. Volver consiste en cambiar <code>DB_URL</code>, <code>MESSAGING_TRANSPORT</code>, <code>STORAGE_PROVIDER</code> y
+<code>NOTIFICATION_PROVIDER</code>, apuntar a Key Vault y desplegar en el slot. Por eso
 la variante es reversible: lo que se pierde mientras tanto es la demostración, no el trabajo.</p>
 <p>La decisión está registrada en <a href="adr-0009-despliegue-backend-ec2.html">ADR-0009</a>, con las consecuencias
 aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un descuido en la

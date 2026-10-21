@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>10 · Tecnologías de Azure en la prueba técnica</title>
+<title>Documentación</title>
 <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
@@ -26,8 +26,8 @@
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
-  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#101-para-que-se-usa-azure">10.1 Para qué se usa Azure</a></li><li><a href="#102-mapa-de-servicios">10.2 Mapa de servicios</a></li><li><a href="#103-matriz-de-intervencion">10.3 Matriz de intervención</a></li><li><a href="#104-requisitos-de-integracion">10.4 Requisitos de integración</a></li><li><a href="#105-contrato-del-mensaje">10.5 Contrato del mensaje</a></li><li><a href="#106-contrato-del-documento">10.6 Contrato del documento</a></li><li><a href="#107-fallos-reintentos-y-cola-de-fallidos">10.7 Fallos, reintentos y cola de fallidos</a></li><li><a href="#108-paridad-local-azure">10.8 Paridad local ↔ Azure</a></li><li><a href="#109-servicios-evaluados-y-descartados">10.9 Servicios evaluados y descartados</a></li><li><a href="#1010-estado-y-evidencia-en-el-codigo">10.10 Estado y evidencia en el código</a></li><li><a href="#1011-configuracion-por-entorno">10.11 Configuración por entorno</a></li><li><a href="#1012-que-falta-para-desplegar">10.12 Qué falta para desplegar</a></li></ul></nav>
-<h1 id="10-tecnologias-de-azure-en-la-prueba-tecnica">10 · Tecnologías de Azure en la prueba técnica</h1>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#101-para-que-se-usa-azure">10.1 Para qué se usa Azure</a></li><li><a href="#102-mapa-de-servicios">10.2 Mapa de servicios</a></li><li><a href="#103-matriz-de-intervencion">10.3 Matriz de intervención</a></li><li><a href="#104-requisitos-de-integracion">10.4 Requisitos de integración</a></li><li><a href="#105-contrato-del-mensaje">10.5 Contrato del mensaje</a></li><li><a href="#106-contrato-del-documento">10.6 Contrato del documento</a></li><li><a href="#107-fallos-reintentos-y-cola-de-fallidos">10.7 Fallos, reintentos y cola de fallidos</a></li><li><a href="#108-paridad-local-azure">10.8 Paridad local ↔ Azure</a></li><li><a href="#109-servicios-evaluados-y-descartados">10.9 Servicios evaluados y descartados</a></li><li><a href="#1010-estado-y-evidencia-en-el-codigo">10.10 Estado y evidencia en el código</a></li><li><a href="#1011-configuracion-por-entorno">10.11 Configuración por entorno</a></li><li><a href="#1013-que-falta-para-desplegar">10.13 Qué falta para desplegar</a></li><li><a href="#1012-ejecucion-local-contra-servicios-de-azure">10.12 Ejecución local contra servicios de…</a></li></ul></nav>
+<p>﻿# 10 · Tecnologías de Azure en la prueba técnica</p>
 <p>Inventario único de los servicios de Azure que intervienen en el prototipo: para qué se usan, qué
 contrato exponen, con qué se sustituyen en local y en qué estado están. Si un servicio no aparece aquí,
 no forma parte del alcance.</p>
@@ -529,7 +529,7 @@ como objeto (<code>JsonNode</code>) manteniendo compatibilidad con los mensajes 
 </tr>
 </tbody>
 </table>
-<h2 id="1012-que-falta-para-desplegar">10.12 Qué falta para desplegar</h2>
+<h2 id="1013-que-falta-para-desplegar">10.13 Qué falta para desplegar</h2>
 <ol>
 <li>Provisionar con Bicep: Storage, Service Bus, Event Grid topic, Function App, App Service, Static Web App, Key Vault, Application Insights.</li>
 <li>Publicar la Function de notificaciones y la de validación documental.</li>
@@ -539,6 +539,188 @@ como objeto (<code>JsonNode</code>) manteniendo compatibilidad con los mensajes 
 </ol>
 <p>Mientras eso no ocurra, el estado es <strong>parcial</strong> y así se declara en la matriz de cobertura del JD
 (documento 09).</p>
+<h2 id="1012-ejecucion-local-contra-servicios-de-azure">10.12 Ejecución local contra servicios de Azure</h2>
+<p>El backend puede correr en el portátil y llamar a <strong>Azure real</strong>. Es la forma de demostrar la integración
+sin desplegar nada: el <code>.jar</code> se ejecuta en local, pero la mensajería, el almacenamiento y las
+notificaciones atraviesan la frontera de red y usan los servicios gestionados.</p>
+<p>No hay cambios de código: los adaptadores ya se eligen por propiedad, y por eso <code>FR-AZR-06</code> (mismo
+contrato en local y en Azure) es verificable.</p>
+<h3 id="10121-que-se-enciende-y-que-hace-falta">10.12.1 Qué se enciende y qué hace falta</h3>
+<table>
+<thead>
+<tr>
+<th>Capacidad</th>
+<th>Sin Azure (por defecto)</th>
+<th>Contra Azure desde local</th>
+<th>Requisito previo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mensajería</td>
+<td>Publicador en proceso</td>
+<td>Service Bus, cola <code>subsidy-requests</code></td>
+<td>Namespace y cola creados</td>
+</tr>
+<tr>
+<td>Documentos</td>
+<td>Sistema de archivos</td>
+<td>Blob privado, clave opaca y SHA-256</td>
+<td>Cuenta de almacenamiento y contenedor</td>
+</tr>
+<tr>
+<td>Notificaciones</td>
+<td>Log estructurado</td>
+<td>Function HTTP desplegada, o Core Tools en <code>localhost:7071</code></td>
+<td>Function publicada o en ejecución</td>
+</tr>
+<tr>
+<td>Secretos</td>
+<td><code>.env</code> no versionado</td>
+<td>Key Vault</td>
+<td>Permiso de lectura para tu identidad</td>
+</tr>
+<tr>
+<td>Observabilidad</td>
+<td>Logs y Actuator</td>
+<td>Application Insights</td>
+<td>Cadena de conexión</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td><code>ng serve</code> contra la API local</td>
+<td>Igual; cambia solo la URL base</td>
+<td>CORS con los orígenes de localhost</td>
+</tr>
+</tbody>
+</table>
+<p>Las variables son las que ya lee <code>application.yml</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Valores</th>
+<th>Efecto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MESSAGING_TRANSPORT</code></td>
+<td><code>local</code> | <code>azure</code></td>
+<td>Publicador en proceso o <code>ServiceBusSenderClient</code></td>
+</tr>
+<tr>
+<td><code>STORAGE_PROVIDER</code></td>
+<td><code>local</code> | <code>azure</code></td>
+<td>Disco o <code>BlobContainerClient</code></td>
+</tr>
+<tr>
+<td><code>NOTIFICATION_PROVIDER</code></td>
+<td><code>local-log</code> | <code>azure-function</code></td>
+<td>Log o llamada HTTP a la Function</td>
+</tr>
+<tr>
+<td><code>CORS_ALLOWED_ORIGINS</code></td>
+<td>lista separada por comas</td>
+<td>Orígenes permitidos; por defecto los tres puertos de <code>ng serve</code></td>
+</tr>
+<tr>
+<td><code>AZURE_SERVICE_BUS_CONNECTION_STRING</code></td>
+<td>cadena</td>
+<td>Namespace de Service Bus</td>
+</tr>
+<tr>
+<td><code>AZURE_STORAGE_CONNECTION_STRING</code></td>
+<td>cadena</td>
+<td>Cuenta de almacenamiento</td>
+</tr>
+<tr>
+<td><code>AZURE_FUNCTION_BASE_URL</code></td>
+<td>URL</td>
+<td>Endpoint de la Function</td>
+</tr>
+<tr>
+<td><code>AZURE_FUNCTION_KEY</code></td>
+<td>clave</td>
+<td>Autorización de la Function</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-powershell">$env:MESSAGING_TRANSPORT=&quot;azure&quot;
+$env:STORAGE_PROVIDER=&quot;azure&quot;
+$env:NOTIFICATION_PROVIDER=&quot;azure-function&quot;
+$env:AZURE_SERVICE_BUS_CONNECTION_STRING=&quot;Endpoint=sb://&lt;namespace&gt;.servicebus.windows.net/;SharedAccessKeyName=&lt;policy&gt;;SharedAccessKey=&lt;key&gt;&quot;
+$env:AZURE_STORAGE_CONNECTION_STRING=&quot;DefaultEndpointsProtocol=https;AccountName=&lt;cuenta&gt;;AccountKey=&lt;key&gt;;EndpointSuffix=core.windows.net&quot;
+java -jar backend/target/colsubsidio-platform-api.jar
+</code></pre>
+<h3 id="10122-dos-formas-de-autenticarse">10.12.2 Dos formas de autenticarse</h3>
+<table>
+<thead>
+<tr>
+<th>Forma</th>
+<th>Cómo</th>
+<th>Cuándo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cadena de conexión en <code>.env</code></td>
+<td>Se pega la clave del portal</td>
+<td>Demo rápida; el secreto vive en disco y <code>.env</code> está en <code>.gitignore</code></td>
+</tr>
+<tr>
+<td><code>az login</code> + <code>DefaultAzureCredential</code></td>
+<td>La sesión del usuario es la credencial</td>
+<td>Demuestra separación entre credencial y configuración, igual que la identidad administrada en producción</td>
+</tr>
+</tbody>
+</table>
+<p>Con la segunda, los permisos se asignan por rol y no se copia ninguna clave:</p>
+<ul>
+<li><em>Azure Service Bus Data Sender</em> para publicar y <em>Data Receiver</em> para consumir.</li>
+<li><em>Storage Blob Data Contributor</em> sobre el contenedor de evidencias.</li>
+<li><em>Key Vault Secrets User</em> si se leen secretos del vault.</li>
+</ul>
+<p>Es la opción recomendada para la demo: no hay secretos en el repositorio y el mecanismo es el mismo que
+se usaría con identidad administrada en App Service.</p>
+<h3 id="10123-que-no-se-puede-probar-entero-desde-local">10.12.3 Qué no se puede probar entero desde local</h3>
+<table>
+<thead>
+<tr>
+<th>Pieza</th>
+<th>Límite</th>
+<th>Alternativa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Event Grid</td>
+<td>No entrega eventos a <code>localhost</code>: el suscriptor debe ser público</td>
+<td>Dejarlo en el log estructurado o exponer un túnel temporal</td>
+</tr>
+<tr>
+<td>Static Web Apps</td>
+<td>Requiere despliegue</td>
+<td><code>ng serve</code> en los tres puertos, o el emulador de Static Web Apps</td>
+</tr>
+<tr>
+<td>Identidad administrada</td>
+<td>No existe fuera de Azure</td>
+<td><code>DefaultAzureCredential</code> con la sesión del usuario</td>
+</tr>
+</tbody>
+</table>
+<h3 id="10124-coste-y-limpieza">10.12.4 Coste y limpieza</h3>
+<p>Service Bus, Blob y Key Vault se facturan <strong>por operación</strong>, así que una demo completa cuesta céntimos.
+El riesgo no es el consumo, es dejarlos encendidos: el crédito de 200 USD de la cuenta gratuita caduca a
+los <strong>30 días</strong>, y a partir de ahí todo se factura. Antes de la primera prueba conviene una alerta de
+presupuesto y, al terminar, borrar el grupo de recursos si no se va a reutilizar.</p>
+<h3 id="10125-por-que-merece-la-pena">10.12.5 Por qué merece la pena</h3>
+<p>Esta modalidad es la que permite que la decisión de desplegar el backend en EC2
+(<a href="adr-0009-despliegue-backend-ec2.html">ADR-0009</a>) no deje la integración con Azure sin evidencia: los
+requisitos <code>FR-AZR-01</code> a <code>FR-AZR-08</code> se pueden demostrar desde el portátil, con recursos reales, sin pagar
+un App Service. Lo que sigue sin poder demostrarse así es la parte de plataforma —slots, swap sin corte,
+identidad administrada, TLS gestionado—, que es exactamente lo que se acepta perder en esa decisión.</p>
   <div class="footer">
     Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
   </div>

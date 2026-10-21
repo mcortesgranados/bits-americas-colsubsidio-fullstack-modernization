@@ -192,9 +192,9 @@ ofrece **deployment slots**, y sin slots no hay promoción con swap.
 | `SPRING_PROFILES_ACTIVE` | `prod` | Activa el perfil sin secretos embebidos |
 | `DB_URL` | `jdbc:mysql://…:3306/colsubsidio_demo?sslMode=REQUIRED` | TLS obligatorio contra MySQL Flexible |
 | `DB_PASSWORD` | `@Microsoft.KeyVault(SecretUri=…)` | Referencia, no valor |
-| `APP_MESSAGING_TRANSPORT` | `azure` | Service Bus real |
-| `APP_STORAGE_PROVIDER` | `azure` | Blob real |
-| `APP_NOTIFICATIONS_PROVIDER` | `azure-function` | Function real |
+| `MESSAGING_TRANSPORT` | `azure` | Service Bus real |
+| `STORAGE_PROVIDER` | `azure` | Blob real |
+| `NOTIFICATION_PROVIDER` | `azure-function` | Function real |
 | `SPRING_FLYWAY_ENABLED` | `false` | Las migraciones las ejecuta el pipeline, no el arranque |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` | Referencia a Key Vault | Telemetría |
 
@@ -533,6 +533,11 @@ local sustituyen a Service Bus y Blob. La mensajería sigue funcionando —outbo
 pero **no se demuestra la integración con Azure**, que es parte explícita del perfil solicitado
 ([09 · Descripción del cargo](09-descripcion-del-cargo.md)).
 
+Esa pérdida se compensa en parte ejecutando el backend **en local contra Azure real**
+([10 · §10.12](10-tecnologias-azure.md#1012-ejecucion-local-contra-servicios-de-azure)): con los
+interruptores de configuración se puede enseñar Service Bus, Blob y la Function funcionando sin desplegar
+nada. Lo que no se recupera por esa vía es la parte de plataforma —slots, swap e identidad administrada—.
+
 ### Coste
 
 | Cuenta | Esquema | Consecuencia |
@@ -556,8 +561,8 @@ no las 750 h durante 12 meses del esquema anterior.
 
 ### Volver a Azure sin reescribir
 
-El `.jar` es el mismo. Volver consiste en cambiar `DB_URL`, `APP_MESSAGING_TRANSPORT`,
-`APP_STORAGE_PROVIDER` y `APP_NOTIFICATIONS_PROVIDER`, apuntar a Key Vault y desplegar en el slot. Por eso
+El `.jar` es el mismo. Volver consiste en cambiar `DB_URL`, `MESSAGING_TRANSPORT`, `STORAGE_PROVIDER` y
+`NOTIFICATION_PROVIDER`, apuntar a Key Vault y desplegar en el slot. Por eso
 la variante es reversible: lo que se pierde mientras tanto es la demostración, no el trabajo.
 
 La decisión está registrada en [ADR-0009](adr/ADR-0009-despliegue-backend-ec2.md), con las consecuencias

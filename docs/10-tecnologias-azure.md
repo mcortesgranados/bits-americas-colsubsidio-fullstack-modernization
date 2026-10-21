@@ -1,4 +1,4 @@
-# 10 · Tecnologías de Azure en la prueba técnica
+﻿# 10 · Tecnologías de Azure en la prueba técnica
 
 Inventario único de los servicios de Azure que intervienen en el prototipo: para qué se usan, qué
 contrato exponen, con qué se sustituyen en local y en qué estado están. Si un servicio no aparece aquí,
@@ -155,7 +155,7 @@ como objeto (`JsonNode`) manteniendo compatibilidad con los mensajes ya publicad
 | `AZURE_FUNCTION_BASE_URL` | Endpoint de la Function | `http://localhost:7071` |
 | `AZURE_FUNCTION_KEY` | Clave de función | vacío |
 
-## 10.12 Qué falta para desplegar
+## 10.13 Qué falta para desplegar
 
 1. Provisionar con Bicep: Storage, Service Bus, Event Grid topic, Function App, App Service, Static Web App, Key Vault, Application Insights.
 2. Publicar la Function de notificaciones y la de validación documental.
@@ -165,3 +165,84 @@ como objeto (`JsonNode`) manteniendo compatibilidad con los mensajes ya publicad
 
 Mientras eso no ocurra, el estado es **parcial** y así se declara en la matriz de cobertura del JD
 (documento 09).
+
+## 10.12 Ejecución local contra servicios de Azure
+
+El backend puede correr en el portátil y llamar a **Azure real**. Es la forma de demostrar la integración
+sin desplegar nada: el `.jar` se ejecuta en local, pero la mensajería, el almacenamiento y las
+notificaciones atraviesan la frontera de red y usan los servicios gestionados.
+
+No hay cambios de código: los adaptadores ya se eligen por propiedad, y por eso `FR-AZR-06` (mismo
+contrato en local y en Azure) es verificable.
+
+### 10.12.1 Qué se enciende y qué hace falta
+
+| Capacidad | Sin Azure (por defecto) | Contra Azure desde local | Requisito previo |
+|-----------|-------------------------|--------------------------|------------------|
+| Mensajería | Publicador en proceso | Service Bus, cola `subsidy-requests` | Namespace y cola creados |
+| Documentos | Sistema de archivos | Blob privado, clave opaca y SHA-256 | Cuenta de almacenamiento y contenedor |
+| Notificaciones | Log estructurado | Function HTTP desplegada, o Core Tools en `localhost:7071` | Function publicada o en ejecución |
+| Secretos | `.env` no versionado | Key Vault | Permiso de lectura para tu identidad |
+| Observabilidad | Logs y Actuator | Application Insights | Cadena de conexión |
+| Frontend | `ng serve` contra la API local | Igual; cambia solo la URL base | CORS con los orígenes de localhost |
+
+Las variables son las que ya lee `application.yml`:
+
+| Variable | Valores | Efecto |
+|----------|---------|--------|
+| `MESSAGING_TRANSPORT` | `local` \| `azure` | Publicador en proceso o `ServiceBusSenderClient` |
+| `STORAGE_PROVIDER` | `local` \| `azure` | Disco o `BlobContainerClient` |
+| `NOTIFICATION_PROVIDER` | `local-log` \| `azure-function` | Log o llamada HTTP a la Function |
+| `CORS_ALLOWED_ORIGINS` | lista separada por comas | Orígenes permitidos; por defecto los tres puertos de `ng serve` |
+| `AZURE_SERVICE_BUS_CONNECTION_STRING` | cadena | Namespace de Service Bus |
+| `AZURE_STORAGE_CONNECTION_STRING` | cadena | Cuenta de almacenamiento |
+| `AZURE_FUNCTION_BASE_URL` | URL | Endpoint de la Function |
+| `AZURE_FUNCTION_KEY` | clave | Autorización de la Function |
+
+```powershell
+$env:MESSAGING_TRANSPORT="azure"
+$env:STORAGE_PROVIDER="azure"
+$env:NOTIFICATION_PROVIDER="azure-function"
+$env:AZURE_SERVICE_BUS_CONNECTION_STRING="Endpoint=sb://<namespace>.servicebus.windows.net/;SharedAccessKeyName=<policy>;SharedAccessKey=<key>"
+$env:AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=<cuenta>;AccountKey=<key>;EndpointSuffix=core.windows.net"
+java -jar backend/target/colsubsidio-platform-api.jar
+```
+
+### 10.12.2 Dos formas de autenticarse
+
+| Forma | Cómo | Cuándo |
+|-------|------|--------|
+| Cadena de conexión en `.env` | Se pega la clave del portal | Demo rápida; el secreto vive en disco y `.env` está en `.gitignore` |
+| `az login` + `DefaultAzureCredential` | La sesión del usuario es la credencial | Demuestra separación entre credencial y configuración, igual que la identidad administrada en producción |
+
+Con la segunda, los permisos se asignan por rol y no se copia ninguna clave:
+
+- *Azure Service Bus Data Sender* para publicar y *Data Receiver* para consumir.
+- *Storage Blob Data Contributor* sobre el contenedor de evidencias.
+- *Key Vault Secrets User* si se leen secretos del vault.
+
+Es la opción recomendada para la demo: no hay secretos en el repositorio y el mecanismo es el mismo que
+se usaría con identidad administrada en App Service.
+
+### 10.12.3 Qué no se puede probar entero desde local
+
+| Pieza | Límite | Alternativa |
+|-------|--------|-------------|
+| Event Grid | No entrega eventos a `localhost`: el suscriptor debe ser público | Dejarlo en el log estructurado o exponer un túnel temporal |
+| Static Web Apps | Requiere despliegue | `ng serve` en los tres puertos, o el emulador de Static Web Apps |
+| Identidad administrada | No existe fuera de Azure | `DefaultAzureCredential` con la sesión del usuario |
+
+### 10.12.4 Coste y limpieza
+
+Service Bus, Blob y Key Vault se facturan **por operación**, así que una demo completa cuesta céntimos.
+El riesgo no es el consumo, es dejarlos encendidos: el crédito de 200 USD de la cuenta gratuita caduca a
+los **30 días**, y a partir de ahí todo se factura. Antes de la primera prueba conviene una alerta de
+presupuesto y, al terminar, borrar el grupo de recursos si no se va a reutilizar.
+
+### 10.12.5 Por qué merece la pena
+
+Esta modalidad es la que permite que la decisión de desplegar el backend en EC2
+([ADR-0009](adr/ADR-0009-despliegue-backend-ec2.md)) no deje la integración con Azure sin evidencia: los
+requisitos `FR-AZR-01` a `FR-AZR-08` se pueden demostrar desde el portátil, con recursos reales, sin pagar
+un App Service. Lo que sigue sin poder demostrarse así es la parte de plataforma —slots, swap sin corte,
+identidad administrada, TLS gestionado—, que es exactamente lo que se acepta perder en esa decisión.
