@@ -127,6 +127,16 @@ shell.
 
 Pruebas del frontend: `npm test` (Jest, 4 suites).
 
+### Arranque en un solo paso
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\start-demo.ps1
+```
+
+Levanta la API, el remoto compilado y el shell, fuerza las variables locales de la base y espera a que
+`/actuator/health` responda antes de devolver el control. Es la forma recomendada de abrir la demo: evita
+tener que exportar variables a mano y deja los tres servicios en segundo plano con sus logs en
+`backend\target\demo-api.log`.
 Credenciales de demostración previstas: `afiliado.demo`, `empresa.demo`, `backoffice.demo`,
 `auditor.demo`, todas con contraseña `Demo123!` y sobreescribibles por variables de entorno.
 
