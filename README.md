@@ -57,6 +57,20 @@ prueba como exitosa sin su ejecución real.
 └── legacy-lab/      # Laboratorio de migración Java 8 / Boot 2.3
 ```
 
+### Si la aplicación no conecta a la base local
+
+Spring Boot da prioridad a las variables de entorno sobre `application.yml`. Si tu máquina tiene
+`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` o `SPRING_DATASOURCE_PASSWORD` definidas —por
+ejemplo, por otro proyecto— la aplicación intentará conectarse a esa otra base, y el error será un
+`Access denied` o un `Communications link failure` que no menciona el archivo de configuración. Para
+esta sesión:
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:mysql://127.0.0.1:3306/colsubsidio_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+$env:SPRING_DATASOURCE_USERNAME = "colsubsidio"
+$env:SPRING_DATASOURCE_PASSWORD = "colsubsidio"
+```
+
 ## Requisitos de entorno (objetivo)
 
 | Herramienta | Versión |
@@ -77,6 +91,8 @@ powershell -ExecutionPolicy Bypass -File tools\apply_local_db.ps1
 # 2. Backend
 cd backend
 ./mvnw spring-boot:run
+#    Con Maven instalado fuera del wrapper:
+#    mvn spring-boot:run
 
 # 3. Frontend (tres procesos)
 cd frontend

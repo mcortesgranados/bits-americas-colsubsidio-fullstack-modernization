@@ -68,7 +68,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * @author Manuela Cortés Granados (manuelacortesgranados@gmail)
      * @since 2026-10-20 11:42 GMT-5 Bogotá D.C. Colombia
      */
-    long countByAffiliateIdAndReadFlagFalse(Long affiliateId);
+    long countByAffiliateIdAndReadFalse(Long affiliateId);
 
     /**
      * Exposes a derived query over the aggregate managed by this repository. Spring Data validates the

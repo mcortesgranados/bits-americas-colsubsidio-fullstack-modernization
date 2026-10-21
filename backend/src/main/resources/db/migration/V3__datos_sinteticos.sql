@@ -12,11 +12,11 @@ INSERT INTO affiliate (id, document_type, document_number, first_name, last_name
 (2, 'CC', '79876543', 'Carlos Andrés', 'Mejía Torres', 'carlos.mejia@example.test', '3109876543', '1985-11-03', 'B', 2, 'ACTIVE', '2026-09-03 09:10:00', '2026-09-03 09:10:00'),
 (3, 'CC', '1015987654', 'Luisa Fernanda', 'Gómez Díaz', 'luisa.gomez@example.test', '3205557788', '1998-07-25', 'A', 1, 'ACTIVE', '2026-09-03 09:20:00', '2026-09-03 09:20:00');
 
-INSERT INTO beneficiary (id, affiliate_id, full_name, relationship, document_number, birth_date) VALUES
-(1, 1, 'Sofía Rojas Rojas', 'HIJO', '1015203040', '2015-02-18'),
-(2, 1, 'Julián Rojas Rojas', 'HIJO', '1025304050', '2018-09-30'),
-(3, 2, 'Marta Torres de Mejía', 'CONYUGE', '41678901', '1987-01-22'),
-(4, 3, 'Emilia Gómez Díaz', 'HIJO', '1045607080', '2021-06-14');
+INSERT INTO beneficiary (id, affiliate_id, full_name, relationship, document_number, birth_date, status, created_at) VALUES
+(1, 1, 'Sofía Rojas Rojas', 'HIJO', '1015203040', '2015-02-18', 'ACTIVE', '2026-09-03 09:05:00'),
+(2, 1, 'Julián Rojas Rojas', 'HIJO', '1025304050', '2018-09-30', 'ACTIVE', '2026-09-03 09:05:00'),
+(3, 2, 'Marta Torres de Mejía', 'CONYUGE', '41678901', '1987-01-22', 'ACTIVE', '2026-09-03 09:15:00'),
+(4, 3, 'Emilia Gómez Díaz', 'HIJO', '1045607080', '2021-06-14', 'ACTIVE', '2026-09-03 09:25:00');
 
 INSERT INTO company_worker (id, company_id, document_type, document_number, first_name, last_name, position, hired_at, status, created_at, updated_at) VALUES
 (1, 1, 'CC', '1020304050', 'Ana María', 'Rojas Peña', 'Analista de calidad', '2019-03-01', 'ACTIVE', '2026-09-04 10:00:00', '2026-09-04 10:00:00'),

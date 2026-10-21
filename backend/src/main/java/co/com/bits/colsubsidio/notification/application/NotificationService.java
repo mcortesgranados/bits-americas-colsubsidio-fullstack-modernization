@@ -162,7 +162,7 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public long unreadCount(Long affiliateId) {
-        return repository.countByAffiliateIdAndReadFlagFalse(affiliateId);
+        return repository.countByAffiliateIdAndReadFalse(affiliateId);
     }
 
     /**

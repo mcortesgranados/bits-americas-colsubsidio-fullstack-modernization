@@ -43,6 +43,8 @@ CREATE TABLE beneficiary (
     relationship    VARCHAR(20)  NOT NULL,
     document_number VARCHAR(30)  NULL,
     birth_date      DATE         NULL,
+    status          VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    created_at      TIMESTAMP    NOT NULL,
     PRIMARY KEY (id),
     KEY idx_beneficiary_affiliate (affiliate_id),
     CONSTRAINT fk_beneficiary_affiliate FOREIGN KEY (affiliate_id) REFERENCES affiliate (id)
@@ -139,6 +141,7 @@ CREATE TABLE app_user (
     role          VARCHAR(30)  NOT NULL,
     affiliate_id  BIGINT       NULL,
     company_id    BIGINT       NULL,
+    enabled       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMP    NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_app_user_username (username),
