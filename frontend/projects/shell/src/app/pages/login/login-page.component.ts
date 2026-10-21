@@ -4,6 +4,13 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
+/** Cuenta de demostración que se ofrece en la propia pantalla de acceso. */
+interface DemoAccount {
+  username: string;
+  role: string;
+  scope: string;
+}
+
 /**
  * Pantalla de acceso del portal.
  *
@@ -34,6 +41,34 @@ export class LoginPageComponent {
     username: this.formBuilder.control('', [Validators.required, Validators.maxLength(60)]),
     password: this.formBuilder.control('', [Validators.required, Validators.minLength(8)]),
   });
+
+  /**
+   * Cuentas sintéticas que crea `DemoUserInitializer` al arrancar.
+   *
+   * Se listan aquí porque el evaluador necesita entrar sin leer el repositorio. Son cuentas de
+   * demostración con datos inventados y comparten contraseña: en un entorno real esta lista no existiría y
+   * la pantalla no revelaría qué usuarios hay dados de alta.
+   */
+  readonly demoPassword = 'Demo123!';
+  readonly demoAccounts: DemoAccount[] = [
+    { username: 'afiliado.demo', role: 'Afiliado', scope: 'Perfil, beneficiarios y solicitudes' },
+    { username: 'empresa.demo', role: 'Empresa', scope: 'Portal de empresas' },
+    { username: 'backoffice.demo', role: 'Back-office', scope: 'Consulta de cualquier afiliado (API)' },
+    { username: 'auditor.demo', role: 'Auditor', scope: 'Consulta de solo lectura (API)' },
+  ];
+
+  /**
+   * Rellena el formulario con una cuenta de demostración.
+   *
+   * Solo rellena: el envío sigue siendo explícito para que quien prueba vea usuario y contraseña antes de
+   * entrar, y para que un clic accidental no abra una sesión.
+   *
+   * @param username cuenta elegida en la lista
+   */
+  useDemoAccount(username: string): void {
+    this.form.setValue({ username, password: this.demoPassword });
+    this.errorMessage.set(null);
+  }
 
   /**
    * Envía las credenciales y navega al destino pendiente.

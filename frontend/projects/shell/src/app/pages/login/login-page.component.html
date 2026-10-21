@@ -53,4 +53,31 @@
       }
     </p>
   </form>
+
+  <section class="demo" aria-labelledby="demo-title">
+    <h2 id="demo-title" class="demo__title">Usuarios de prueba</h2>
+    <p class="demo__hint">
+      Cuentas sintéticas de este entorno de demostración. Contraseña para todas:
+      <code class="demo__password">{{ demoPassword }}</code>
+    </p>
+
+    <ul class="demo__list">
+      @for (account of demoAccounts; track account.username) {
+        <li class="demo__item">
+          <div class="demo__identity">
+            <code class="demo__user">{{ account.username }}</code>
+            <span class="demo__role">{{ account.role }} · {{ account.scope }}</span>
+          </div>
+          <button
+            class="demo__use"
+            type="button"
+            (click)="useDemoAccount(account.username)"
+            [attr.aria-label]="'Usar la cuenta ' + account.username"
+          >
+            Usar
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
 </section>

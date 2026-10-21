@@ -71,6 +71,93 @@
   }
 }
 
+.demo {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--cs-border);
+
+  &__title {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--cs-graphite);
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--cs-muted);
+  }
+
+  &__password {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    padding: 0.05rem 0.3rem;
+    border-radius: 0.25rem;
+    background: #f2f3f7;
+    color: var(--cs-graphite);
+  }
+
+  &__list {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #e6e8ee;
+    border-radius: 0.5rem;
+  }
+
+  &__identity {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  &__user {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    color: var(--cs-graphite);
+  }
+
+  &__role {
+    font-size: 0.72rem;
+    color: var(--cs-muted);
+  }
+
+  &__use {
+    flex: none;
+    min-height: 36px;
+    padding: 0 0.8rem;
+    border: 1px solid var(--cs-graphite);
+    border-radius: var(--cs-pill);
+    background: var(--cs-white);
+    color: var(--cs-graphite);
+    font-family: var(--cs-font);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--cs-graphite);
+      color: var(--cs-white);
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--cs-accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
 .field {
   display: grid;
   gap: 0.35rem;
