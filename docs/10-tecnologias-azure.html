@@ -26,7 +26,7 @@
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
-  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#101-para-que-se-usa-azure">10.1 Para qué se usa Azure</a></li><li><a href="#102-mapa-de-servicios">10.2 Mapa de servicios</a></li><li><a href="#103-matriz-de-intervencion">10.3 Matriz de intervención</a></li><li><a href="#104-requisitos-de-integracion">10.4 Requisitos de integración</a></li><li><a href="#105-contrato-del-mensaje">10.5 Contrato del mensaje</a></li><li><a href="#106-contrato-del-documento">10.6 Contrato del documento</a></li><li><a href="#107-fallos-reintentos-y-cola-de-fallidos">10.7 Fallos, reintentos y cola de fallidos</a></li><li><a href="#108-paridad-local-azure">10.8 Paridad local ↔ Azure</a></li><li><a href="#109-servicios-evaluados-y-descartados">10.9 Servicios evaluados y descartados</a></li><li><a href="#1010-estado-y-evidencia-en-el-codigo">10.10 Estado y evidencia en el código</a></li><li><a href="#1011-configuracion-por-entorno">10.11 Configuración por entorno</a></li><li><a href="#1013-que-falta-para-desplegar">10.13 Qué falta para desplegar</a></li><li><a href="#1012-ejecucion-local-contra-servicios-de-azure">10.12 Ejecución local contra servicios de…</a></li></ul></nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#101-para-que-se-usa-azure">10.1 Para qué se usa Azure</a></li><li><a href="#102-mapa-de-servicios">10.2 Mapa de servicios</a></li><li><a href="#103-matriz-de-intervencion">10.3 Matriz de intervención</a></li><li><a href="#104-requisitos-de-integracion">10.4 Requisitos de integración</a></li><li><a href="#105-contrato-del-mensaje">10.5 Contrato del mensaje</a></li><li><a href="#106-contrato-del-documento">10.6 Contrato del documento</a></li><li><a href="#107-fallos-reintentos-y-cola-de-fallidos">10.7 Fallos, reintentos y cola de fallidos</a></li><li><a href="#108-paridad-local-azure">10.8 Paridad local ↔ Azure</a></li><li><a href="#109-servicios-evaluados-y-descartados">10.9 Servicios evaluados y descartados</a></li><li><a href="#1010-estado-y-evidencia-en-el-codigo">10.10 Estado y evidencia en el código</a></li><li><a href="#1011-configuracion-por-entorno">10.11 Configuración por entorno</a></li><li><a href="#1013-que-falta-para-desplegar">10.13 Qué falta para desplegar</a></li><li><a href="#1012-ejecucion-local-contra-servicios-de-azure">10.12 Ejecución local contra servicios de…</a></li><li><a href="#1014-cobertura-de-azure-functions-en-los-trece-casos">10.14 Cobertura de Azure Functions en los…</a></li></ul></nav>
 <p>﻿# 10 · Tecnologías de Azure en la prueba técnica</p>
 <p>Inventario único de los servicios de Azure que intervienen en el prototipo: para qué se usan, qué
 contrato exponen, con qué se sustituyen en local y en qué estado están. Si un servicio no aparece aquí,
@@ -721,6 +721,213 @@ presupuesto y, al terminar, borrar el grupo de recursos si no se va a reutilizar
 requisitos <code>FR-AZR-01</code> a <code>FR-AZR-08</code> se pueden demostrar desde el portátil, con recursos reales, sin pagar
 un App Service. Lo que sigue sin poder demostrarse así es la parte de plataforma —slots, swap sin corte,
 identidad administrada, TLS gestionado—, que es exactamente lo que se acepta perder en esa decisión.</p>
+<h2 id="1014-cobertura-de-azure-functions-en-los-trece-casos">10.14 Cobertura de Azure Functions en los trece casos</h2>
+<p>La pregunta razonable es cómo hacer que <strong>los trece casos pasen por Azure Functions</strong> sin convertir el
+prototipo en trece funciones y sin salir del free tier. La respuesta es separar dos cosas: una <strong>función
+transversal de auditoría</strong> que recibe un evento por cada caso, y <strong>cuatro funciones especializadas</strong> donde
+existe trabajo asíncrono real.</p>
+<h3 id="10141-dos-capas-no-trece-funciones">10.14.1 Dos capas, no trece funciones</h3>
+<table>
+<thead>
+<tr>
+<th>Capa</th>
+<th>Función</th>
+<th>Disparador</th>
+<th>Qué aporta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transversal</td>
+<td><code>auditDispatcher</code></td>
+<td>Event Grid, topic <code>audit</code></td>
+<td>Recibe un evento por cada acción de negocio y completa <code>audit_log</code> con actor, correlación y resultado</td>
+</tr>
+<tr>
+<td>Trabajo asíncrono</td>
+<td><code>subsidyClassifier</code></td>
+<td>Event Grid, <code>subsidy.request.submitted</code></td>
+<td>Calcula documentos requeridos y mueve la solicitud</td>
+</tr>
+<tr>
+<td>Trabajo asíncrono</td>
+<td><code>documentScanner</code></td>
+<td>Blob Created</td>
+<td>Verifica el MIME real, recalcula SHA-256 y marca el documento</td>
+</tr>
+<tr>
+<td>Trabajo asíncrono</td>
+<td><code>notificationFanout</code></td>
+<td>Event Grid, <code>notification.requested</code></td>
+<td>Envía el aviso <code>EMAIL_DEMO</code> y registra el resultado</td>
+</tr>
+<tr>
+<td>Programada</td>
+<td><code>reportBuilder</code></td>
+<td>Timer, diario 02:00</td>
+<td>Precalcula los agregados del reporte administrativo</td>
+</tr>
+</tbody>
+</table>
+<p>Con cinco funciones se cubren los trece casos: cuatro tienen lógica propia y el resto entra por la capa
+transversal. Crear una función por endpoint sería peor negocio —más latencia, más superficie de fallo y
+catorce despliegues— sin añadir una sola garantía.</p>
+<h3 id="10142-que-funcion-toca-cada-caso">10.14.2 Qué función toca cada caso</h3>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Función</th>
+<th>Evento o disparador</th>
+<th>¿Free tier?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-01 · Perfil</td>
+<td><code>auditDispatcher</code></td>
+<td><code>audit.pii.read</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-02 · Beneficiarios</td>
+<td><code>auditDispatcher</code></td>
+<td><code>audit.pii.read</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-03 · Registrar solicitud</td>
+<td><code>subsidyClassifier</code></td>
+<td><code>subsidy.request.submitted</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-04 · Cargar documento</td>
+<td><code>documentScanner</code></td>
+<td>Blob Created</td>
+<td>Sí en Functions; el blob se factura</td>
+</tr>
+<tr>
+<td>UC-05 · Estado en tiempo real</td>
+<td><code>auditDispatcher</code></td>
+<td><code>audit.stream.opened</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-06 · Cancelar</td>
+<td><code>notificationFanout</code></td>
+<td><code>subsidy.request.cancelled</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-07 · Notificaciones</td>
+<td><code>notificationFanout</code></td>
+<td><code>notification.requested</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-08 · Perfil de empresa</td>
+<td><code>auditDispatcher</code></td>
+<td><code>audit.pii.read</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-09 · Trabajadores</td>
+<td><code>auditDispatcher</code></td>
+<td><code>audit.pii.read</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-10 · Trámites minimizados</td>
+<td><code>auditDispatcher</code></td>
+<td><code>audit.access</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-11 · Reporte administrativo</td>
+<td><code>reportBuilder</code></td>
+<td>Timer diario</td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-12 · Decisión de demostración</td>
+<td><code>notificationFanout</code> + <code>auditDispatcher</code></td>
+<td><code>subsidy.decision.recorded</code></td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>UC-13 · Procesar evento</td>
+<td><code>subsidyClassifier</code></td>
+<td><code>subsidy.request.submitted</code></td>
+<td>Sí</td>
+</tr>
+</tbody>
+</table>
+<h3 id="10143-reglas-que-hacen-que-esto-no-se-degrade">10.14.3 Reglas que hacen que esto no se degrade</h3>
+<ol>
+<li><strong>La función nunca es la fuente de verdad.</strong> Si está caída, el caso de uso sigue respondiendo; el
+   evento queda en el outbox y se reintenta. Es la misma regla que ya aplica el publicador.</li>
+<li><strong>Idempotencia obligatoria.</strong> Cada función escribe en <code>processed_message</code> con la clave
+   <code>(message_id, consumer)</code> antes de aplicar efectos, igual que el consumidor del backend.</li>
+<li><strong>Sin datos personales en el evento.</strong> El payload lleva identificadores y la acción, nunca documento,
+   correo ni nombre. Los datos se leen dentro de la función con el mismo enmascarado del backend.</li>
+<li><strong>Correlación extremo a extremo.</strong> El <code>correlationId</code> del request viaja en el evento y se escribe en
+   Application Insights, de modo que una queja se puede rastrear hasta la fila de auditoría.</li>
+<li><strong>Tiempo acotado.</strong> Consumo tiene un máximo de 10 minutos por ejecución; el escaneo de documentos
+   trabaja por streaming y no carga el archivo completo en memoria.</li>
+<li><strong>Fallo terminal a la vista.</strong> Tras los reintentos, el mensaje va a <code>failed_message</code> y se completa el
+   del broker; no se deja un bucle de reentrega.</li>
+</ol>
+<h3 id="10144-cuentas-del-free-tier-con-este-diseno">10.14.4 Cuentas del free tier con este diseño</h3>
+<table>
+<thead>
+<tr>
+<th>Recurso</th>
+<th>Cuota gratuita</th>
+<th>Consumo de una demo</th>
+<th>Holgura</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Functions (Consumption)</td>
+<td>1 000 000 de ejecuciones y 400 000 GB-s al mes</td>
+<td>~300 eventos/día → 9 000 ejecuciones al mes</td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>Event Grid</td>
+<td>100 000 operaciones al mes</td>
+<td>~9 000 publicaciones + entregas</td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>Static Web Apps</td>
+<td>100 GB de banda al mes por suscripción</td>
+<td>Portales estáticos</td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>Application Insights</td>
+<td>5 GB de ingesta al mes</td>
+<td>Trazas de 9 000 ejecuciones</td>
+<td>Sí</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lo que no es gratis aunque la función lo sea:</strong> Functions necesita una <strong>cuenta de almacenamiento</strong> para
+su estado y sus checkpoints, y esa cuenta se factura aparte —céntimos al volumen de una demo, pero no es
+cero—. El blob de evidencias de UC-04 también se factura. Y Service Bus, si se usa como transporte en vez
+de Event Grid, no tiene cuota gratuita.</p>
+<p>Por eso la topología económica es: <strong>Event Grid como bus de la demo</strong>, Service Bus documentado como
+transporte de producción, y Blob limitado a las evidencias.</p>
+<h3 id="10145-que-se-demuestra-y-que-no">10.14.5 Qué se demuestra y qué no</h3>
+<p>Con este diseño los trece casos dejan un rastro verificable en Azure: una ejecución de Function por acción,
+visible en Application Insights y en <code>audit_log</code>. Eso cubre la parte del perfil que pide «integración con
+servicios de Azure» sin desplegar App Service.</p>
+<p>Lo que <strong>no</strong> demuestra: colas con consumidores competidores y sesiones (eso es Service Bus), almacenamiento
+privado con clave gestionada (Blob con identidad administrada) ni el despliegue con slots. Esas tres cosas
+siguen dependiendo de la alternativa Azure del <a href="12-plan-despliegue-azure.html">documento 12</a>.</p>
   <div class="footer">
     Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
   </div>

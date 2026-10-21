@@ -246,3 +246,84 @@ Esta modalidad es la que permite que la decisión de desplegar el backend en EC2
 requisitos `FR-AZR-01` a `FR-AZR-08` se pueden demostrar desde el portátil, con recursos reales, sin pagar
 un App Service. Lo que sigue sin poder demostrarse así es la parte de plataforma —slots, swap sin corte,
 identidad administrada, TLS gestionado—, que es exactamente lo que se acepta perder en esa decisión.
+
+## 10.14 Cobertura de Azure Functions en los trece casos
+
+La pregunta razonable es cómo hacer que **los trece casos pasen por Azure Functions** sin convertir el
+prototipo en trece funciones y sin salir del free tier. La respuesta es separar dos cosas: una **función
+transversal de auditoría** que recibe un evento por cada caso, y **cuatro funciones especializadas** donde
+existe trabajo asíncrono real.
+
+### 10.14.1 Dos capas, no trece funciones
+
+| Capa | Función | Disparador | Qué aporta |
+|------|---------|------------|------------|
+| Transversal | `auditDispatcher` | Event Grid, topic `audit` | Recibe un evento por cada acción de negocio y completa `audit_log` con actor, correlación y resultado |
+| Trabajo asíncrono | `subsidyClassifier` | Event Grid, `subsidy.request.submitted` | Calcula documentos requeridos y mueve la solicitud |
+| Trabajo asíncrono | `documentScanner` | Blob Created | Verifica el MIME real, recalcula SHA-256 y marca el documento |
+| Trabajo asíncrono | `notificationFanout` | Event Grid, `notification.requested` | Envía el aviso `EMAIL_DEMO` y registra el resultado |
+| Programada | `reportBuilder` | Timer, diario 02:00 | Precalcula los agregados del reporte administrativo |
+
+Con cinco funciones se cubren los trece casos: cuatro tienen lógica propia y el resto entra por la capa
+transversal. Crear una función por endpoint sería peor negocio —más latencia, más superficie de fallo y
+catorce despliegues— sin añadir una sola garantía.
+
+### 10.14.2 Qué función toca cada caso
+
+| Caso | Función | Evento o disparador | ¿Free tier? |
+|------|---------|---------------------|-------------|
+| UC-01 · Perfil | `auditDispatcher` | `audit.pii.read` | Sí |
+| UC-02 · Beneficiarios | `auditDispatcher` | `audit.pii.read` | Sí |
+| UC-03 · Registrar solicitud | `subsidyClassifier` | `subsidy.request.submitted` | Sí |
+| UC-04 · Cargar documento | `documentScanner` | Blob Created | Sí en Functions; el blob se factura |
+| UC-05 · Estado en tiempo real | `auditDispatcher` | `audit.stream.opened` | Sí |
+| UC-06 · Cancelar | `notificationFanout` | `subsidy.request.cancelled` | Sí |
+| UC-07 · Notificaciones | `notificationFanout` | `notification.requested` | Sí |
+| UC-08 · Perfil de empresa | `auditDispatcher` | `audit.pii.read` | Sí |
+| UC-09 · Trabajadores | `auditDispatcher` | `audit.pii.read` | Sí |
+| UC-10 · Trámites minimizados | `auditDispatcher` | `audit.access` | Sí |
+| UC-11 · Reporte administrativo | `reportBuilder` | Timer diario | Sí |
+| UC-12 · Decisión de demostración | `notificationFanout` + `auditDispatcher` | `subsidy.decision.recorded` | Sí |
+| UC-13 · Procesar evento | `subsidyClassifier` | `subsidy.request.submitted` | Sí |
+
+### 10.14.3 Reglas que hacen que esto no se degrade
+
+1. **La función nunca es la fuente de verdad.** Si está caída, el caso de uso sigue respondiendo; el
+   evento queda en el outbox y se reintenta. Es la misma regla que ya aplica el publicador.
+2. **Idempotencia obligatoria.** Cada función escribe en `processed_message` con la clave
+   `(message_id, consumer)` antes de aplicar efectos, igual que el consumidor del backend.
+3. **Sin datos personales en el evento.** El payload lleva identificadores y la acción, nunca documento,
+   correo ni nombre. Los datos se leen dentro de la función con el mismo enmascarado del backend.
+4. **Correlación extremo a extremo.** El `correlationId` del request viaja en el evento y se escribe en
+   Application Insights, de modo que una queja se puede rastrear hasta la fila de auditoría.
+5. **Tiempo acotado.** Consumo tiene un máximo de 10 minutos por ejecución; el escaneo de documentos
+   trabaja por streaming y no carga el archivo completo en memoria.
+6. **Fallo terminal a la vista.** Tras los reintentos, el mensaje va a `failed_message` y se completa el
+   del broker; no se deja un bucle de reentrega.
+
+### 10.14.4 Cuentas del free tier con este diseño
+
+| Recurso | Cuota gratuita | Consumo de una demo | Holgura |
+|---------|----------------|---------------------|---------|
+| Functions (Consumption) | 1 000 000 de ejecuciones y 400 000 GB-s al mes | ~300 eventos/día → 9 000 ejecuciones al mes | Sí |
+| Event Grid | 100 000 operaciones al mes | ~9 000 publicaciones + entregas | Sí |
+| Static Web Apps | 100 GB de banda al mes por suscripción | Portales estáticos | Sí |
+| Application Insights | 5 GB de ingesta al mes | Trazas de 9 000 ejecuciones | Sí |
+
+**Lo que no es gratis aunque la función lo sea:** Functions necesita una **cuenta de almacenamiento** para
+su estado y sus checkpoints, y esa cuenta se factura aparte —céntimos al volumen de una demo, pero no es
+cero—. El blob de evidencias de UC-04 también se factura. Y Service Bus, si se usa como transporte en vez
+de Event Grid, no tiene cuota gratuita.
+
+Por eso la topología económica es: **Event Grid como bus de la demo**, Service Bus documentado como
+transporte de producción, y Blob limitado a las evidencias.
+
+### 10.14.5 Qué se demuestra y qué no
+
+Con este diseño los trece casos dejan un rastro verificable en Azure: una ejecución de Function por acción,
+visible en Application Insights y en `audit_log`. Eso cubre la parte del perfil que pide «integración con
+servicios de Azure» sin desplegar App Service.
+
+Lo que **no** demuestra: colas con consumidores competidores y sesiones (eso es Service Bus), almacenamiento
+privado con clave gestionada (Blob con identidad administrada) ni el despliegue con slots. Esas tres cosas
+siguen dependiendo de la alternativa Azure del [documento 12](12-plan-despliegue-azure.md).
