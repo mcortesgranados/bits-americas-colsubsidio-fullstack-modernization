@@ -32,9 +32,10 @@
 restricciones la protegen y qué columnas contienen datos personales. El diagrama de arquitectura del
 documento 04 muestra el modelo en contexto; <strong>este documento es la fuente de verdad del esquema</strong>.</p>
 <blockquote>
-<p>Derivado de las 13 entidades JPA de <code>backend/src/main/java/.../**/domain</code>. Cuando existan las
-migraciones Flyway, el DDL pasará a ser la fuente de verdad y este diccionario deberá validarse contra
-él. Hoy <strong>no hay migraciones</strong>: la carpeta <code>db/migration</code> no existe (ver 11.9).</p>
+<p>Derivado de las 13 entidades JPA de <code>backend/src/main/java/.../**/domain</code> y contrastado con las
+migraciones Flyway <code>V1</code>–<code>V3</code> de <code>backend/src/main/resources/db/migration</code>, que ya existen. A partir de
+ahora <strong>el DDL es la fuente de verdad</strong>: si hay divergencia, manda la migración y este diccionario se
+corrige.</p>
 </blockquote>
 <h2 id="111-convenciones-del-esquema">11.1 Convenciones del esquema</h2>
 <table>
@@ -1735,8 +1736,15 @@ produce un <code>500</code> y no una fuga de datos en claro.</p>
 </table>
 <h2 id="119-migraciones">11.9 Migraciones</h2>
 <p>Flyway está configurado (<code>flyway-core</code> + <code>flyway-mysql</code>, <code>ddl-auto: none</code>, <code>baseline-on-migrate: false</code>)
-pero <strong>la carpeta <code>backend/src/main/resources/db/migration</code> no existe</strong>: no hay una sola migración
-escrita. El esquema de este documento es, por tanto, el objetivo a crear en la Fase 2.</p>
+y las tres migraciones están escritas en <code>backend/src/main/resources/db/migration</code>:</p>
+<ul>
+<li><code>V1__esquema_inicial.sql</code> — las 13 tablas con sus claves primarias, únicas y foráneas.</li>
+<li><code>V2__indices_de_consulta.sql</code> — los índices de consulta del §11.5.</li>
+<li><code>V3__datos_sinteticos.sql</code> — datos de demostración: empresas, afiliados, beneficiarios, trabajadores,
+  solicitudes en tres estados, documentos, historial, notificaciones, outbox, idempotencia y auditoría.</li>
+</ul>
+<p>La semilla <strong>no</strong> crea filas en <code>app_user</code>: la contraseña debe ser un hash BCrypt real, y ese sembrado
+corresponde al <code>DemoUserInitializer</code>, que sigue pendiente (brecha B4 del <a href="07-inventario-codigo-preliminar.html">documento 07</a>).</p>
 <table>
 <thead>
 <tr>
@@ -1775,7 +1783,7 @@ escrita. El esquema de este documento es, por tanto, el objetivo a crear en la F
 </tr>
 </tbody>
 </table>
-<p>Ejemplo del tipo de DDL esperado (extracto, no la migración completa):</p>
+<p>Extracto de <code>V1</code> para <code>subsidy_request</code>, que es el DDL que se aplica:</p>
 <pre><code class="language-sql">CREATE TABLE subsidy_request (
     id                BIGINT        NOT NULL AUTO_INCREMENT,
     request_number    VARCHAR(30)   NOT NULL,
@@ -1809,32 +1817,28 @@ escrita. El esquema de este documento es, por tanto, el objetivo a crear en la F
 </thead>
 <tbody>
 <tr>
-<td>Migraciones <code>V1</code>–<code>V3</code></td>
-<td>Sin ellas no hay tablas: el backend no arranca contra MySQL</td>
-</tr>
-<tr>
-<td>Índices marcados «Migración (pendiente)»</td>
-<td>El esquema funciona pero las consultas del portal hacen recorrido completo</td>
+<td>Historial de Flyway sin inicializar si la base se creó a mano</td>
+<td><code>flyway:baseline</code> en la versión 3 antes de arrancar con migraciones activas</td>
 </tr>
 <tr>
 <td><code>beneficiary</code> sin <code>created_at</code>/<code>updated_at</code></td>
 <td>Inconsistente con el resto de tablas de negocio; decidir si se añaden</td>
 </tr>
 <tr>
-<td><code>company_worker</code> sin <code>unique</code> en la entidad</td>
-<td>La unicidad <code>(company_id, document_number)</code> solo existirá si la crea la migración</td>
-</tr>
-<tr>
 <td>Sin restricciones <code>CHECK</code> en <code>requested_amount &gt; 0</code> y longitudes de motivo</td>
 <td>La validación vive solo en la capa de aplicación</td>
 </tr>
 <tr>
-<td>Sin datos sintéticos versionados</td>
-<td>La demo depende de una carga manual</td>
+<td><code>app_user</code> sin semilla</td>
+<td>No hay usuarios de demostración hasta que exista el <code>DemoUserInitializer</code></td>
 </tr>
 <tr>
 <td>Sin prueba de integración contra MySQL real</td>
 <td>H2 no valida el DDL específico del motor (ver 11.9)</td>
+</tr>
+<tr>
+<td>Los índices de <code>V2</code> no se han medido con datos de volumen</td>
+<td>El diseño es razonable, pero no hay evidencia de rendimiento</td>
 </tr>
 </tbody>
 </table>

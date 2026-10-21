@@ -53,8 +53,8 @@ recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local 
 <tbody>
 <tr>
 <td><code>backend/</code></td>
-<td>Sí: 92 archivos Java, <code>pom.xml</code>, <code>application.yml</code></td>
-<td>Comila como proyecto Maven, pero sin migraciones Flyway no arranca contra MySQL</td>
+<td>Sí: 92 archivos Java, <code>pom.xml</code>, <code>application.yml</code> y migraciones <code>V1</code>–<code>V3</code></td>
+<td>Compila como proyecto Maven; falta crear la base local y los usuarios de demostración</td>
 </tr>
 <tr>
 <td><code>frontend/</code></td>
@@ -792,8 +792,8 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.</p>
 <td>La vuelta a Azure en un comando</td>
 </tr>
 <tr>
-<td>Migraciones Flyway <code>V1</code>–<code>V3</code></td>
-<td>La etapa <code>Migrate</code></td>
+<td>Historial de Flyway (<code>baseline</code> en 3 si la base se creó a mano)</td>
+<td>Que la etapa <code>Migrate</code> no reintente <code>V1</code>–<code>V3</code></td>
 </tr>
 <tr>
 <td><code>azure-pipelines.yml</code> y los tres tokens de Static Web Apps</td>

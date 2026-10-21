@@ -46,7 +46,7 @@ Ningún archivo se elimina sin dejar constancia aquí de la razón y del reempla
 | B4 | DTOs de solicitud (`SubsidyRequestSummaryResponse`, detalle, documentos, historial, revisión) | Crear en `subsidy/api/dto` |
 | B5 | Tablero reactivo del afiliado | Crear módulo `dashboard` con `Mono.zip` |
 | B6 | Controlador de operación (outbox y fallidos) | Crear `ops` |
-| B7 | Migraciones Flyway | Crear `V1__schema.sql` y `V2__demo_data.sql` portables |
+| B7 | Migraciones Flyway | **Resuelto**: `V1__esquema_inicial.sql`, `V2__indices_de_consulta.sql` y `V3__datos_sinteticos.sql` |
 
 ## 7.4 Ajustes detectados al contrastar con los requisitos
 

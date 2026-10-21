@@ -4,9 +4,10 @@ Detalle del modelo relacional del prototipo: qué tablas existen, qué guarda ca
 restricciones la protegen y qué columnas contienen datos personales. El diagrama de arquitectura del
 documento 04 muestra el modelo en contexto; **este documento es la fuente de verdad del esquema**.
 
-> Derivado de las 13 entidades JPA de `backend/src/main/java/.../**/domain`. Cuando existan las
-> migraciones Flyway, el DDL pasará a ser la fuente de verdad y este diccionario deberá validarse contra
-> él. Hoy **no hay migraciones**: la carpeta `db/migration` no existe (ver 11.9).
+> Derivado de las 13 entidades JPA de `backend/src/main/java/.../**/domain` y contrastado con las
+> migraciones Flyway `V1`–`V3` de `backend/src/main/resources/db/migration`, que ya existen. A partir de
+> ahora **el DDL es la fuente de verdad**: si hay divergencia, manda la migración y este diccionario se
+> corrige.
 
 ## 11.1 Convenciones del esquema
 
@@ -390,8 +391,15 @@ produce un `500` y no una fuga de datos en claro.
 ## 11.9 Migraciones
 
 Flyway está configurado (`flyway-core` + `flyway-mysql`, `ddl-auto: none`, `baseline-on-migrate: false`)
-pero **la carpeta `backend/src/main/resources/db/migration` no existe**: no hay una sola migración
-escrita. El esquema de este documento es, por tanto, el objetivo a crear en la Fase 2.
+y las tres migraciones están escritas en `backend/src/main/resources/db/migration`:
+
+- `V1__esquema_inicial.sql` — las 13 tablas con sus claves primarias, únicas y foráneas.
+- `V2__indices_de_consulta.sql` — los índices de consulta del §11.5.
+- `V3__datos_sinteticos.sql` — datos de demostración: empresas, afiliados, beneficiarios, trabajadores,
+  solicitudes en tres estados, documentos, historial, notificaciones, outbox, idempotencia y auditoría.
+
+La semilla **no** crea filas en `app_user`: la contraseña debe ser un hash BCrypt real, y ese sembrado
+corresponde al `DemoUserInitializer`, que sigue pendiente (brecha B4 del [documento 07](07-inventario-codigo-preliminar.md)).
 
 | Convención | Valor |
 |------------|-------|
@@ -403,7 +411,7 @@ escrita. El esquema de este documento es, por tanto, el objetivo a crear en la F
 | Verificación | `mvn flyway:validate` en CI antes de empaquetar |
 | H2 | Mismo DDL donde sea posible; las diferencias de dialecto se aíslan en un `application-test.yml` |
 
-Ejemplo del tipo de DDL esperado (extracto, no la migración completa):
+Extracto de `V1` para `subsidy_request`, que es el DDL que se aplica:
 
 ```sql
 CREATE TABLE subsidy_request (
@@ -434,13 +442,12 @@ CREATE TABLE subsidy_request (
 
 | Pendiente | Impacto |
 |-----------|---------|
-| Migraciones `V1`–`V3` | Sin ellas no hay tablas: el backend no arranca contra MySQL |
-| Índices marcados «Migración (pendiente)» | El esquema funciona pero las consultas del portal hacen recorrido completo |
+| Historial de Flyway sin inicializar si la base se creó a mano | `flyway:baseline` en la versión 3 antes de arrancar con migraciones activas |
 | `beneficiary` sin `created_at`/`updated_at` | Inconsistente con el resto de tablas de negocio; decidir si se añaden |
-| `company_worker` sin `unique` en la entidad | La unicidad `(company_id, document_number)` solo existirá si la crea la migración |
 | Sin restricciones `CHECK` en `requested_amount > 0` y longitudes de motivo | La validación vive solo en la capa de aplicación |
-| Sin datos sintéticos versionados | La demo depende de una carga manual |
+| `app_user` sin semilla | No hay usuarios de demostración hasta que exista el `DemoUserInitializer` |
 | Sin prueba de integración contra MySQL real | H2 no valida el DDL específico del motor (ver 11.9) |
+| Los índices de `V2` no se han medido con datos de volumen | El diseño es razonable, pero no hay evidencia de rendimiento |
 
 Estos puntos están alineados con las brechas B1–B7 del [documento 07](07-inventario-codigo-preliminar.md)
 y con la Fase 2 del [plan de entrega](06-plan-entrega.md).

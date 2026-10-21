@@ -18,7 +18,7 @@ se deja de demostrar, está en la [sección 12.16](#1216-topologia-vigente-backe
 
 | Pieza | Existe hoy | Consecuencia |
 |-------|------------|--------------|
-| `backend/` | Sí: 92 archivos Java, `pom.xml`, `application.yml` | Comila como proyecto Maven, pero sin migraciones Flyway no arranca contra MySQL |
+| `backend/` | Sí: 92 archivos Java, `pom.xml`, `application.yml` y migraciones `V1`–`V3` | Compila como proyecto Maven; falta crear la base local y los usuarios de demostración |
 | `frontend/` | **No existe** | El shell y los dos remotos son diseño, no código |
 | `infra/` (Bicep) | **No existe** | No hay infraestructura como código |
 | Pipeline | **No existe** | Ningún despliegue automatizado |
@@ -460,7 +460,7 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.
 | Reglas de Security Group y renovación de TLS | Abrir el servicio sin exponer MySQL ni caducar el certificado |
 | Copias: snapshot de EBS y `mysqldump` | Recuperación ante pérdida de datos |
 | `infra/` con Bicep (SWA × 3 y App Service, para la alternativa Azure) | La vuelta a Azure en un comando |
-| Migraciones Flyway `V1`–`V3` | La etapa `Migrate` |
+| Historial de Flyway (`baseline` en 3 si la base se creó a mano) | Que la etapa `Migrate` no reintente `V1`–`V3` |
 | `azure-pipelines.yml` y los tres tokens de Static Web Apps | La automatización |
 | Pruebas E2E de humo | La puerta de calidad posterior al despliegue |
 

@@ -65,13 +65,14 @@ prueba como exitosa sin su ejecución real.
 | Maven | 3.9+ |
 | Node.js | 20 o 22 LTS |
 | MySQL | 8.0 |
-| Docker | Opcional (facilita MySQL local) |
+| Docker | Opcional: MySQL nativo sirve para local; Docker es necesario para el despliegue |
 
-## Ejecución local (prevista al cerrar la Fase 2)
+## Ejecución local
 
-```bash
-# 1. Base de datos
-docker compose -f infra/docker-compose.yml up -d mysql
+```powershell
+# 1. Base de datos: aplica V1 (esquema), V2 (índices) y V3 (datos sintéticos)
+#    Pide la contraseña del root de MySQL y crea la base y el usuario de la aplicación.
+powershell -ExecutionPolicy Bypass -File tools\apply_local_db.ps1
 
 # 2. Backend
 cd backend
