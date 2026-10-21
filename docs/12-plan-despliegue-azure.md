@@ -372,6 +372,11 @@ en el centro del ejercicio: la demo se puede evaluar completa sin gastar.
 El crédito de 200 USD de la cuenta gratuita no cambia el cálculo: es válido **30 días**, no durante toda
 la demo. Sirve para una ventana de validación, no como presupuesto del proyecto.
 
+**La VM gratuita tampoco resuelve el backend.** La cuenta gratuita incluye 750 h al mes de B1s
+(1 vCPU, 1 GiB) durante 12 meses, además de dos variantes v2 de 2 vCPU. Son 750 h, es decir **una sola
+máquina encendida 24/7**, sin slots, sin SLA y con 1 GiB que no alcanzan para API + MySQL + portales a
+la vez. Serviría para hospedar una de las tres piezas, no el sistema.
+
 ## 12.14 Riesgos de despliegue
 
 | Riesgo | Síntoma | Mitigación |
