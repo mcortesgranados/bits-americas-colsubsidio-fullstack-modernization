@@ -73,6 +73,21 @@ $env:SPRING_DATASOURCE_USERNAME = "colsubsidio"
 $env:SPRING_DATASOURCE_PASSWORD = "colsubsidio"
 ```
 
+## Identidad visual
+
+Los estilos del portal se tomaron de los **valores computados del sitio real** (`colsubsidio.com`, inspeccionado el 20/10/2026 con `getComputedStyle`), no de una aproximación:
+
+| Token | Valor | Origen |
+|-------|-------|--------|
+| Tipografía | Poppins 400/500/600/700 | `font-family` del `body` |
+| Texto base | `#212529` | `color` del `body` |
+| Títulos y barra | `#333333` | `color` de `h1`/`h2` y fondo del menú |
+| Fondo de contenido | `#F6F7FC` | `background-color` del `main` |
+| Botones | píldora `80px`, alto `44px`, fondo `#333333` | `.ButtonLink_btnBasic` |
+
+El azul `#0067B1` se usa solo como acento de foco: aparece como color de marca en la ficha pública, pero no en la portada inspeccionada.
+
+**No se usa el logotipo ni se imita la marca.** El prototipo se identifica como demostración en la cabecera y en el pie, y todos los datos son sintéticos.
 ## Requisitos de entorno (objetivo)
 
 | Herramienta | Versión |

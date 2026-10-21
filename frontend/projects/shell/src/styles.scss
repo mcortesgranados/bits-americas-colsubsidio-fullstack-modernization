@@ -1,1 +1,62 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Tokens visuales del portal.
+ *
+ * Los valores están tomados de los estilos computados de colsubsidio.com (20/10/2026): fondo de
+ * contenido #F6F7FC, barra de navegación #333333, texto #212529, títulos #333333, tipografía Poppins y
+ * botones tipo píldora de 44 px. El azul #0067B1 se usa solo como acento de foco, porque aparece como
+ * color de marca en la ficha pública y no en la portada inspeccionada.
+ *
+ * No se reproduce el logotipo ni se imita la marca: es un prototipo con datos sintéticos y así se declara
+ * en el pie de página.
+ */
+:root {
+  --cs-ink: #212529;
+  --cs-graphite: #333333;
+  --cs-graphite-strong: #1f1f1f;
+  --cs-surface: #f6f7fc;
+  --cs-white: #ffffff;
+  --cs-border: #cccccc;
+  --cs-muted: #5c636a;
+  --cs-accent: #0067b1;
+  --cs-danger: #a1151b;
+  --cs-pill: 80px;
+  --cs-radius: 0.5rem;
+  --cs-font: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--cs-surface);
+  color: var(--cs-ink);
+  font-family: var(--cs-font);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--cs-graphite);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--cs-accent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--cs-accent);
+  outline-offset: 2px;
+}

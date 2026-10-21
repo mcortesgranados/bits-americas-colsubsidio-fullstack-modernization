@@ -1,6 +1,25 @@
+// Los tokens viven en el shell y llegan al remoto por herencia del documento; se declaran aquí solo como
+// respaldo para cuando el remoto se sirve de forma aislada durante el desarrollo.
+:host {
+  --cs-ink: #212529;
+  --cs-graphite: #333333;
+  --cs-graphite-strong: #1f1f1f;
+  --cs-surface: #f6f7fc;
+  --cs-white: #ffffff;
+  --cs-border: #cccccc;
+  --cs-muted: #5c636a;
+  --cs-accent: #0067b1;
+  --cs-danger: #a1151b;
+  --cs-pill: 80px;
+  --cs-font: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  display: block;
+}
+
 .profile {
   display: grid;
   gap: 1.25rem;
+  color: var(--cs-ink);
+  font-family: var(--cs-font);
 
   &__header {
     display: flex;
@@ -15,27 +34,30 @@
     font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #14603a;
+    color: var(--cs-muted);
   }
 
   &__title {
     margin: 0;
     font-size: 1.5rem;
-    color: #12211a;
+    color: var(--cs-graphite);
   }
 
   &__refresh {
-    min-height: 2.5rem;
-    padding: 0 1rem;
-    border: 1px solid #14603a;
-    border-radius: 0.5rem;
-    background: #ffffff;
-    color: #14603a;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border: 1px solid var(--cs-graphite);
+    border-radius: var(--cs-pill);
+    background: var(--cs-white);
+    color: var(--cs-graphite);
+    font-family: var(--cs-font);
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      background: #eef5f0;
+      background: var(--cs-graphite);
+      color: var(--cs-white);
     }
 
     &:disabled {
@@ -44,7 +66,7 @@
     }
 
     &:focus-visible {
-      outline: 3px solid #1d8f5a;
+      outline: 3px solid var(--cs-accent);
       outline-offset: 2px;
     }
   }
@@ -52,31 +74,31 @@
   &__status {
     min-height: 1.25rem;
     margin: 0;
-    font-size: 0.9rem;
-    color: #44544c;
+    font-size: 0.875rem;
+    color: var(--cs-muted);
 
     &--error {
-      color: #a1151b;
+      color: var(--cs-danger);
       font-weight: 600;
     }
   }
 }
 
 .card {
-  border: 1px solid #d7ded9;
-  border-radius: 0.75rem;
-  padding: 1.25rem;
-  background: #ffffff;
+  border: 1px solid var(--cs-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: var(--cs-white);
 
   &__title {
     margin: 0 0 1rem;
     font-size: 1.1rem;
-    color: #12211a;
+    color: var(--cs-graphite);
   }
 
   &__empty {
     margin: 0;
-    color: #44544c;
+    color: var(--cs-muted);
   }
 }
 
@@ -90,64 +112,65 @@
     gap: 0.15rem;
 
     dt {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #44544c;
+      letter-spacing: 0.06em;
+      color: var(--cs-muted);
     }
 
     dd {
       margin: 0;
       font-size: 1rem;
-      color: #12211a;
+      color: var(--cs-ink);
     }
   }
 }
 
 .badge {
   display: inline-block;
-  padding: 0.15rem 0.6rem;
-  border-radius: 999px;
-  background: #e4f2e9;
-  color: #14603a;
-  font-size: 0.85rem;
+  padding: 0.15rem 0.7rem;
+  border-radius: var(--cs-pill);
+  background: #e7f0fa;
+  color: var(--cs-accent);
+  font-size: 0.78rem;
   font-weight: 700;
 
   &--inactive {
     background: #fbe9e9;
-    color: #a1151b;
+    color: var(--cs-danger);
   }
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 
   &__caption {
     text-align: left;
-    font-size: 0.8rem;
-    color: #44544c;
+    font-size: 0.75rem;
+    color: var(--cs-muted);
     padding-bottom: 0.5rem;
   }
 
   th,
   td {
-    padding: 0.6rem 0.5rem;
+    padding: 0.65rem 0.5rem;
     text-align: left;
-    border-bottom: 1px solid #e6ebe8;
+    border-bottom: 1px solid #e6e8ee;
   }
 
   thead th {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #44544c;
+    color: var(--cs-muted);
+    border-bottom-color: var(--cs-border);
   }
 
   tbody th {
     font-weight: 600;
-    color: #12211a;
+    color: var(--cs-graphite);
   }
 }
 
@@ -172,7 +195,7 @@
       display: grid;
       gap: 0.25rem;
       padding: 0.75rem 0;
-      border-bottom: 1px solid #e6ebe8;
+      border-bottom: 1px solid #e6e8ee;
     }
 
     th,
@@ -183,7 +206,7 @@
 
     td {
       display: block;
-      color: #44544c;
+      color: var(--cs-muted);
     }
   }
 }

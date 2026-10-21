@@ -10,14 +10,16 @@
       </span>
     </a>
 
-    <nav class="shell-nav" aria-label="Navegación principal">
-      <a routerLink="/afiliados" routerLinkActive="is-active">Afiliados</a>
-    </nav>
-
     @if (auth.isAuthenticated()) {
       <button class="shell-header__action" type="button" (click)="logout()">Cerrar sesión</button>
     }
   </div>
+
+  <nav class="shell-nav" aria-label="Navegación principal">
+    <div class="shell-nav__inner">
+      <a routerLink="/afiliados" routerLinkActive="is-active">Afiliados</a>
+    </div>
+  </nav>
 </header>
 
 <main id="contenido" class="shell-main" tabindex="-1">

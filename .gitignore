@@ -43,3 +43,6 @@ application-secret.yml
 # Azure / infra outputs
 .azure/
 *.publishsettings
+
+# capturas de verificación (no son entregables)
+capturas/

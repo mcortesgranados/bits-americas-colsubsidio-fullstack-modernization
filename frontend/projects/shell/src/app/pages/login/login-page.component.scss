@@ -3,27 +3,28 @@
   gap: 1.5rem;
   max-width: 26rem;
   margin: 3rem auto;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
+  background: var(--cs-white);
+  border-radius: 1rem;
 
   &__eyebrow {
     margin: 0 0 0.25rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #14603a;
+    color: var(--cs-muted);
   }
 
   &__title {
     margin: 0 0 0.5rem;
     font-size: 1.5rem;
-    line-height: 1.2;
-    color: #12211a;
+    color: var(--cs-graphite);
   }
 
   &__hint {
     margin: 0;
-    font-size: 0.9rem;
-    color: #44544c;
+    font-size: 0.85rem;
+    color: var(--cs-muted);
   }
 
   &__form {
@@ -32,17 +33,19 @@
   }
 
   &__submit {
-    min-height: 2.75rem;
+    min-height: 44px;
+    padding: 0 1.5rem;
     border: 0;
-    border-radius: 0.5rem;
-    background: #14603a;
-    color: #ffffff;
-    font-size: 1rem;
+    border-radius: var(--cs-pill);
+    background: var(--cs-graphite);
+    color: var(--cs-white);
+    font-family: var(--cs-font);
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      background: #0f4a2d;
+      background: var(--cs-graphite-strong);
     }
 
     &:disabled {
@@ -51,7 +54,7 @@
     }
 
     &:focus-visible {
-      outline: 3px solid #1d8f5a;
+      outline: 3px solid var(--cs-accent);
       outline-offset: 2px;
     }
   }
@@ -59,10 +62,10 @@
   &__status {
     min-height: 1.25rem;
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
 
     &--error {
-      color: #a1151b;
+      color: var(--cs-danger);
       font-weight: 600;
     }
   }
@@ -74,30 +77,33 @@
 
   &__label {
     font-weight: 600;
-    font-size: 0.95rem;
-    color: #12211a;
+    font-size: 0.875rem;
+    color: var(--cs-graphite);
   }
 
   &__input {
-    min-height: 2.75rem;
-    padding: 0 0.75rem;
-    border: 1px solid #7b8a82;
-    border-radius: 0.5rem;
+    min-height: 44px;
+    padding: 0 0.85rem;
+    border: 1px solid var(--cs-border);
+    border-radius: 0.25rem;
+    background: var(--cs-white);
+    color: var(--cs-ink);
+    font-family: var(--cs-font);
     font-size: 1rem;
 
     &:focus-visible {
-      outline: 3px solid #1d8f5a;
+      outline: 3px solid var(--cs-accent);
       outline-offset: 1px;
     }
 
     &[aria-invalid='true'] {
-      border-color: #a1151b;
+      border-color: var(--cs-danger);
     }
   }
 
   &__error {
     margin: 0;
-    font-size: 0.85rem;
-    color: #a1151b;
+    font-size: 0.8rem;
+    color: var(--cs-danger);
   }
 }
