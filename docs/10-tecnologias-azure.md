@@ -67,6 +67,7 @@ flowchart LR
 | FR-AZR-06 | El adaptador local y el de Azure respetan el mismo contrato | M | La misma prueba de integración pasa con `local` y con un doble del SDK; el handler no cambia |
 | FR-AZR-07 | Sin secretos en el repositorio y fallo rápido si falta configuración | M | Arrancar con `transport=azure` sin cadena de conexión falla al iniciar con mensaje claro |
 | FR-AZR-08 | Los portales se sirven con fallback de rutas para enlaces profundos | S | Recargar `/affiliates/requests/42` devuelve el shell y no un 404 |
+| FR-AZR-09 | Toda operación de un caso de uso emite un evento `audit.*` a Event Grid, escrito en el outbox dentro de la transacción del agregado | M | Con el publicador caído el caso responde igual y el evento queda `PENDING`; la auditoría se recupera al volver el servicio |
 
 ## 10.5 Contrato del mensaje
 

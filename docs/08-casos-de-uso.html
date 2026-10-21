@@ -719,84 +719,118 @@ datos de contacto completos porque es el titular.</p>
 <thead>
 <tr>
 <th>Caso</th>
-<th>Servicio de Azure</th>
+<th>Evento que emite</th>
+<th>Servicios de Azure</th>
+<th>Función</th>
 <th>Para qué</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>UC-01</td>
-<td>Solo Static Web Apps (hosting)</td>
-<td>Servir el portal que consume la API</td>
+<td><code>audit.pii.read</code></td>
+<td>Event Grid</td>
+<td><code>auditDispatcher</code></td>
+<td>Registrar el acceso al perfil sin viajar con datos personales</td>
 </tr>
 <tr>
 <td>UC-02</td>
-<td>Ninguno</td>
-<td>Lectura directa de MySQL</td>
+<td><code>audit.pii.read</code></td>
+<td>Event Grid</td>
+<td><code>auditDispatcher</code></td>
+<td>Trazar la consulta de beneficiarios</td>
 </tr>
 <tr>
 <td>UC-03</td>
-<td>Service Bus</td>
-<td>Publicar <code>subsidy.request.submitted</code> para clasificar la solicitud</td>
+<td><code>subsidy.request.submitted</code> · <code>audit.subsidy.created</code></td>
+<td>Service Bus · Event Grid</td>
+<td><code>subsidyClassifier</code> · <code>auditDispatcher</code></td>
+<td>Clasificar la evidencia exigida y dejar rastro</td>
 </tr>
 <tr>
 <td>UC-04</td>
-<td>Blob Storage · Event Grid (previsto)</td>
-<td>Guardar la evidencia y avisar a suscriptores</td>
+<td><code>subsidy.document.uploaded</code></td>
+<td>Blob Storage · Event Grid</td>
+<td><code>documentScanner</code> · <code>auditDispatcher</code></td>
+<td>Verificar MIME y SHA-256, marcar el documento y auditar</td>
 </tr>
 <tr>
 <td>UC-05</td>
-<td>Ninguno</td>
-<td>El estado se empuja por SSE desde el mismo proceso</td>
+<td><code>audit.stream.opened</code></td>
+<td>Event Grid</td>
+<td><code>auditDispatcher</code></td>
+<td>Medir apertura y cierre del stream SSE</td>
 </tr>
 <tr>
 <td>UC-06</td>
-<td>Ninguno</td>
-<td>Cambio de estado síncrono con historial y notificación</td>
+<td><code>subsidy.request.cancelled</code></td>
+<td>Event Grid</td>
+<td><code>notificationFanout</code> · <code>auditDispatcher</code></td>
+<td>Avisar al afiliado y auditar la cancelación</td>
 </tr>
 <tr>
 <td>UC-07</td>
-<td>Ninguno</td>
-<td>Bandeja de notificaciones en MySQL</td>
+<td><code>notification.requested</code></td>
+<td>Event Grid</td>
+<td><code>notificationFanout</code></td>
+<td>Entregar el aviso <code>EMAIL_DEMO</code></td>
 </tr>
 <tr>
 <td>UC-08</td>
-<td>Ninguno</td>
-<td>Lectura de la empresa</td>
+<td><code>audit.pii.read</code></td>
+<td>Event Grid</td>
+<td><code>auditDispatcher</code></td>
+<td>Auditar la consulta de la empresa</td>
 </tr>
 <tr>
 <td>UC-09</td>
-<td>Ninguno</td>
-<td>CRUD de trabajadores sintéticos</td>
+<td><code>audit.worker.changed</code></td>
+<td>Event Grid</td>
+<td><code>auditDispatcher</code></td>
+<td>Auditar altas y bajas de trabajadores</td>
 </tr>
 <tr>
 <td>UC-10</td>
-<td>Ninguno</td>
-<td>Consulta agregada con datos minimizados</td>
+<td><code>audit.access</code></td>
+<td>Event Grid</td>
+<td><code>auditDispatcher</code></td>
+<td>Auditar la consulta agregada minimizada</td>
 </tr>
 <tr>
 <td>UC-11</td>
-<td>Ninguno</td>
-<td>Agregaciones sobre MySQL</td>
+<td><code>audit.report.generated</code></td>
+<td>Event Grid</td>
+<td><code>reportBuilder</code> · <code>auditDispatcher</code></td>
+<td>Precalcular el reporte y registrar su emisión</td>
 </tr>
 <tr>
 <td>UC-12</td>
-<td>Service Bus (previsto)</td>
-<td>Propagar el cambio de estado a otros consumidores</td>
+<td><code>subsidy.decision.recorded</code></td>
+<td>Event Grid</td>
+<td><code>notificationFanout</code> · <code>auditDispatcher</code></td>
+<td>Propagar la decisión de demostración y auditarla</td>
 </tr>
 <tr>
 <td>UC-13</td>
-<td>Service Bus · Function (prevista)</td>
-<td>Consumir el evento y disparar la notificación</td>
+<td><code>subsidy.request.submitted</code> (consume)</td>
+<td>Event Grid · Service Bus opcional</td>
+<td><code>subsidyClassifier</code></td>
+<td>Aplicar la transición de estado</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Ocho de los trece casos no requieren ningún servicio de integración de Azure.</strong> Solo los tres que
-cruzan una frontera asíncrona (UC-03, UC-12, UC-13) y el que manipula binarios (UC-04) lo necesitan.
-Añadir mensajería a una lectura de perfil sería sobrearquitectura, y el diseño lo evita a propósito.</p>
-<p><strong>Ninguno significa ningún servicio de integración.</strong> La persistencia en MySQL y el hosting en Static
-Web Apps son transversales: los trece casos leen o escriben en el motor relacional, así que en Azure
-todos pasan por el servidor flexible de MySQL, igual que todos se sirven desde el mismo hosting.</p>
+<p><strong>Los trece casos emiten al menos un evento a Event Grid y todos pasan por una Function.</strong> La cobertura
+no se consigue creando trece funciones sino con <strong>una capa transversal</strong> —<code>auditDispatcher</code> recibe el
+evento de auditoría de cualquier caso— y <strong>cuatro funciones especializadas</strong> donde existe trabajo
+asíncrono real.</p>
+<p><strong>La participación es asíncrona y no bloqueante.</strong> El evento se escribe en el <strong>outbox dentro de la misma
+transacción</strong> del caso y se publica después. Si Event Grid o la función no están disponibles, el caso de
+uso responde igual y el evento se reintenta; lo único que se degrada es la auditoría, nunca la operación
+del afiliado. Esa es la condición que permite afirmar que los trece casos usan Azure <strong>sin</strong> romper el
+requisito de que la demo corra sin suscripción.</p>
+<p><strong>Lo que sigue sin ser gratuito:</strong> Service Bus en UC-03 y UC-13, y Blob en UC-04. En una demo se
+sustituyen por Event Grid y por el adaptador de disco local, y entonces el flujo completo entra en el
+free tier. El detalle de la propuesta está en <a href="10-tecnologias-azure.html">10 · §10.14</a>.</p>
 <h2 id="85-free-tier-de-los-servicios-usados">8.5 Free tier de los servicios usados</h2>
 <p>Consulta del <strong>2026-10-20</strong> sobre las páginas públicas de precios y la lista de servicios gratuitos de
 Azure. Las cuotas cambian con el tiempo: hay que reconfirmarlas antes de desplegar.</p>
@@ -884,96 +918,98 @@ es gratuito.</p>
 <thead>
 <tr>
 <th>Caso</th>
-<th>Free tier ya aplicado</th>
-<th>Free tier que se podría añadir</th>
+<th>Free tier aplicado</th>
+<th>Servicio de pago, si alguno</th>
 <th>Límite a vigilar</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>UC-01 · Perfil del afiliado</td>
-<td>Static Web Apps (hosting del portal)</td>
-<td>Application Insights para trazar el endpoint</td>
-<td>100 GB de banda y 5 GB de ingesta al mes</td>
+<td>Event Grid + <code>auditDispatcher</code> + Static Web Apps</td>
+<td>—</td>
+<td>100 000 operaciones y 1 000 000 de ejecuciones al mes</td>
 </tr>
 <tr>
 <td>UC-02 · Beneficiarios</td>
-<td>Ninguno: no toca Azure</td>
-<td>Application Insights</td>
-<td>5 GB de ingesta al mes</td>
+<td>Event Grid + <code>auditDispatcher</code></td>
+<td>—</td>
+<td>Igual que UC-01</td>
 </tr>
 <tr>
 <td>UC-03 · Registrar solicitud</td>
-<td>Ninguno: Service Bus no es gratuito</td>
-<td>Event Grid como bus de eventos de la demo</td>
+<td>Event Grid + <code>auditDispatcher</code></td>
+<td>Service Bus (opcional: Event Grid lo sustituye en la demo)</td>
 <td>100 000 operaciones al mes</td>
 </tr>
 <tr>
 <td>UC-04 · Cargar documento</td>
-<td>Event Grid (previsto)</td>
-<td>Functions Consumption para validar tipo y tamaño y calcular el SHA-256</td>
-<td>1 000 000 de ejecuciones al mes</td>
+<td>Event Grid + <code>documentScanner</code></td>
+<td>Blob Storage para la evidencia</td>
+<td>100 000 operaciones y 1 000 000 de ejecuciones</td>
 </tr>
 <tr>
 <td>UC-05 · Estado en tiempo real</td>
-<td>Ninguno: SSE en el mismo proceso</td>
-<td>Application Insights para medir la duración del stream</td>
-<td>5 GB de ingesta al mes</td>
-</tr>
-<tr>
-<td>UC-06 · Cancelar solicitud</td>
-<td>Ninguno</td>
-<td>Event Grid para avisar la cancelación</td>
+<td>Event Grid + <code>auditDispatcher</code></td>
+<td>—</td>
 <td>100 000 operaciones al mes</td>
 </tr>
 <tr>
+<td>UC-06 · Cancelar solicitud</td>
+<td>Event Grid + <code>notificationFanout</code></td>
+<td>—</td>
+<td>100 000 operaciones y 1 000 000 de ejecuciones</td>
+</tr>
+<tr>
 <td>UC-07 · Notificaciones</td>
-<td>Functions Consumption (prevista)</td>
-<td>Event Grid para entregar el aviso</td>
-<td>1 000 000 de ejecuciones y 100 000 operaciones</td>
+<td>Event Grid + <code>notificationFanout</code></td>
+<td>—</td>
+<td>Igual que UC-06</td>
 </tr>
 <tr>
 <td>UC-08 · Perfil de empresa</td>
-<td>Static Web Apps (hosting)</td>
-<td>Application Insights</td>
-<td>100 GB de banda y 5 GB de ingesta</td>
+<td>Event Grid + <code>auditDispatcher</code></td>
+<td>—</td>
+<td>100 000 operaciones al mes</td>
 </tr>
 <tr>
 <td>UC-09 · Trabajadores</td>
-<td>Static Web Apps (hosting)</td>
+<td>Event Grid + <code>auditDispatcher</code></td>
 <td>—</td>
-<td>100 GB de banda al mes</td>
+<td>100 000 operaciones al mes</td>
 </tr>
 <tr>
 <td>UC-10 · Trámites minimizados</td>
-<td>Static Web Apps (hosting)</td>
-<td>Application Insights</td>
-<td>100 GB de banda y 5 GB de ingesta</td>
+<td>Event Grid + <code>auditDispatcher</code></td>
+<td>—</td>
+<td>100 000 operaciones al mes</td>
 </tr>
 <tr>
 <td>UC-11 · Reporte administrativo</td>
-<td>Ninguno</td>
-<td>Function con temporizador que precalcule el reporte</td>
-<td>1 000 000 de ejecuciones (30 al mes con frecuencia diaria)</td>
+<td>Event Grid + <code>reportBuilder</code></td>
+<td>—</td>
+<td>30 ejecuciones al mes con frecuencia diaria</td>
 </tr>
 <tr>
 <td>UC-12 · Decisión de demostración</td>
-<td>Ninguno: Service Bus no es gratuito</td>
-<td>Event Grid para el evento de decisión</td>
+<td>Event Grid + <code>notificationFanout</code></td>
+<td>—</td>
 <td>100 000 operaciones al mes</td>
 </tr>
 <tr>
 <td>UC-13 · Procesar evento</td>
-<td>Functions Consumption (prevista)</td>
-<td>Event Grid como disparador en lugar de Service Bus</td>
-<td>1 000 000 de ejecuciones y 100 000 operaciones</td>
+<td>Event Grid + <code>subsidyClassifier</code></td>
+<td>Service Bus (opcional, igual que UC-03)</td>
+<td>100 000 operaciones y 1 000 000 de ejecuciones</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Diez de los trece casos no tocan ningún servicio de Azure de pago.</strong> Solo UC-03 y UC-13 dependen de
-Service Bus y UC-04 de Blob Storage. Si en una demo se sustituyen esos dos servicios —Event Grid en
-lugar de la cola y el adaptador de disco local en lugar del contenedor— el prototipo completo corre
-dentro del año gratuito.</p>
+<p><strong>Los trece casos usan servicios gratuitos de forma permanente.</strong> Ya no hay casos «sin Azure»: todos
+emiten al menos un evento a Event Grid y todos pasan por una función. Las dos únicas excepciones son de
+<strong>semántica</strong>, no de cuota: Service Bus en UC-03 y UC-13, y Blob en UC-04. Sustituyendo la cola por Event
+Grid y el contenedor por el disco local, el flujo completo corre dentro del free tier.</p>
+<p><strong>El coste que no desaparece:</strong> la cuenta de almacenamiento que Functions necesita para su estado y sus
+checkpoints. Se factura aparte y a este volumen son céntimos, pero no es cero.</p>
 <p><strong>Azure Database for MySQL aplica a los trece casos.</strong> Toda lectura y escritura pasa por el motor
 relacional: en local es un contenedor y en Azure, un servidor flexible. Es la diferencia entre «ningún
 servicio de integración» y «ningún servicio de Azure»: la base entra en el año gratuito, pero no es una

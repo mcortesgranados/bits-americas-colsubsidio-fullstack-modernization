@@ -271,6 +271,12 @@ servicios de Azure son el destino previsto y su configuración está versionada 
 <td>S</td>
 <td>Recargar <code>/affiliates/requests/42</code> devuelve el shell y no un 404</td>
 </tr>
+<tr>
+<td>FR-AZR-09</td>
+<td>Toda operación de un caso de uso emite un evento <code>audit.*</code> a Event Grid, escrito en el outbox dentro de la transacción del agregado</td>
+<td>M</td>
+<td>Con el publicador caído el caso responde igual y el evento queda <code>PENDING</code>; la auditoría se recupera al volver el servicio</td>
+</tr>
 </tbody>
 </table>
 <h2 id="105-contrato-del-mensaje">10.5 Contrato del mensaje</h2>

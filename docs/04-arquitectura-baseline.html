@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Documentación</title>
+<title>04 · Arquitectura baseline</title>
 <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
@@ -27,7 +27,7 @@
     <a href="index.html">← Índice de documentación</a>
   </nav>
   <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#41-principios">4.1 Principios</a></li><li><a href="#42-contexto-del-sistema">4.2 Contexto del sistema</a></li><li><a href="#43-contenedores-y-despliegue">4.3 Contenedores y despliegue</a></li><li><a href="#44-modulos-del-backend">4.4 Módulos del backend</a></li><li><a href="#45-decisiones-de-arquitectura-resumen">4.5 Decisiones de arquitectura (resumen)</a></li><li><a href="#46-contrato-de-api">4.6 Contrato de API</a></li><li><a href="#47-modelo-de-datos">4.7 Modelo de datos</a></li><li><a href="#48-frontend-y-microfrontends">4.8 Frontend y microfrontends</a></li><li><a href="#49-correspondencia-azure-local">4.9 Correspondencia Azure ↔ local</a></li><li><a href="#410-estructura-del-repositorio">4.10 Estructura del repositorio</a></li><li><a href="#411-entornos-y-puertos">4.11 Entornos y puertos</a></li><li><a href="#412-estrategia-de-pruebas">4.12 Estrategia de pruebas</a></li><li><a href="#413-modernizacion-resumen-detalle-en-fase-7">4.13 Modernización (resumen; detalle en f…</a></li></ul></nav>
-<p>﻿# 04 · Arquitectura baseline</p>
+<h1 id="04-arquitectura-baseline">04 · Arquitectura baseline</h1>
 <p>Esta sección fija la arquitectura <strong>antes</strong> de continuar la implementación. Cualquier cambio posterior
 debe reflejarse aquí y en un ADR.</p>
 <h2 id="41-principios">4.1 Principios</h2>
@@ -423,10 +423,10 @@ cascada.</p>
 <td><code>app.messaging.transport=azure\|local</code></td>
 </tr>
 <tr>
-<td>Eventos de dominio externos</td>
-<td>Event Grid (topic de documentos)</td>
+<td>Eventos de dominio y auditoría</td>
+<td>Event Grid (topic <code>audit</code> y topic de documentos)</td>
 <td>Logger estructurado</td>
-<td><code>app.integrations.event-grid.enabled</code> (prevista, no implementada)</td>
+<td><code>app.integrations.event-grid.enabled</code> (diseñado para los trece casos; no implementado)</td>
 </tr>
 <tr>
 <td>Documentos</td>

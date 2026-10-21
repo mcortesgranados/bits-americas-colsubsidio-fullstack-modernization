@@ -1,4 +1,4 @@
-﻿# 04 · Arquitectura baseline
+# 04 · Arquitectura baseline
 
 Esta sección fija la arquitectura **antes** de continuar la implementación. Cualquier cambio posterior
 debe reflejarse aquí y en un ADR.
@@ -214,7 +214,7 @@ flowchart LR
 | Capacidad | Producción (Azure) | Local (por defecto) | Activación |
 |-----------|--------------------|---------------------|------------|
 | Mensajería | Service Bus (cola `subsidy-requests`) | Publicador en proceso + pipeline Reactor | `app.messaging.transport=azure\|local` |
-| Eventos de dominio externos | Event Grid (topic de documentos) | Logger estructurado | `app.integrations.event-grid.enabled` (prevista, no implementada) |
+| Eventos de dominio y auditoría | Event Grid (topic `audit` y topic de documentos) | Logger estructurado | `app.integrations.event-grid.enabled` (diseñado para los trece casos; no implementado) |
 | Documentos | Blob Storage (contenedor privado) | Sistema de archivos local | `app.storage.provider=azure\|local` |
 | Base de datos | Azure Database for MySQL Flexible Server | Contenedor `mysql:8.4` en `docker-compose` | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` |
 | Notificaciones | Azure Function HTTP | Logger estructurado | `app.notifications.provider=azure-function\|local-log` |

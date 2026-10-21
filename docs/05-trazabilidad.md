@@ -120,5 +120,6 @@ requisito → código → prueba; allí se enlaza requisito del JD → entregabl
 | FR-AZR-04 | `DocumentStorage`, `AccessGuard` | `DocumentAccessIT` | 403 al descargar documento ajeno |
 | FR-AZR-05 | Function de notificaciones (pendiente) | `NotificationIdempotencyTest` | Un solo envío por `notificationId` |
 | FR-AZR-06 | `DomainEventPublisher` y `DocumentStorage` | `ParityIT` (perfil local y doble Azure) | Mismo handler en ambos transportes |
+| FR-AZR-09 | `OutboxService`, publicador de Event Grid y Function `auditDispatcher` (pendientes) | `AuditOutboxTest` | Caso respondiendo 200 con el evento en `PENDING` |
 | FR-AZR-07 | `application.yml`, propiedades | `AzureProfileStartupTest` | Falla al iniciar sin cadena de conexión |
 | FR-AZR-08 | `staticwebapp.config.json` (pendiente) | `SwaRoutingTest` | Recarga profunda devuelve el shell |
