@@ -24,6 +24,7 @@ import java.time.Instant;
  * @since 2026-10-20 11:42 GMT-5 Bogotá D.C. Colombia
  */
 public record SubsidyRequestSummaryResponse(
+        Long id,
         String requestNumber,
         SubsidyType subsidyType,
         SubsidyRequestStatus status,
@@ -54,6 +55,7 @@ public record SubsidyRequestSummaryResponse(
      */
     public static SubsidyRequestSummaryResponse from(SubsidyRequest request) {
         return new SubsidyRequestSummaryResponse(
+                request.getId(),
                 request.getRequestNumber(),
                 request.getSubsidyType(),
                 request.getStatus(),

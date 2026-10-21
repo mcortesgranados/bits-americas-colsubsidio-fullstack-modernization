@@ -46,6 +46,19 @@ public interface SubsidyRequestRepository
     Optional<SubsidyRequest> findByRequestNumber(String requestNumber);
 
     /**
+     * Returns the request with the highest radicado for a given prefix, used by the number generator.
+     *
+     * <p>The prefix {@code SOL-<year>-} fixes the year, so the query only looks at the current series.
+     * Ordering by the text column works because the sequence is zero-padded to four digits, which keeps
+     * the lexicographic order equal to the numeric one for the expected range. The method returns an
+     * optional because the first request of a year has no predecessor.
+     *
+     * @param prefix radicado prefix of the series, for example {@code SOL-2026-}
+     * @return the last request of the series, or an empty optional when the series has no rows yet
+     */
+    Optional<SubsidyRequest> findTopByRequestNumberStartingWithOrderByRequestNumberDesc(String prefix);
+
+    /**
      * Exposes a derived query over the aggregate managed by this repository. Spring Data validates the
      * property path when the context starts, which turns mapping mistakes into immediate startup failures.
      *

@@ -40,4 +40,13 @@ public interface RequestStatusHistoryRepository extends JpaRepository<RequestSta
      * @since 2026-10-20 11:42 GMT-5 Bogotá D.C. Colombia
      */
     List<RequestStatusHistory> findByRequestIdOrderByOccurredAtAscIdAsc(Long requestId);
+
+    /**
+     * Returns the transitions recorded after a given identifier, used to replay an SSE reconnection.
+     *
+     * @param requestId request whose timeline is replayed
+     * @param id        last identifier the client received
+     * @return transitions with a greater identifier, oldest first
+     */
+    List<RequestStatusHistory> findByRequestIdAndIdGreaterThanOrderByIdAsc(Long requestId, Long id);
 }

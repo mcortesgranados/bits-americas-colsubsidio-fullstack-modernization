@@ -4,9 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import co.com.bits.colsubsidio.affiliate.domain.AffiliateRepository;
+import co.com.bits.colsubsidio.affiliate.domain.BeneficiaryRepository;
 import co.com.bits.colsubsidio.common.api.PageResponse;
+import co.com.bits.colsubsidio.messaging.application.OutboxService;
+import co.com.bits.colsubsidio.security.AccessGuard;
 import co.com.bits.colsubsidio.subsidy.api.dto.SubsidyRequestSummaryResponse;
 import co.com.bits.colsubsidio.subsidy.domain.SubsidyRequest;
+import co.com.bits.colsubsidio.subsidy.domain.RequestStatusHistoryRepository;
+import co.com.bits.colsubsidio.subsidy.domain.RequiredDocumentRepository;
 import co.com.bits.colsubsidio.subsidy.domain.SubsidyRequestRepository;
 import co.com.bits.colsubsidio.subsidy.domain.SubsidyRequestStatus;
 import co.com.bits.colsubsidio.subsidy.domain.SubsidyType;
@@ -40,6 +46,30 @@ class SubsidyRequestServiceTest {
 
     @Mock
     private SubsidyRequestRepository requests;
+
+    @Mock
+    private AffiliateRepository affiliates;
+
+    @Mock
+    private BeneficiaryRepository beneficiaries;
+
+    @Mock
+    private RequiredDocumentRepository documents;
+
+    @Mock
+    private RequestStatusHistoryRepository history;
+
+    @Mock
+    private OutboxService outbox;
+
+    @Mock
+    private RequestNumberGenerator numbers;
+
+    @Mock
+    private AccessGuard accessGuard;
+
+    @org.mockito.Spy
+    private SubsidyDemoRules rules = new SubsidyDemoRules();
 
     @InjectMocks
     private SubsidyRequestService service;
