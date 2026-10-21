@@ -1,4 +1,4 @@
-# Documentación del proyecto
+﻿# Documentación del proyecto
 
 Repositorio: `bits-americas-colsubsidio-fullstack-modernization`
 Versión de la línea base documental: **1.0** — 2026-10-20
@@ -25,11 +25,12 @@ demostración**.
 | 09 | [Descripción del cargo](09-descripcion-del-cargo.md) | JD original, lectura estructurada, cobertura real y brechas declaradas |
 | 10 | [Tecnologías de Azure](10-tecnologias-azure.md) | Inventario de servicios, contratos, paridad local, FR-AZR y estado real |
 | 11 | [Diccionario de datos y modelo ER](11-diccionario-de-datos.md) | 13 tablas, columna por columna, enumeraciones, índices, datos personales y migraciones |
-| 12 | [Plan de despliegue en Azure](12-plan-despliegue-azure.md) | Tres Static Web Apps para los microfrontends, App Service con slots, pipeline y rollback |
+| 12 | [Plan de despliegue (Azure + AWS)](12-plan-despliegue-azure.md) | Microfrontends en tres Static Web Apps, backend en EC2 y alternativa App Service, pipeline y rollback |
+| ADR-0009 | [Despliegue del backend en AWS EC2](adr/ADR-0009-despliegue-backend-ec2.md) | Decisión vigente, consecuencias aceptadas y fecha de revisión |
 
 Documentos previstos para fases posteriores (aún no creados):
 
-- `docs/adr/ADR-0001..0008.md` — decisiones arquitectónicas.
+- `docs/adr/ADR-0001..0008.md` — decisiones arquitectónicas (pendientes; el ADR-0009 ya está escrito).
 - `docs/modernizacion/` — plan de migración Java 8 / Boot 2.3 → Java 17 / Boot 3.x, matriz de
   compatibilidad y recetas OpenRewrite.
 - `docs/api/openapi.yaml` — contrato OpenAPI versionado.

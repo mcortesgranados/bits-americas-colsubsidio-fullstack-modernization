@@ -26,12 +26,16 @@
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
-  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#121-estado-actual">12.1 Estado actual</a></li><li><a href="#122-topologia-de-despliegue">12.2 Topología de despliegue</a></li><li><a href="#123-unidades-de-despliegue">12.3 Unidades de despliegue</a></li><li><a href="#124-decision-tres-static-web-apps-no-una">12.4 Decisión: tres Static Web Apps, no una</a></li><li><a href="#125-configuracion-de-las-aplicaciones-estaticas">12.5 Configuración de las aplicaciones es…</a></li><li><a href="#126-secuencia-de-despliegue-de-un-remoto">12.6 Secuencia de despliegue de un remoto</a></li><li><a href="#127-despliegue-del-backend">12.7 Despliegue del backend</a></li><li><a href="#128-orden-de-despliegue-y-compatibilidad">12.8 Orden de despliegue y compatibilidad</a></li><li><a href="#129-identidad-y-secretos">12.9 Identidad y secretos</a></li><li><a href="#1210-base-de-datos-en-el-pipeline">12.10 Base de datos en el pipeline</a></li><li><a href="#1211-pipeline-en-azure-devops">12.11 Pipeline en Azure DevOps</a></li><li><a href="#1212-ambientes-y-promocion">12.12 Ambientes y promoción</a></li><li><a href="#1213-coste-y-free-tier-del-despliegue">12.13 Coste y free tier del despliegue</a></li><li><a href="#1214-riesgos-de-despliegue">12.14 Riesgos de despliegue</a></li><li><a href="#1215-que-falta-para-ejecutar-este-plan">12.15 Qué falta para ejecutar este plan</a></li><li><a href="#1216-variante-backend-en-aws-ec2">12.16 Variante: backend en AWS EC2</a></li></ul></nav>
-<p>﻿# 12 · Plan de despliegue en Azure: backend y microfrontends</p>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#121-estado-actual">12.1 Estado actual</a></li><li><a href="#122-topologia-de-despliegue">12.2 Topología de despliegue</a></li><li><a href="#123-unidades-de-despliegue">12.3 Unidades de despliegue</a></li><li><a href="#124-decision-tres-static-web-apps-no-una">12.4 Decisión: tres Static Web Apps, no una</a></li><li><a href="#125-configuracion-de-las-aplicaciones-estaticas">12.5 Configuración de las aplicaciones es…</a></li><li><a href="#126-secuencia-de-despliegue-de-un-remoto">12.6 Secuencia de despliegue de un remoto</a></li><li><a href="#127-despliegue-del-backend-en-app-service-alternativa">12.7 Despliegue del backend en App Servic…</a></li><li><a href="#128-orden-de-despliegue-y-compatibilidad">12.8 Orden de despliegue y compatibilidad</a></li><li><a href="#129-identidad-y-secretos">12.9 Identidad y secretos</a></li><li><a href="#1210-base-de-datos-en-el-pipeline">12.10 Base de datos en el pipeline</a></li><li><a href="#1211-pipeline-en-azure-devops">12.11 Pipeline en Azure DevOps</a></li><li><a href="#1212-ambientes-y-promocion">12.12 Ambientes y promoción</a></li><li><a href="#1213-coste-y-free-tier-del-despliegue">12.13 Coste y free tier del despliegue</a></li><li><a href="#1214-riesgos-de-despliegue">12.14 Riesgos de despliegue</a></li><li><a href="#1215-que-falta-para-ejecutar-este-plan">12.15 Qué falta para ejecutar este plan</a></li><li><a href="#1216-topologia-vigente-backend-en-aws-ec2">12.16 Topología vigente: backend en AWS EC2</a></li><li><a href="#1217-decision-registrada">12.17 Decisión registrada</a></li></ul></nav>
+<p>﻿# 12 · Plan de despliegue: microfrontends en Azure y backend en AWS</p>
 <p>Cómo se publica el prototipo cuando exista: qué artefactos se generan, dónde aterrizan, en qué orden se
 promueven y cómo se revierte. El diseño de microfrontends del documento 04 (§4.8) ya decidió tres cosas
 que aquí se materializan: <strong>tres aplicaciones independientes</strong>, un <strong>manifiesto de remotos leído en
 runtime</strong> y un <strong><code>contractVersion</code> que el shell valida</strong> antes de montar una ruta.</p>
+<p><strong>Topología vigente (2026-10-20):</strong> el frontend se publica en tres Static Web Apps de Azure y el backend
+en una instancia <strong>AWS EC2</strong> con Docker Compose. App Service queda documentado como alternativa para
+cuando se exija que todo el sistema viva en Azure. El detalle de la decisión, con lo que se gana y lo que
+se deja de demostrar, está en la <a href="#1216-topologia-vigente-backend-en-aws-ec2">sección 12.16</a>.</p>
 <blockquote>
 <p><strong>Nada de este documento se ha ejecutado.</strong> No hay suscripción, ni <code>frontend/</code>, ni <code>infra/</code>, ni
 pipeline: la Fase 6 del <a href="06-plan-entrega.html">plan de entrega</a> es la que los crea. Los nombres de
@@ -72,6 +76,11 @@ recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local 
 <td><strong>No existe</strong></td>
 <td>El entorno local se levanta a mano</td>
 </tr>
+<tr>
+<td>Topología elegida</td>
+<td>Frontend en Azure, backend en EC2</td>
+<td>El <code>docker-compose.yml</code> deja de ser solo local: es también el artefacto de despliegue</td>
+</tr>
 </tbody>
 </table>
 <p>Por eso este plan es prospectivo: describe el destino y el orden, no un estado alcanzado.</p>
@@ -80,22 +89,25 @@ recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local 
     U[Usuario] --&gt; SHELL[Static Web Apps&lt;br/&gt;shell]
     SHELL --&gt;|remoteEntry.js| MFA[Static Web Apps&lt;br/&gt;mfe-affiliates]
     SHELL --&gt;|remoteEntry.js| MFC[Static Web Apps&lt;br/&gt;mfe-companies]
-    SHELL --&gt;|/api/v1| API[App Service Linux&lt;br/&gt;API Spring Boot]
-    API --&gt; DB[(MySQL Flexible)]
-    API --&gt; SB[(Service Bus)]
-    API --&gt; BLOB[(Blob Storage)]
-    SB --&gt; CON[Consumidor&lt;br/&gt;mismo App Service]
-    API -.-&gt; KV[Key Vault]
-    API -.-&gt; AI[Application Insights]
-    FN[Function&lt;br/&gt;notificaciones] --&gt; AI
+    SHELL --&gt;|HTTPS /api/v1| API[Spring Boot&lt;br/&gt;EC2 · Docker]
+    API --&gt; DB[(MySQL 8&lt;br/&gt;contenedor)]
+    API --&gt; VOL[(Volumen EBS&lt;br/&gt;documentos)]
+    API -. alternativa Azure .-&gt; APP[App Service · slots]
+    APP -.-&gt; DBF[(MySQL Flexible)]
+    APP -.-&gt; SB[(Service Bus)]
+    APP -.-&gt; BLOB[(Blob Storage)]
 </pre>
+<p>Línea continua: <strong>topología vigente</strong>. Línea punteada: <strong>alternativa en Azure</strong>, que se activa cambiando
+las variables de entorno del backend y publicándolo en App Service.</p>
 <p>Cuatro artefactos desplegables en tres planos distintos: <strong>estático</strong> (tres Static Web Apps), <strong>cómputo</strong>
-(API y Function) y <strong>datos</strong> (MySQL, Service Bus, Blob). Los tres planos se despliegan por separado
-porque fallan por razones distintas.</p>
+(la API) y <strong>datos</strong> (MySQL y el volumen de evidencias). Los planos se despliegan por separado porque
+fallan por razones distintas. En la topología vigente no hay Service Bus, ni Blob, ni Function: el
+backend usa los adaptadores locales —outbox en proceso y sistema de archivos— y por eso el
+<code>docker-compose.yml</code> es a la vez entorno local y artefacto de despliegue.</p>
 <blockquote>
-<p><strong>Variante en evaluación:</strong> publicar el backend en una instancia <strong>AWS EC2</strong> en lugar de App Service
-mantiene el estático en Azure y mueve solo el plano de cómputo y datos. Está detallada en la
-<a href="#1216-variante-backend-en-aws-ec2">sección 12.16</a>, con lo que se gana y lo que se deja de demostrar.</p>
+<p><strong>Por qué EC2 y qué cuesta:</strong> está en la <a href="#1216-topologia-vigente-backend-en-aws-ec2">sección 12.16</a>.
+En una línea: cuesta menos y se levanta más rápido, pero deja sin evidencia los requisitos de
+integración con Azure del perfil.</p>
 </blockquote>
 <h2 id="123-unidades-de-despliegue">12.3 Unidades de despliegue</h2>
 <table>
@@ -132,8 +144,8 @@ mantiene el estático en Azure y mueve solo el plano de cómputo y datos. Está 
 </tr>
 <tr>
 <td>API</td>
-<td><code>mvn -B verify</code> → <code>.jar</code></td>
-<td>App Service <code>app-demo-api</code> (slot <code>staging</code> → <code>production</code>)</td>
+<td><code>mvn -B verify</code> → <code>.jar</code> + imagen Docker</td>
+<td><strong>EC2 <code>t3.small</code></strong> (vigente) · App Service con slots (alternativa)</td>
 <td>Semver + SHA</td>
 <td>Con cada cambio de backend</td>
 </tr>
@@ -286,7 +298,13 @@ orígenes; ninguna de las dos está en el alcance actual.</p>
 <code>MAJOR</code> obliga a publicar una segunda instancia del remoto en otra URL, cambiar el manifiesto y retirar
 la anterior cuando el tráfico confirme. El shell nunca se despliega esperando un contrato que aún no
 existe.</p>
-<h2 id="127-despliegue-del-backend">12.7 Despliegue del backend</h2>
+<h2 id="127-despliegue-del-backend-en-app-service-alternativa">12.7 Despliegue del backend en App Service (alternativa)</h2>
+<blockquote>
+<p>Esta sección describe la alternativa Azure. La topología vigente está en la
+<a href="#1216-topologia-vigente-backend-en-aws-ec2">sección 12.16</a>. Se conserva porque es el camino obligado
+si la entrega exige que todo el sistema viva en Azure, y porque las variables de configuración son las
+mismas en ambos destinos.</p>
+</blockquote>
 <p><strong>Destino:</strong> App Service Linux, Java 17, plan <strong>Standard S1</strong>. No se usa el nivel gratuito porque su
 cuota es de una hora al día y el servicio debe estar disponible; tampoco se usa Container Apps, descartado
 en el <a href="10-tecnologias-azure.html#109-servicios-evaluados-y-descartados">documento 10</a>. El plan Standard es el mínimo que
@@ -586,8 +604,18 @@ configuración (<code>DB_URL</code>, orígenes del manifiesto, cadenas de Applic
 <tbody>
 <tr>
 <td>Static Web Apps × 3</td>
-<td>Sí, plan Free</td>
+<td><strong>Sí, plan Free</strong></td>
 <td>100 GB de banda al mes <strong>por suscripción</strong>, compartidos por las tres apps; 0,5 GB por app; sin SLA</td>
+</tr>
+<tr>
+<td>EC2   3.small (API + MySQL + nginx)</td>
+<td>Según cuenta</td>
+<td>Cuentas nuevas: hasta 200 USD en créditos por 6 meses. Cuentas antiguas: 750 h de micro, insuficientes para los tres contenedores</td>
+</tr>
+<tr>
+<td>EBS, snapshots y IP pública</td>
+<td><strong>No</strong></td>
+<td>Se facturan aparte del cómputo</td>
 </tr>
 <tr>
 <td>Azure Functions</td>
@@ -626,9 +654,10 @@ configuración (<code>DB_URL</code>, orígenes del manifiesto, cadenas de Applic
 </tr>
 </tbody>
 </table>
-<p>Traducción práctica: <strong>el frontend puede vivir en free tier; el backend no.</strong> Publicar la API y la base
-es el coste real del despliegue, y es la razón por la que el requisito de «corre en local sin Azure» está
-en el centro del ejercicio: la demo se puede evaluar completa sin gastar.</p>
+<p>Traducción práctica: <strong>el frontend puede vivir en free tier; el backend no.</strong> Con la topología vigente el
+coste se concentra en la instancia EC2, su disco y su IP; en la alternativa Azure se concentra en App
+Service y MySQL. En ambos casos el requisito de «corre en local sin Azure» sigue en el centro del
+ejercicio: la demo se puede evaluar completa sin gastar.</p>
 <p>El crédito de 200 USD de la cuenta gratuita no cambia el cálculo: es válido <strong>30 días</strong>, no durante toda
 la demo. Sirve para una ventana de validación, no como presupuesto del proyecto.</p>
 <p><strong>La VM gratuita tampoco resuelve el backend.</strong> La cuenta gratuita incluye 750 h al mes de B1s
@@ -706,12 +735,28 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.</p>
 <td>Todo el plano estático</td>
 </tr>
 <tr>
-<td><code>infra/</code> con Bicep (SWA × 3, App Service, MySQL, Service Bus, Blob, Key Vault, Function)</td>
-<td>Cualquier despliegue reproducible</td>
+<td><code>docker-compose.yml</code> de producción (api + mysql + nginx)</td>
+<td>El despliegue en EC2 y la paridad local</td>
 </tr>
 <tr>
-<td><code>docker-compose.yml</code></td>
-<td>La paridad local que este plan promete</td>
+<td><code>user-data</code> o script de aprovisionamiento de la instancia</td>
+<td>Que la instancia sea reproducible y no una mascota</td>
+</tr>
+<tr>
+<td>Reglas de Security Group y renovación de TLS</td>
+<td>Abrir el servicio sin exponer MySQL ni caducar el certificado</td>
+</tr>
+<tr>
+<td>Copias: snapshot de EBS y <code>mysqldump</code></td>
+<td>Recuperación ante pérdida de datos</td>
+</tr>
+<tr>
+<td><code>infra/</code> con Bicep (SWA × 3 y App Service, para la alternativa Azure)</td>
+<td>La vuelta a Azure en un comando</td>
+</tr>
+<tr>
+<td>Migraciones Flyway <code>V1</code>–<code>V3</code></td>
+<td>La etapa <code>Migrate</code></td>
 </tr>
 <tr>
 <td>Migraciones Flyway <code>V1</code>–<code>V3</code></td>
@@ -730,8 +775,8 @@ la vez. Serviría para hospedar una de las tres piezas, no el sistema.</p>
 <p>Todo ello corresponde a la Fase 6 del <a href="06-plan-entrega.html">plan de entrega</a>, con la salvedad de que los
 microfrontends se construyen en la Fase 4 y las migraciones en la Fase 2: este documento describe cómo se
 publican, no cuándo se escriben.</p>
-<h2 id="1216-variante-backend-en-aws-ec2">12.16 Variante: backend en AWS EC2</h2>
-<p>Decisión en evaluación: publicar el backend en una instancia <strong>EC2</strong> y dejar el frontend en Azure. Es una
+<h2 id="1216-topologia-vigente-backend-en-aws-ec2">12.16 Topología vigente: backend en AWS EC2</h2>
+<p>Decisión tomada: el backend se publica en una instancia <strong>EC2</strong> y el frontend se queda en Azure. Es una
 topología válida técnicamente, pero cambia qué se demuestra. El código no se toca: el backend corre con
 los adaptadores <code>local</code>, que ya existen y son los mismos que se usan en la demo sin Azure.</p>
 <pre class="mermaid">flowchart TB
@@ -802,6 +847,43 @@ los adaptadores <code>local</code>, que ya existen y son los mismos que se usan 
 </tr>
 </tbody>
 </table>
+<h3 id="lo-que-el-frontend-necesita-para-hablar-con-ec2">Lo que el frontend necesita para hablar con EC2</h3>
+<table>
+<thead>
+<tr>
+<th>Punto</th>
+<th>Configuración</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>URL de la API</td>
+<td><code>assets/config.json</code> del shell, leído en runtime: <code>{ "apiBaseUrl": "https://api.&lt;dominio&gt;/api/v1" }</code></td>
+</tr>
+<tr>
+<td>CORS</td>
+<td><code>app.cors.allowed-origins</code> con los tres orígenes de Static Web Apps, no con <code>*</code></td>
+</tr>
+<tr>
+<td>Preflight</td>
+<td><code>OPTIONS</code> debe llegar a Spring: nginx no lo intercepta y responde con <code>Authorization</code> y <code>Content-Type</code> permitidos</td>
+</tr>
+<tr>
+<td>Autenticación</td>
+<td>JWT en cabecera <code>Authorization</code>. Con cookies haría falta <code>SameSite=None; Secure</code> y un tercer dominio de confianza</td>
+</tr>
+<tr>
+<td>CSP</td>
+<td>El host de la API entra en <code>connect-src</code> del shell, o el navegador bloquea las llamadas</td>
+</tr>
+<tr>
+<td>TLS</td>
+<td>HTTPS en ambos lados: Static Web Apps siempre; EC2 con <code>certbot</code> o ALB</td>
+</tr>
+</tbody>
+</table>
+<p>El primer punto es el que evita recompilar los tres proyectos cada vez que el backend cambia de nube: la
+URL no está en <code>environment.ts</code>, está en un JSON que se sirve con el shell.</p>
 <h3 id="que-se-gana-y-que-se-deja-de-demostrar">Qué se gana y qué se deja de demostrar</h3>
 <table>
 <thead>
@@ -920,6 +1002,47 @@ la variante es reversible: lo que se pierde mientras tanto es la demostración, 
 <p><strong>Decisión pendiente de registrar:</strong> si se confirma EC2, corresponde un <code>ADR-0009</code> con el contexto, las
 consecuencias aceptadas y una fecha de revisión, para que la desviación quede explícita y no parezca un
 descuido en la entrega.</p>
+<h2 id="1217-decision-registrada">12.17 Decisión registrada</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Decisión</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>Tres Static Web Apps (plan Free) en Azure: shell, <code>mfe-affiliates</code>, <code>mfe-companies</code></td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Una instancia AWS EC2 <code>t3.small</code> con Docker Compose: API, MySQL 8 y nginx</td>
+</tr>
+<tr>
+<td>Datos</td>
+<td>MySQL en contenedor sobre EBS; evidencias en un volumen de la misma instancia</td>
+</tr>
+<tr>
+<td>Integraciones Azure</td>
+<td><strong>Fuera de la topología vigente</strong>: se usan los adaptadores <code>local</code></td>
+</tr>
+<tr>
+<td>Alternativa documentada</td>
+<td>App Service con slots + MySQL Flexible + Service Bus + Blob (secciones 12.7 a 12.11)</td>
+</tr>
+<tr>
+<td>Reversibilidad</td>
+<td>Cambiar <code>DB_URL</code> y los proveedores en el entorno; el <code>.jar</code> y el frontend no se tocan</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lo que esta decisión cuesta, dicho sin adornos:</strong> el repositorio demuestra microfrontends, mensajería
+con outbox e idempotencia —eso sigue en pie— pero <strong>deja de demostrar la integración con Azure</strong> que el
+perfil pide, y pierde el despliegue sin corte que dan los slots. Si la entrega se evalúa contra el JD,
+conviene tenerlo explícito antes de que lo pregunte el evaluador.</p>
+<p>La decisión queda registrada en
+<a href="adr-0009-despliegue-backend-ec2.html">ADR-0009</a>, con fecha de revisión.</p>
   <div class="footer">
     Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
   </div>

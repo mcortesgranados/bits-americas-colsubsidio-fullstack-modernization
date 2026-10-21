@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Builds one standalone HTML page per Markdown document in docs/.
 
 Each page shares docs/assets/docs.css and the sticky candidate header, and includes a link back to
@@ -106,6 +106,13 @@ def convert(markdown_text: str) -> tuple[str, str]:
         r'href="\1.html\2"',
         html,
     )
+    # ADR sources live in docs/adr but are published next to the numbered pages.
+    html = re.sub(
+        r'href="(?:\.\./)?adr/([^"]+?)\.md(#[^"]*)?"',
+        lambda m: f'href="{m.group(1).lower()}.html{m.group(2) or ""}"',
+        html,
+    )
+    html = re.sub(r'href="\.\./([0-9]{2}-[a-z0-9\-]+)\.md(#[^"]*)?"', r'href="\1.html\2"', html)
     match = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
     title = re.sub(r"<[^>]+>", "", match.group(1)).strip() if match else "Documentación"
     return html, title
@@ -127,6 +134,24 @@ def main() -> int:
         target.write_text(page, encoding="utf-8")
         built += 1
         print(f"built {target.name} ({len(page)} bytes)")
+
+    adr_dir = DOCS / "adr"
+    if adr_dir.is_dir():
+        for source in sorted(adr_dir.glob("*.md")):
+            html, title = convert(source.read_text(encoding="utf-8"))
+            page = TEMPLATE.format(
+                title=title,
+                css=CSS,
+                header=HEADER,
+                quick=build_quick_access(html),
+                body=html,
+                mermaid=MERMAID,
+            )
+            target = DOCS / f"{source.stem.lower()}.html"
+            target.write_text(page, encoding="utf-8")
+            built += 1
+            print(f"built {target.name} ({len(page)} bytes)")
+
     print(f"pages: {built}")
     return 0
 

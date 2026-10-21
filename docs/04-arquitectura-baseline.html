@@ -103,9 +103,9 @@ debe reflejarse aquí y en un ADR.</p>
     API -. telemetría .-&gt; AI
     HOST -. despliegue .-&gt; SWA
 </pre>
-<h3 id="431-variante-de-despliegue-backend-en-aws-ec2">4.3.1 Variante de despliegue: backend en AWS EC2</h3>
-<p>El diagrama anterior es la referencia. Si el backend se publica en una instancia EC2, el frontend sigue
-en Azure y el plano de datos se mueve con él:</p>
+<h3 id="431-despliegue-vigente-frontend-en-azure-y-backend-en-aws-ec2">4.3.1 Despliegue vigente: frontend en Azure y backend en AWS EC2</h3>
+<p>El diagrama anterior describe los contenedores lógicos. El despliegue vigente mantiene el frontend en
+Azure y mueve el backend y su plano de datos a una instancia EC2:</p>
 <pre class="mermaid">flowchart TB
     U[Usuario] --&gt; SWA[Static Web Apps&lt;br/&gt;shell + mfe-affiliates + mfe-companies]
     SWA --&gt;|HTTPS /api/v1 · CORS| EC2
@@ -117,12 +117,12 @@ en Azure y el plano de datos se mueve con él:</p>
     end
     EC2 --&gt;|nginx + TLS| U
 </pre>
-<p>Lo que cambia no es el código: es <strong>qué adaptadores se ejercitan</strong>. En esta variante el backend corre con
+<p>Lo que cambia no es el código: es <strong>qué adaptadores se ejercitan</strong>. En la topología vigente el backend corre con
 <code>app.messaging.transport=local</code> y <code>app.storage.provider=local</code>, es decir, el mismo perfil que se usa en
 local. Service Bus, Blob, Key Vault, Event Grid y la Function quedan fuera de la demostración, y con
 ellos los requisitos <code>FR-AZR-01</code> a <code>FR-AZR-08</code> dejan de tener evidencia ejecutable. El detalle operativo
 —tamaño, seguridad, TLS, coste y riesgos— está en el
-<a href="12-plan-despliegue-azure.html#1216-variante-backend-en-aws-ec2">12 · Plan de despliegue</a>.</p>
+<a href="12-plan-despliegue-azure.html#1216-topologia-vigente-backend-en-aws-ec2">12 · Plan de despliegue</a>.</p>
 <h2 id="44-modulos-del-backend">4.4 Módulos del backend</h2>
 <table>
 <thead>

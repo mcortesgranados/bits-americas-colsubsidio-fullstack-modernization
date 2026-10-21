@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentación</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<header class="candidate-sticky-header" id="candidate-sticky-header" aria-label="Información básica de Manuela Cortés Granados">
+  <img class="candidate-photo" src="assets/manuela-cortes-granados.jpg" alt="Fotografía de perfil de Manuela Cortés Granados" width="200" height="200" loading="eager" decoding="async">
+  <div class="candidate-identity">
+    <strong>Manuela Cortés Granados</strong>
+    <span>Senior Software Engineer Candidate</span>
+  </div>
+  <div class="candidate-basic-data">
+    <span>📍 Bogotá, Colombia</span>
+    <a href="mailto:manuelacortesgranados@gmail.com">✉️ manuelacortesgranados@gmail.com</a>
+    <span>🕒 Immediate / negotiable</span>
+    <a href="https://github.com/mcortesgranados" target="_blank" rel="noopener">💻 GitHub</a>
+    <a href="index.html">📚 Documentación</a>
+    <a href="04-arquitectura-baseline.html">🧭 Arquitectura</a>
+  </div>
+</header>
+<main class="container doc-content">
+  <nav class="doc-nav" aria-label="Navegación de documentación">
+    <a href="index.html">← Índice de documentación</a>
+  </nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#contexto">Contexto</a></li><li><a href="#decision">Decisión</a></li><li><a href="#alternativas-consideradas">Alternativas consideradas</a></li><li><a href="#consecuencias">Consecuencias</a></li><li><a href="#seguimiento">Seguimiento</a></li></ul></nav>
+<p>﻿# ADR-0009 · Despliegue del backend en AWS EC2</p>
+<ul>
+<li><strong>Estado:</strong> aceptada</li>
+<li><strong>Fecha:</strong> 2026-10-20</li>
+<li><strong>Decisores:</strong> autor del prototipo</li>
+<li><strong>Revisión:</strong> al cerrar la Fase 6 o si la entrega exige que todo el sistema viva en Azure</li>
+</ul>
+<h2 id="contexto">Contexto</h2>
+<p>El prototipo debe poder evaluarse de punta a punta, y el requisito de «corre en local sin Azure» ya
+obligaba a tener adaptadores locales para mensajería, almacenamiento y notificaciones. Levantar la
+alternativa Azure completa (App Service con slots, MySQL Flexible, Service Bus, Blob, Key Vault) tiene un
+coste mensual que no se justifica para una demostración de 2,5 meses, y el crédito de la cuenta gratuita
+de Azure caduca a los 30 días. Una VM B1s gratuita (1 GiB) no sostiene API + MySQL + nginx a la vez.</p>
+<h2 id="decision">Decisión</h2>
+<p>El backend se publica en <strong>una instancia AWS EC2 <code>t3.small</code></strong> (2 vCPU, 2 GiB) con tres contenedores
+—API, MySQL 8 y nginx con TLS— sobre un volumen EBS. El backend corre con el <strong>perfil local</strong>
+(<code>app.messaging.transport=local</code>, <code>app.storage.provider=local</code>, <code>app.notifications.provider=local-log</code>).</p>
+<p>El frontend permanece en <strong>Azure Static Web Apps</strong> (tres apps del plan Free) y consume la API por HTTPS
+con JWT en cabecera.</p>
+<h2 id="alternativas-consideradas">Alternativas consideradas</h2>
+<table>
+<thead>
+<tr>
+<th>Alternativa</th>
+<th>Por qué se descarta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>App Service Standard S1 + MySQL Flexible</td>
+<td>Funcionalmente superior (slots, identidad administrada, TLS gestionado), pero es coste recurrente y el crédito dura 30 días</td>
+</tr>
+<tr>
+<td>Azure VM B1s gratuita</td>
+<td>1 GiB: cabe la API sola o MySQL solo, no el sistema; sin slots ni SLA</td>
+</tr>
+<tr>
+<td>Azure Container Apps</td>
+<td>Descartado en el documento 10; añade registro de contenedores y no resuelve el coste</td>
+</tr>
+<tr>
+<td>Todo en AWS (S3 + CloudFront para el frontend)</td>
+<td>Dejaría la entrega sin ninguna pieza de Azure visible</td>
+</tr>
+</tbody>
+</table>
+<h2 id="consecuencias">Consecuencias</h2>
+<p><strong>Positivas</strong></p>
+<ul>
+<li>Coste cubierto con los créditos de AWS para cuentas nuevas (hasta 200 USD, 6 meses).</li>
+<li>El mismo <code>docker-compose.yml</code> sirve para local y para producción: menos deriva entre entornos.</li>
+<li>Reversible: volver a Azure es cambiar variables de entorno y desplegar el mismo <code>.jar</code>.</li>
+</ul>
+<p><strong>Negativas, aceptadas</strong></p>
+<ul>
+<li><strong>Los requisitos <code>FR-AZR-01</code> a <code>FR-AZR-08</code> dejan de tener evidencia ejecutable.</strong> Service Bus, Blob,
+  Event Grid, la Function y Key Vault no participan, y el perfil solicitado incluye integración con Azure.</li>
+<li>Sin slots: cada despliegue corta el servicio entre 20 y 40 segundos.</li>
+<li>Parcheo del sistema operativo, TLS y copias de seguridad quedan a cargo del equipo.</li>
+<li>Sin point-in-time recovery: la recuperación depende de snapshots y volcados.</li>
+<li>La instancia tiende a convertirse en mascota si no se versiona su aprovisionamiento.</li>
+</ul>
+<h2 id="seguimiento">Seguimiento</h2>
+<table>
+<thead>
+<tr>
+<th>Acción</th>
+<th>Responsable</th>
+<th>Cuándo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Versionar <code>docker-compose.yml</code> de producción y el <code>user-data</code></td>
+<td>Autor</td>
+<td>Fase 6</td>
+</tr>
+<tr>
+<td>Automatizar snapshot diario y probar una restauración</td>
+<td>Autor</td>
+<td>Fase 6</td>
+</tr>
+<tr>
+<td>Revisar la decisión si la entrega exige Azure de extremo a extremo</td>
+<td>Autor</td>
+<td>Antes del cierre</td>
+</tr>
+<tr>
+<td>Si se revierte: desplegar App Service y volver a los adaptadores <code>azure</code></td>
+<td>Autor</td>
+<td>Según revisión</td>
+</tr>
+</tbody>
+</table>
+<p>Referencias: <a href="12-plan-despliegue-azure.html#1216-topologia-vigente-backend-en-aws-ec2">12 · Plan de despliegue</a>,
+<a href="10-tecnologias-azure.html">10 · Tecnologías de Azure</a>,
+<a href="04-arquitectura-baseline.html#431-despliegue-vigente-frontend-en-azure-y-backend-en-aws-ec2">04 · Arquitectura baseline</a>.</p>
+  <div class="footer">
+    Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+</body>
+</html>

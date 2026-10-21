@@ -40,7 +40,8 @@ prueba como exitosa sin su ejecución real.
 | [09 · Descripción del cargo](docs/09-descripcion-del-cargo.md) | JD original, lectura estructurada y cobertura real |
 | [10 · Tecnologías de Azure](docs/10-tecnologias-azure.md) | Inventario de servicios, paridad local y estado |
 | [11 · Diccionario de datos y modelo ER](docs/11-diccionario-de-datos.md) | 13 tablas, columnas, índices, estados y datos personales |
-| [12 · Plan de despliegue en Azure](docs/12-plan-despliegue-azure.md) | Microfrontends en tres Static Web Apps, API con slots y pipeline |
+| [12 · Plan de despliegue (Azure + AWS)](docs/12-plan-despliegue-azure.md) | Microfrontends en tres Static Web Apps, backend en EC2 y alternativa App Service |
+| [ADR-0009](docs/adr/ADR-0009-despliegue-backend-ec2.md) | Decisión de desplegar el backend en EC2 y sus consecuencias |
 
 ## Estructura prevista
 

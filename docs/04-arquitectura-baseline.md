@@ -82,10 +82,10 @@ flowchart TB
     HOST -. despliegue .-> SWA
 ```
 
-### 4.3.1 Variante de despliegue: backend en AWS EC2
+### 4.3.1 Despliegue vigente: frontend en Azure y backend en AWS EC2
 
-El diagrama anterior es la referencia. Si el backend se publica en una instancia EC2, el frontend sigue
-en Azure y el plano de datos se mueve con él:
+El diagrama anterior describe los contenedores lógicos. El despliegue vigente mantiene el frontend en
+Azure y mueve el backend y su plano de datos a una instancia EC2:
 
 ```mermaid
 flowchart TB
@@ -100,12 +100,12 @@ flowchart TB
     EC2 -->|nginx + TLS| U
 ```
 
-Lo que cambia no es el código: es **qué adaptadores se ejercitan**. En esta variante el backend corre con
+Lo que cambia no es el código: es **qué adaptadores se ejercitan**. En la topología vigente el backend corre con
 `app.messaging.transport=local` y `app.storage.provider=local`, es decir, el mismo perfil que se usa en
 local. Service Bus, Blob, Key Vault, Event Grid y la Function quedan fuera de la demostración, y con
 ellos los requisitos `FR-AZR-01` a `FR-AZR-08` dejan de tener evidencia ejecutable. El detalle operativo
 —tamaño, seguridad, TLS, coste y riesgos— está en el
-[12 · Plan de despliegue](12-plan-despliegue-azure.md#1216-variante-backend-en-aws-ec2).
+[12 · Plan de despliegue](12-plan-despliegue-azure.md#1216-topologia-vigente-backend-en-aws-ec2).
 
 ## 4.4 Módulos del backend
 
