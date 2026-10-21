@@ -26,7 +26,7 @@
   <nav class="doc-nav" aria-label="Navegación de documentación">
     <a href="index.html">← Índice de documentación</a>
   </nav>
-  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#101-para-que-se-usa-azure">10.1 Para qué se usa Azure</a></li><li><a href="#102-mapa-de-servicios">10.2 Mapa de servicios</a></li><li><a href="#103-matriz-de-intervencion">10.3 Matriz de intervención</a></li><li><a href="#104-requisitos-de-integracion">10.4 Requisitos de integración</a></li><li><a href="#105-contrato-del-mensaje">10.5 Contrato del mensaje</a></li><li><a href="#106-contrato-del-documento">10.6 Contrato del documento</a></li><li><a href="#107-fallos-reintentos-y-cola-de-fallidos">10.7 Fallos, reintentos y cola de fallidos</a></li><li><a href="#108-paridad-local-azure">10.8 Paridad local ↔ Azure</a></li><li><a href="#109-servicios-evaluados-y-descartados">10.9 Servicios evaluados y descartados</a></li><li><a href="#1010-estado-y-evidencia-en-el-codigo">10.10 Estado y evidencia en el código</a></li><li><a href="#1011-configuracion-por-entorno">10.11 Configuración por entorno</a></li><li><a href="#1013-que-falta-para-desplegar">10.13 Qué falta para desplegar</a></li><li><a href="#1012-ejecucion-local-contra-servicios-de-azure">10.12 Ejecución local contra servicios de…</a></li><li><a href="#1014-cobertura-de-azure-functions-en-los-trece-casos">10.14 Cobertura de Azure Functions en los…</a></li></ul></nav>
+  <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#101-para-que-se-usa-azure">10.1 Para qué se usa Azure</a></li><li><a href="#102-mapa-de-servicios">10.2 Mapa de servicios</a></li><li><a href="#103-matriz-de-intervencion">10.3 Matriz de intervención</a></li><li><a href="#104-requisitos-de-integracion">10.4 Requisitos de integración</a></li><li><a href="#105-contrato-del-mensaje">10.5 Contrato del mensaje</a></li><li><a href="#106-contrato-del-documento">10.6 Contrato del documento</a></li><li><a href="#107-fallos-reintentos-y-cola-de-fallidos">10.7 Fallos, reintentos y cola de fallidos</a></li><li><a href="#108-paridad-local-azure">10.8 Paridad local ↔ Azure</a></li><li><a href="#109-servicios-evaluados-y-descartados">10.9 Servicios evaluados y descartados</a></li><li><a href="#1010-estado-y-evidencia-en-el-codigo">10.10 Estado y evidencia en el código</a></li><li><a href="#1011-configuracion-por-entorno">10.11 Configuración por entorno</a></li><li><a href="#1013-que-falta-para-desplegar">10.13 Qué falta para desplegar</a></li><li><a href="#1012-ejecucion-local-contra-servicios-de-azure">10.12 Ejecución local contra servicios de…</a></li><li><a href="#1014-cobertura-de-azure-functions-en-los-trece-casos">10.14 Cobertura de Azure Functions en los…</a></li><li><a href="#1015-como-verificar-el-consumo-frente-al-free-tier">10.15 Cómo verificar el consumo frente al…</a></li></ul></nav>
 <p>﻿# 10 · Tecnologías de Azure en la prueba técnica</p>
 <p>Inventario único de los servicios de Azure que intervienen en el prototipo: para qué se usan, qué
 contrato exponen, con qué se sustituyen en local y en qué estado están. Si un servicio no aparece aquí,
@@ -928,6 +928,76 @@ servicios de Azure» sin desplegar App Service.</p>
 <p>Lo que <strong>no</strong> demuestra: colas con consumidores competidores y sesiones (eso es Service Bus), almacenamiento
 privado con clave gestionada (Blob con identidad administrada) ni el despliegue con slots. Esas tres cosas
 siguen dependiendo de la alternativa Azure del <a href="12-plan-despliegue-azure.html">documento 12</a>.</p>
+<h2 id="1015-como-verificar-el-consumo-frente-al-free-tier">10.15 Cómo verificar el consumo frente al free tier</h2>
+<p>Saber si un recurso está dentro de la cuota no se resuelve con una métrica aislada: Azure expone el
+consumo de los servicios gratuitos solo en la suscripción que se creó con la cuenta gratuita, y por
+servicio en sus propias métricas.</p>
+<h3 id="10151-la-tabla-oficial-de-servicios-gratuitos">10.15.1 La tabla oficial de servicios gratuitos</h3>
+<ol>
+<li>Entra en el <a href="https://portal.azure.com/">portal de Azure</a> y busca <strong>Subscriptions</strong>.</li>
+<li>Selecciona la suscripción creada al darse de alta la cuenta gratuita.</li>
+<li>En la página de la suscripción, abre <strong>Top free services by usage</strong> y luego <strong>View all free services</strong>.</li>
+</ol>
+<p>La tabla <strong>Free services for 12 months</strong> tiene tres columnas: <strong>Meter</strong> (unidad de medida),
+<strong>Usage/Limit</strong> (consumo del mes frente al límite) y <strong>Status</strong>, con cuatro valores posibles: <em>Not in use</em>,
+<em>Unlikely to Exceed</em>, <em>Exceeds on \&lt;fecha&gt;</em> y <em>Exceeded on \&lt;fecha&gt;</em>.</p>
+<p>Dos advertencias que evitan diagnósticos falsos:</p>
+<ul>
+<li><strong>El consumo aparece con uno o dos días de retraso.</strong> Un recurso recién creado puede figurar como
+  <em>Not in use</em> aunque esté trabajando.</li>
+<li><strong>Si la tabla no aparece, la suscripción no tiene servicios gratuitos.</strong> No es un fallo de la interfaz:
+  solo la suscripción del alta original los recibe.</li>
+</ul>
+<p>La fecha de expiración de los 12 meses está en el <em>tooltip</em> de la esquina superior izquierda de esa rejilla.</p>
+<h3 id="10152-donde-mirar-cada-servicio-de-este-prototipo">10.15.2 Dónde mirar cada servicio de este prototipo</h3>
+<table>
+<thead>
+<tr>
+<th>Servicio</th>
+<th>Dónde se comprueba</th>
+<th>Qué mirar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Functions</td>
+<td>Métricas de la Function App</td>
+<td>Ejecuciones totales y GB-s del periodo</td>
+</tr>
+<tr>
+<td>Event Grid</td>
+<td>Métricas del topic</td>
+<td>Eventos publicados y entregados</td>
+</tr>
+<tr>
+<td>Static Web Apps</td>
+<td>Métricas de la app</td>
+<td>Banda consumida frente a los 100 GB por suscripción</td>
+</tr>
+<tr>
+<td>Application Insights</td>
+<td>Métricas del recurso o tabla <code>Usage</code></td>
+<td>Volumen de ingesta frente a 5 GB al mes</td>
+</tr>
+<tr>
+<td>MySQL Flexible</td>
+<td>Métricas del servidor</td>
+<td>Horas de cómputo y almacenamiento; y la fecha de fin de los 12 meses</td>
+</tr>
+<tr>
+<td>Blob, Service Bus, Key Vault</td>
+<td>Cost analysis</td>
+<td>Aparecen como cargo desde la primera operación: no tienen cuota gratuita</td>
+</tr>
+</tbody>
+</table>
+<h3 id="10153-la-comprobacion-que-no-engana">10.15.3 La comprobación que no engaña</h3>
+<p><strong>Cost analysis</strong> con el rango del mes en curso y agrupado por <em>Service name</em>: si un servicio tiene cuota
+dentro del límite, la fila muestra cero; si la ha superado, muestra el excedente. Es la única vista que
+responde a «¿me van a cobrar?» sin interpretar métricas.</p>
+<p>Conviene añadir un <strong>presupuesto con alerta</strong> (Cost Management → Budgets) el mismo día que se crea el
+primer recurso: la cuota gratuita no avisa sola, y el crédito de 200 USD caduca a los 30 días sin
+recordatorio previo.</p>
   <div class="footer">
     Documentación generada para la prueba técnica · <span class="tag">v1.0</span>
   </div>

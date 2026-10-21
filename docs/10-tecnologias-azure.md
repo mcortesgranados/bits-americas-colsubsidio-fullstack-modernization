@@ -327,3 +327,49 @@ servicios de Azure» sin desplegar App Service.
 Lo que **no** demuestra: colas con consumidores competidores y sesiones (eso es Service Bus), almacenamiento
 privado con clave gestionada (Blob con identidad administrada) ni el despliegue con slots. Esas tres cosas
 siguen dependiendo de la alternativa Azure del [documento 12](12-plan-despliegue-azure.md).
+
+## 10.15 Cómo verificar el consumo frente al free tier
+
+Saber si un recurso está dentro de la cuota no se resuelve con una métrica aislada: Azure expone el
+consumo de los servicios gratuitos solo en la suscripción que se creó con la cuenta gratuita, y por
+servicio en sus propias métricas.
+
+### 10.15.1 La tabla oficial de servicios gratuitos
+
+1. Entra en el [portal de Azure](https://portal.azure.com/) y busca **Subscriptions**.
+2. Selecciona la suscripción creada al darse de alta la cuenta gratuita.
+3. En la página de la suscripción, abre **Top free services by usage** y luego **View all free services**.
+
+La tabla **Free services for 12 months** tiene tres columnas: **Meter** (unidad de medida),
+**Usage/Limit** (consumo del mes frente al límite) y **Status**, con cuatro valores posibles: *Not in use*,
+*Unlikely to Exceed*, *Exceeds on \<fecha\>* y *Exceeded on \<fecha\>*.
+
+Dos advertencias que evitan diagnósticos falsos:
+
+- **El consumo aparece con uno o dos días de retraso.** Un recurso recién creado puede figurar como
+  *Not in use* aunque esté trabajando.
+- **Si la tabla no aparece, la suscripción no tiene servicios gratuitos.** No es un fallo de la interfaz:
+  solo la suscripción del alta original los recibe.
+
+La fecha de expiración de los 12 meses está en el *tooltip* de la esquina superior izquierda de esa rejilla.
+
+### 10.15.2 Dónde mirar cada servicio de este prototipo
+
+| Servicio | Dónde se comprueba | Qué mirar |
+|----------|--------------------|-----------|
+| Functions | Métricas de la Function App | Ejecuciones totales y GB-s del periodo |
+| Event Grid | Métricas del topic | Eventos publicados y entregados |
+| Static Web Apps | Métricas de la app | Banda consumida frente a los 100 GB por suscripción |
+| Application Insights | Métricas del recurso o tabla `Usage` | Volumen de ingesta frente a 5 GB al mes |
+| MySQL Flexible | Métricas del servidor | Horas de cómputo y almacenamiento; y la fecha de fin de los 12 meses |
+| Blob, Service Bus, Key Vault | Cost analysis | Aparecen como cargo desde la primera operación: no tienen cuota gratuita |
+
+### 10.15.3 La comprobación que no engaña
+
+**Cost analysis** con el rango del mes en curso y agrupado por *Service name*: si un servicio tiene cuota
+dentro del límite, la fila muestra cero; si la ha superado, muestra el excedente. Es la única vista que
+responde a «¿me van a cobrar?» sin interpretar métricas.
+
+Conviene añadir un **presupuesto con alerta** (Cost Management → Budgets) el mismo día que se crea el
+primer recurso: la cuota gratuita no avisa sola, y el crédito de 200 USD caduca a los 30 días sin
+recordatorio previo.
