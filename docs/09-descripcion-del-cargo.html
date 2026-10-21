@@ -392,16 +392,68 @@ código).</p>
 <h2 id="95-contexto-para-asistentes-de-ia">9.5 Contexto para asistentes de IA</h2>
 <p>Bloque compacto para reutilizar al pedir ayuda a un asistente sobre este repositorio:</p>
 <pre><code class="language-text">Proyecto: prueba técnica Bits Americas para Colsubsidio. Prototipo independiente, datos sintéticos.
+Estado del repositorio: 2026-10-20. UC-01 operativo de punta a punta.
 Objetivo: modernización Java 8/Boot 2.3 -&gt; Java 17/Boot 3.x, APIs REST + Reactor,
           Azure (Functions, Service Bus, Event Grid, Blob) y dos portales Angular con Module Federation.
+
 Restricciones duras:
   - No afirmar integración con sistemas reales de Colsubsidio ni usar PII real.
   - Las reglas de negocio son de demostración; ninguna aprobación es oficial.
   - Ejecutable en local sin suscripción de Azure (adaptadores locales).
   - No reportar pruebas como exitosas sin ejecutarlas.
-Fuente de verdad: docs/01..09 (alcance, FR, NFR, arquitectura, trazabilidad, plan, inventario, UC, JD).
-Backend: co.com.bits.colsubsidio, módulos por funcionalidad, MVC + JPA, Reactor en streaming y mensajería.
-Salida esperada: código compilable, pruebas ejecutadas, decisiones justificadas y documentación en español.
+
+Fuente de verdad: docs/01..12 y docs/adr/ADR-0009.
+  01 alcance · 02 FR · 03 NFR · 04 arquitectura · 05 trazabilidad · 06 plan · 07 inventario
+  08 casos de uso · 09 JD y cobertura · 10 Azure · 11 diccionario de datos · 12 despliegue
+
+Backend (implementado): co.com.bits.colsubsidio, monolito modular por funcionalidad,
+  MVC + JPA para CRUD, Reactor acotado a SSE, dashboard y salidas HTTP.
+  Auth: POST /api/v1/auth/demo-token emite JWT HS256 con claims roles/affiliateId/companyId.
+  DemoUserInitializer crea las cuentas desde app.security.demo-users al arrancar (BCrypt).
+  UC-01: GET /api/v1/affiliates/me y GET /api/v1/affiliates/me/subsidy-requests.
+  Mensajería: outbox transaccional, idempotencia (message_id, consumer), dead-letter local.
+  Adaptadores Azure escritos para Service Bus y Blob; no ejecutados.
+
+Base de datos (implementada): MySQL 8.0.46 local, base colsubsidio_demo.
+  Flyway: V1 esquema (13 tablas), V2 índices, V3 datos sintéticos. Baseline marcado en 3.
+  app_user se siembra en runtime, no en SQL, para no inventar hashes BCrypt.
+
+Frontend (implementado): workspace Angular 18.2 en frontend/.
+  shell (4200) + mfe-affiliates (4201) + shared-core (contratos). Module Federation con webpack.
+  Manifiesto en runtime (assets/mf.manifest.json) y contractVersion validada antes de montar.
+  remoto se carga con loadRemoteModule type:'module' porque remoteEntry.js es ESM.
+  URL de API en assets/config.json, inyectada por interceptor; token en sessionStorage.
+  Estilos tomados de colsubsidio.com: Poppins, #333333, #212529, #F6F7FC, botones píldora 80px/44px.
+  Sin logotipo de la marca: el portal se declara demostración en cabecera y pie.
+
+Azure:
+  Topología vigente: frontend en 3 Static Web Apps (Free), backend en EC2 t3.small con Docker
+    Compose (ADR-0009). App Service con slots queda como alternativa documentada.
+  Cobertura por diseño: los trece casos emiten audit.* a Event Grid y pasan por una Function
+    (FR-AZR-09). Cinco funciones: auditDispatcher, subsidyClassifier, documentScanner,
+    notificationFanout, reportBuilder. Participación asíncrona vía outbox: no bloquea el caso.
+  Free tier verificado: Functions 1 M ejecuciones + 400 000 GB-s/mes; Event Grid 100 000
+    operaciones/mes; Static Web Apps 100 GB banda/mes por suscripción. Service Bus, Blob y
+    Key Vault sin cuota. MySQL gratis 12 meses. Crédito de 200 USD válido 30 días.
+  Nada de Event Grid ni de Functions está implementado todavía: es diseño.
+
+Pruebas ejecutadas: 9 backend (JUnit 5 + Mockito) y 7 frontend (Jest). Ambas suites en verde.
+  Sin prueba de integración con MySQL ni E2E automatizado.
+
+Entorno local, trampas conocidas:
+  - SPRING_DATASOURCE_* globales de otro proyecto sobrescriben application.yml: exportarlas.
+  - ng serve del remoto inyecta su cliente de recarga y recarga el shell: servir dist con CORS.
+  - webpack duplicado (raíz vs build-angular) rompe el plugin de federación: overrides en package.json.
+  - PowerShell 5.1 escribe BOM con Set-Content -Encoding UTF8 y rompe javac y los .java.
+
+Comandos: tools/apply_local_db.ps1 (base), tools/start-demo.ps1 (API + remoto + shell),
+  mvn -f backend/pom.xml test, npm test, npm run build:all, tools/build_docs_html.py (docs HTML).
+
+Pendiente: remoto de empresas, implementación de las cinco funciones y del publicador de
+  Event Grid, E2E, integración con MySQL real, y despliegue de los tres artefactos estáticos.
+
+Salida esperada: código compilable, pruebas ejecutadas, decisiones justificadas y documentación
+en español, sin maquillar lo que falta.
 </code></pre>
 <h2 id="96-uso-en-la-entrevista">9.6 Uso en la entrevista</h2>
 <ul>
