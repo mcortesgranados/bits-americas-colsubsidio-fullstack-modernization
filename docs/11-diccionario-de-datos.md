@@ -401,6 +401,20 @@ y las tres migraciones están escritas en `backend/src/main/resources/db/migrati
 La semilla **no** crea filas en `app_user`: la contraseña debe ser un hash BCrypt real, y ese sembrado
 corresponde al `DemoUserInitializer`, que sigue pendiente (brecha B4 del [documento 07](07-inventario-codigo-preliminar.md)).
 
+**Si los scripts se aplican a mano** —con `tools/apply_local_db.ps1` o con el cliente `mysql`— hay que
+marcar el historial antes de que el backend arranque con Flyway, o la aplicación fallará al encontrar un
+esquema sin historial:
+
+```bash
+FLYWAY_URL="jdbc:mysql://localhost:3306/colsubsidio_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
+FLYWAY_USER=root FLYWAY_PASSWORD=*** \
+mvn -f backend/pom.xml flyway:baseline -Dflyway.baselineVersion=3
+```
+
+En Windows conviene pasar la URL por variable de entorno (`FLYWAY_URL`) y no por `-D`, porque el `&` de
+los parámetros JDBC lo interpreta `cmd`. Queda una fila `BASELINE` en `flyway_schema_history` con versión
+3, y a partir de ahí un `V4` se aplica con normalidad.
+
 | Convención | Valor |
 |------------|-------|
 | Ubicación | `backend/src/main/resources/db/migration` |
@@ -442,8 +456,6 @@ CREATE TABLE subsidy_request (
 
 | Pendiente | Impacto |
 |-----------|---------|
-| Historial de Flyway sin inicializar si la base se creó a mano | `flyway:baseline` en la versión 3 antes de arrancar con migraciones activas |
-| `beneficiary` sin `created_at`/`updated_at` | Inconsistente con el resto de tablas de negocio; decidir si se añaden |
 | Sin restricciones `CHECK` en `requested_amount > 0` y longitudes de motivo | La validación vive solo en la capa de aplicación |
 | `app_user` sin semilla | No hay usuarios de demostración hasta que exista el `DemoUserInitializer` |
 | Sin prueba de integración contra MySQL real | H2 no valida el DDL específico del motor (ver 11.9) |

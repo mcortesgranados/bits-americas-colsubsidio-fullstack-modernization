@@ -1745,6 +1745,16 @@ y las tres migraciones están escritas en <code>backend/src/main/resources/db/mi
 </ul>
 <p>La semilla <strong>no</strong> crea filas en <code>app_user</code>: la contraseña debe ser un hash BCrypt real, y ese sembrado
 corresponde al <code>DemoUserInitializer</code>, que sigue pendiente (brecha B4 del <a href="07-inventario-codigo-preliminar.html">documento 07</a>).</p>
+<p><strong>Si los scripts se aplican a mano</strong> —con <code>tools/apply_local_db.ps1</code> o con el cliente <code>mysql</code>— hay que
+marcar el historial antes de que el backend arranque con Flyway, o la aplicación fallará al encontrar un
+esquema sin historial:</p>
+<pre><code class="language-bash">FLYWAY_URL=&quot;jdbc:mysql://localhost:3306/colsubsidio_demo?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC&quot; \
+FLYWAY_USER=root FLYWAY_PASSWORD=*** \
+mvn -f backend/pom.xml flyway:baseline -Dflyway.baselineVersion=3
+</code></pre>
+<p>En Windows conviene pasar la URL por variable de entorno (<code>FLYWAY_URL</code>) y no por <code>-D</code>, porque el <code>&amp;</code> de
+los parámetros JDBC lo interpreta <code>cmd</code>. Queda una fila <code>BASELINE</code> en <code>flyway_schema_history</code> con versión
+3, y a partir de ahí un <code>V4</code> se aplica con normalidad.</p>
 <table>
 <thead>
 <tr>
@@ -1816,14 +1826,6 @@ corresponde al <code>DemoUserInitializer</code>, que sigue pendiente (brecha B4 
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>Historial de Flyway sin inicializar si la base se creó a mano</td>
-<td><code>flyway:baseline</code> en la versión 3 antes de arrancar con migraciones activas</td>
-</tr>
-<tr>
-<td><code>beneficiary</code> sin <code>created_at</code>/<code>updated_at</code></td>
-<td>Inconsistente con el resto de tablas de negocio; decidir si se añaden</td>
-</tr>
 <tr>
 <td>Sin restricciones <code>CHECK</code> en <code>requested_amount &gt; 0</code> y longitudes de motivo</td>
 <td>La validación vive solo en la capa de aplicación</td>
