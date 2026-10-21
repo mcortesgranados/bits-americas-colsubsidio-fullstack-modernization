@@ -49,3 +49,6 @@ capturas/
 
 # artefactos de verificación generados por el agente
 .artifacts/
+
+# salida temporal de verificación
+_tmp/
