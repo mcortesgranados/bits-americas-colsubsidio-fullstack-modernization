@@ -13,17 +13,19 @@ camino de despliegue en Azure.
 | Fase | Alcance | Estado |
 |------|---------|--------|
 | 1 | Requisitos, alcance y arquitectura | Completada (v1.0) |
-| 2 | Backend, modelo de datos y APIs | En progreso: esquema, semilla y **UC-01 y UC-02 de punta a punta** |
-| 3 | Seguridad, pruebas y OpenAPI | Parcial: JWT, autorización por token y 14 pruebas de backend |
-| 4 | Portales Angular y Module Federation | Parcial: shell, remoto de afiliados, login, perfil y beneficiarios |
+| 2 | Backend, modelo de datos y APIs | En progreso: esquema, semilla y **UC-01 a UC-05 de punta a punta** |
+| 3 | Seguridad, pruebas y OpenAPI | Parcial: JWT, autorización por token y 37 pruebas de backend |
+| 4 | Portales Angular y Module Federation | Parcial: shell, remoto de afiliados, login, perfil, beneficiarios, asistente de solicitud, carga de documentos y detalle con historial en vivo |
 | 5 | Mensajería asíncrona y adaptadores Azure | Parcial (esqueleto) |
 | 6 | Docker, CI/CD y Postman | Pendiente |
 | 7 | ADR, modernización y guion de demo | Pendiente |
 
-El backend compila y arranca contra MySQL. Los casos de uso **UC-01 (consultar el perfil del afiliado)** y
-**UC-02 (consultar beneficiarios)** funcionan de punta a punta: login con JWT, perfil enmascarado, listado
-de solicitudes y beneficiarios con documento enmascarado, auditoría de la consulta y 403 cuando el
-afiliado pide los beneficiarios de otro. Lo que sigue pendiente está en
+El backend compila y arranca contra MySQL. Los casos de uso **UC-01 (consultar el perfil del afiliado)**,
+**UC-02 (consultar beneficiarios)** y **UC-03 (registrar una solicitud de subsidio)** funcionan de punta a
+punta: login con JWT, perfil enmascarado, listado de solicitudes y beneficiarios con documento enmascarado,
+auditoría de la consulta, 403 cuando el afiliado pide los beneficiarios de otro, y registro de solicitudes
+con radicado único, reglas de demostración, outbox transaccional, clasificación asíncrona posterior, evidencias con SHA-256 que mueven la solicitud a revisión al completarse, y detalle con línea de tiempo que se actualiza por SSE sin recargar. Lo que
+sigue pendiente está en
 [07 · Inventario del código preliminar](docs/07-inventario-codigo-preliminar.md). No se declara ninguna
 prueba como exitosa sin su ejecución real.
 
@@ -140,8 +142,9 @@ Levanta la API, el remoto compilado y el shell, fuerza las variables locales de 
 `/actuator/health` responda antes de devolver el control. Es la forma recomendada de abrir la demo: evita
 tener que exportar variables a mano y deja los tres servicios en segundo plano con sus logs en
 `backend\target\demo-api.log`.
-Credenciales de demostración previstas: `afiliado.demo`, `empresa.demo`, `backoffice.demo`,
-`auditor.demo`, todas con contraseña `Demo123!` y sobreescribibles por variables de entorno.
+Credenciales de demostración: `afiliado.demo`, `empresa.demo`, `backoffice.demo`, `auditor.demo`, todas con
+contraseña `Demo123!` y sobreescribibles por variables de entorno. La pantalla de acceso las lista con un
+botón **Usar** que rellena el formulario, para que la demo se pueda probar sin leer este archivo.
 
 ## Uso
 

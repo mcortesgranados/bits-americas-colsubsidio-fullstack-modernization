@@ -117,14 +117,14 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 <td>FR-AFI-05</td>
 <td><code>subsidy</code></td>
 <td><code>GET /api/v1/subsidy-requests/{id}</code></td>
-<td><code>SubsidyRequestQueryIT.detail</code></td>
+<td><code>SubsidyRequestQueryServiceTest</code></td>
 <td>Detalle con línea de tiempo</td>
 </tr>
 <tr>
 <td>FR-AFI-06</td>
 <td><code>subsidy</code></td>
 <td>detalle + <code>GET .../documents</code></td>
-<td><code>DocumentCompletenessTest</code></td>
+<td><code>SubsidyRequestQueryServiceTest</code></td>
 <td>Lista de pendientes</td>
 </tr>
 <tr>
@@ -194,7 +194,7 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 <td>FR-SOL-01</td>
 <td><code>subsidy</code></td>
 <td><code>POST /api/v1/subsidy-requests</code></td>
-<td><code>SubsidyRequestServiceTest</code>, <code>SubsidyFlowIT</code></td>
+<td><code>SubsidyRequestCreationTest</code></td>
 <td>Asistente de nueva solicitud</td>
 </tr>
 <tr>
@@ -208,7 +208,7 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 <td>FR-SOL-03</td>
 <td><code>subsidy</code>, <code>messaging</code></td>
 <td><code>OutboxService.append</code></td>
-<td><code>OutboxPublisherTest</code></td>
+<td><code>SubsidyRequestCreationTest</code></td>
 <td>Evidencia en logs/BD</td>
 </tr>
 <tr>
@@ -222,28 +222,28 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 <td>FR-SOL-05</td>
 <td><code>subsidy</code>, <code>storage</code></td>
 <td><code>POST .../{id}/documents</code></td>
-<td><code>DocumentUploadIT</code>, <code>LocalStorageTest</code></td>
+<td><code>SubsidyDocumentServiceTest</code></td>
 <td>Carga de documentos</td>
 </tr>
 <tr>
 <td>FR-SOL-06</td>
 <td><code>subsidy</code>, <code>storage</code></td>
 <td>validaciones de archivo</td>
-<td><code>DocumentUploadIT.rejectsInvalid</code></td>
+<td><code>SubsidyDocumentServiceTest</code></td>
 <td>Mensaje de error</td>
 </tr>
 <tr>
 <td>FR-SOL-07</td>
 <td><code>subsidy</code>, <code>storage</code></td>
 <td><code>GET .../documents/{type}/content</code></td>
-<td><code>DocumentDownloadIT</code></td>
+<td><code>SubsidyDocumentServiceTest</code></td>
 <td>Enlace de descarga</td>
 </tr>
 <tr>
 <td>FR-SOL-08</td>
 <td><code>subsidy</code></td>
 <td><code>GET .../{id}/history</code></td>
-<td><code>SubsidyHistoryIT</code></td>
+<td><code>SubsidyRequestQueryServiceTest</code></td>
 <td>Línea de tiempo</td>
 </tr>
 <tr>
@@ -271,7 +271,7 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 <td>FR-SOL-12</td>
 <td><code>subsidy</code></td>
 <td><code>GET .../{id}/events</code> (SSE)</td>
-<td><code>StatusStreamIT</code></td>
+<td><code>SubsidyRequestQueryServiceTest</code></td>
 <td>Actualización en vivo</td>
 </tr>
 <tr>
@@ -466,21 +466,21 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 <td>UC-03</td>
 <td>Afiliado</td>
 <td>FR-SOL-01, FR-SOL-02, FR-SOL-03</td>
-<td><code>SubsidyFlowIT.create</code></td>
+<td><code>SubsidyRequestCreationTest</code></td>
 <td>Asistente de solicitud</td>
 </tr>
 <tr>
 <td>UC-04</td>
 <td>Afiliado</td>
-<td>FR-SOL-05, FR-SOL-06</td>
-<td><code>DocumentUploadIT</code></td>
+<td>FR-SOL-05, FR-SOL-06, FR-SOL-07</td>
+<td><code>SubsidyDocumentServiceTest</code></td>
 <td>Carga de evidencias</td>
 </tr>
 <tr>
 <td>UC-05</td>
 <td>Afiliado / empresa</td>
-<td>FR-AFI-05, FR-SOL-08, FR-SOL-12</td>
-<td><code>StatusStreamIT</code></td>
+<td>FR-AFI-05, FR-AFI-06, FR-SOL-08, FR-SOL-12</td>
+<td><code>SubsidyRequestQueryServiceTest</code></td>
 <td>Detalle con línea de tiempo</td>
 </tr>
 <tr>

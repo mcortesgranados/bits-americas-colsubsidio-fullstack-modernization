@@ -134,14 +134,14 @@ código).
 | Table Storage | Evaluado y descartado para el caso de uso (documentado) | Pendiente |
 | MySQL | Modelo JPA completo; migraciones Flyway pendientes | Parcial |
 | Microfrontends / Module Federation | Decisión D5 y diseño §4.8; sin código | Pendiente |
-| Angular 15+ con RxJS y SASS | Workspace Angular 18.2: shell, remoto de afiliados, perfil (UC-01) y beneficiarios (UC-02) | Parcial |
+| Angular 15+ con RxJS y SASS | Workspace Angular 18.2: shell, remoto de afiliados, perfil (UC-01), beneficiarios (UC-02) y asistente de solicitud (UC-03) | Parcial |
 | Web components | `cs-status-badge` diseñado, no implementado | Pendiente |
 | Accesibilidad WCAG 2.x | Checklist y criterios en `03` (NFR-UX) | Parcial |
 | Azure Static Web Apps | Fase 6 del plan | Pendiente |
 | Docker | Fase 6 del plan | Pendiente |
 | Azure DevOps Pipelines | Fase 6 del plan | Pendiente |
-| JUnit / Mockito | 14 pruebas unitarias en verde (auth, perfil, beneficiarios y solicitudes) | Parcial |
-| Jest | 10 pruebas en verde (auth, perfil, beneficiarios y contratos) | Parcial |
+| JUnit / Mockito | 37 pruebas unitarias en verde (auth, perfil, beneficiarios, solicitudes, radicado, documentos y consultas) | Parcial |
+| Jest | 27 pruebas en verde (auth, login, perfil, beneficiarios, asistente, documentos, detalle y contratos) | Parcial |
 | Mermaid | Diagramas en `01`, `02`, `04`, `06` y `08` | Cubierto |
 | SOLID y patrones | Módulos por funcionalidad, puertos y adaptadores, DTOs | Parcial |
 | Documentación de decisiones | Documentos 01–08 y decisiones D1–D10 | Cubierto |
@@ -158,7 +158,7 @@ código).
 2. **El backend no compila todavía.** Es un esqueleto avanzado; faltan servicios, migraciones y pruebas (ver documento 07).
 3. **No hay frontend.** Los dos portales, el shell y los remotos son diseño, no implementación.
 4. **No hay despliegue en Azure.** Existen adaptadores y decisiones, no recursos provisionados ni pipeline ejecutado.
-5. **La cobertura se limita a pruebas unitarias.** Hay 14 pruebas de backend y 10 de frontend en verde, pero no hay pruebas de integración con MySQL ni E2E automatizado.
+5. **La cobertura se limita a pruebas unitarias.** Hay 37 pruebas de backend y 27 de frontend en verde, pero no hay pruebas de integración con MySQL ni E2E automatizado.
 6. **Table Storage** se evaluó y se descartó porque el caso de uso no lo requiere; queda como decisión razonada, no como omisión.
 
 ## 9.5 Contexto para asistentes de IA
@@ -167,7 +167,7 @@ Bloque compacto para reutilizar al pedir ayuda a un asistente sobre este reposit
 
 ```text
 Proyecto: prueba técnica Bits Americas para Colsubsidio. Prototipo independiente, datos sintéticos.
-Estado del repositorio: 2026-10-21. UC-01 y UC-02 operativos de punta a punta.
+Estado del repositorio: 2026-10-21. UC-01 a UC-05 operativos de punta a punta.
 Objetivo: modernización Java 8/Boot 2.3 -> Java 17/Boot 3.x, APIs REST + Reactor,
           Azure (Functions, Service Bus, Event Grid, Blob) y dos portales Angular con Module Federation.
 
@@ -189,6 +189,15 @@ Backend (implementado): co.com.bits.colsubsidio, monolito modular por funcionali
   UC-02: GET /api/v1/affiliates/me/beneficiaries y /{id}/beneficiaries, ordenados por nombre,
     documento enmascarado en el DTO, pertenencia validada por AccessGuard y auditoría
     PII_ACCESS / PII_ACCESS_DENIED.
+  UC-03: POST /api/v1/subsidy-requests (rol afiliado) aplica RD-01…RD-05, genera un radicado
+    SOL-<año>-<secuencia>, escribe solicitud, documentos, primer historial y evento outbox en una
+    transacción y deja que el consumidor la clasifique en PENDING_DOCUMENTS o IN_REVIEW.
+  UC-04: POST y GET /api/v1/subsidy-requests/{id}/documents; valida pertenencia, catálogo, MIME y 5 MB,
+    guarda con SHA-256, audita, publica subsidy.document.uploaded y el consumidor mueve la solicitud a
+    IN_REVIEW cuando no faltan evidencias.
+  UC-05: GET /{id} y /{id}/history para detalle y línea de tiempo; GET /{id}/events (SSE) con replay por
+    Last-Event-ID, heartbeat cada 15 s y cierre en estado terminal; el portal consume el stream con fetch
+    porque EventSource no envía el token.
   Mensajería: outbox transaccional, idempotencia (message_id, consumer), dead-letter local.
   Adaptadores Azure escritos para Service Bus y Blob; no ejecutados.
 
@@ -198,7 +207,9 @@ Base de datos (implementada): MySQL 8.0.46 local, base colsubsidio_demo.
 
 Frontend (implementado): workspace Angular 18.2 en frontend/.
   shell (4200) + mfe-affiliates (4201) + shared-core (contratos). Module Federation con webpack.
-  Pantallas: perfil (UC-01) y beneficiarios (UC-02); la navegación entre secciones vive en el remoto.
+  Pantallas: login (con cuentas de prueba), perfil (UC-01), beneficiarios (UC-02), asistente de
+  solicitud (UC-03), documentos de la solicitud (UC-04) y detalle con historial en vivo (UC-05); la
+  navegación vive en el remoto.
   Manifiesto en runtime (assets/mf.manifest.json) y contractVersion validada antes de montar.
   remoto se carga con loadRemoteModule type:'module' porque remoteEntry.js es ESM.
   URL de API en assets/config.json, inyectada por interceptor; token en sessionStorage.
@@ -217,7 +228,7 @@ Azure:
     Key Vault sin cuota. MySQL gratis 12 meses. Crédito de 200 USD válido 30 días.
   Nada de Event Grid ni de Functions está implementado todavía: es diseño.
 
-Pruebas ejecutadas: 14 backend (JUnit 5 + Mockito) y 10 frontend (Jest). Ambas suites en verde.
+Pruebas ejecutadas: 37 backend (JUnit 5 + Mockito) y 27 frontend (Jest). Ambas suites en verde.
   Sin prueba de integración con MySQL ni E2E automatizado.
 
 Entorno local, trampas conocidas:

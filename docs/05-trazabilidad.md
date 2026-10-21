@@ -18,8 +18,8 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 | FR-AFI-02 | `affiliate` | `PATCH /api/v1/affiliates/me/contact` | `AffiliateContactIT` | Formulario de contacto |
 | FR-AFI-03 | `affiliate` | `GET /api/v1/affiliates/me/beneficiaries` | `AffiliateServiceBeneficiariesTest` | `mfe-affiliates` · Beneficiarios |
 | FR-AFI-04 | `subsidy` | `GET /api/v1/affiliates/me/subsidy-requests` | `SubsidyRequestQueryIT` | `mfe-affiliates` · Mis solicitudes |
-| FR-AFI-05 | `subsidy` | `GET /api/v1/subsidy-requests/{id}` | `SubsidyRequestQueryIT.detail` | Detalle con línea de tiempo |
-| FR-AFI-06 | `subsidy` | detalle + `GET .../documents` | `DocumentCompletenessTest` | Lista de pendientes |
+| FR-AFI-05 | `subsidy` | `GET /api/v1/subsidy-requests/{id}` | `SubsidyRequestQueryServiceTest` | Detalle con línea de tiempo |
+| FR-AFI-06 | `subsidy` | detalle + `GET .../documents` | `SubsidyRequestQueryServiceTest` | Lista de pendientes |
 | FR-AFI-07 | `notification` | `GET/PATCH .../notifications` | `NotificationIT` | Campana y bandeja |
 | FR-AFI-08 | `dashboard` | `GET /api/v1/affiliates/me/dashboard` | `DashboardServiceTest` (StepVerifier) | Tarjetas del inicio |
 | FR-EMP-01 | `company` | `GET /api/v1/companies/me` | `CompanyIT.profile` | `mfe-companies` · Empresa |
@@ -29,18 +29,18 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 | FR-EMP-05 | `company`, `subsidy` | `GET /api/v1/companies/me/subsidy-requests` | `CompanySubsidyIT.minimisedData` | Bandeja administrativa |
 | FR-EMP-06 | `company` | `GET /api/v1/companies/me/reports/summary` | `CompanyReportIT` | Reporte con tarjetas |
 | FR-EMP-07 | `security` | `AccessGuard.requireCompanyAccess` | `SecurityIT.companyIsolation` | 403 en UI |
-| FR-SOL-01 | `subsidy` | `POST /api/v1/subsidy-requests` | `SubsidyRequestServiceTest`, `SubsidyFlowIT` | Asistente de nueva solicitud |
+| FR-SOL-01 | `subsidy` | `POST /api/v1/subsidy-requests` | `SubsidyRequestCreationTest` | Asistente de nueva solicitud |
 | FR-SOL-02 | `subsidy` | generador de radicado | `RequestNumberGeneratorTest` | Radicado visible |
-| FR-SOL-03 | `subsidy`, `messaging` | `OutboxService.append` | `OutboxPublisherTest` | Evidencia en logs/BD |
+| FR-SOL-03 | `subsidy`, `messaging` | `OutboxService.append` | `SubsidyRequestCreationTest` | Evidencia en logs/BD |
 | FR-SOL-04 | `subsidy` | `GET /api/v1/subsidy-requests` | `SubsidyRequestQueryIT.filters` | Filtros de bandeja |
-| FR-SOL-05 | `subsidy`, `storage` | `POST .../{id}/documents` | `DocumentUploadIT`, `LocalStorageTest` | Carga de documentos |
-| FR-SOL-06 | `subsidy`, `storage` | validaciones de archivo | `DocumentUploadIT.rejectsInvalid` | Mensaje de error |
-| FR-SOL-07 | `subsidy`, `storage` | `GET .../documents/{type}/content` | `DocumentDownloadIT` | Enlace de descarga |
-| FR-SOL-08 | `subsidy` | `GET .../{id}/history` | `SubsidyHistoryIT` | Línea de tiempo |
+| FR-SOL-05 | `subsidy`, `storage` | `POST .../{id}/documents` | `SubsidyDocumentServiceTest` | Carga de documentos |
+| FR-SOL-06 | `subsidy`, `storage` | validaciones de archivo | `SubsidyDocumentServiceTest` | Mensaje de error |
+| FR-SOL-07 | `subsidy`, `storage` | `GET .../documents/{type}/content` | `SubsidyDocumentServiceTest` | Enlace de descarga |
+| FR-SOL-08 | `subsidy` | `GET .../{id}/history` | `SubsidyRequestQueryServiceTest` | Línea de tiempo |
 | FR-SOL-09 | `subsidy` | `POST .../{id}/cancel` | `SubsidyRequestServiceTest.cancel` | Acción de cancelación |
 | FR-SOL-10 | `subsidy` | `POST .../{id}/review` | `ReviewIT` | Swagger / Postman |
 | FR-SOL-11 | `subsidy` | agregado `SubsidyRequest` | `SubsidyRequestTest.transitions` | 422 en UI |
-| FR-SOL-12 | `subsidy` | `GET .../{id}/events` (SSE) | `StatusStreamIT` | Actualización en vivo |
+| FR-SOL-12 | `subsidy` | `GET .../{id}/events` (SSE) | `SubsidyRequestQueryServiceTest` | Actualización en vivo |
 | FR-ASY-01 | `messaging` | `SubsidyMessageHandler` | `SubsidyFlowIT` | Estado tras registrar |
 | FR-ASY-02 | `messaging` | `TransactionalMessageExecutor` | `IdempotencyIT` | Sin duplicados |
 | FR-ASY-03 | `messaging` | `MessageProcessingService` | `RetryAndDlqTest` | `failed_message` |
@@ -88,9 +88,9 @@ portales. Se actualizará al cerrar cada fase; un requisito sin prueba y sin evi
 |------|-------|------------|-----------------|-----------|
 | UC-01 | Afiliado | FR-AFI-01 | `AffiliateIT.profile` | `mfe-affiliates` · Perfil |
 | UC-02 | Afiliado | FR-AFI-03 | `AffiliateServiceBeneficiariesTest` | `mfe-affiliates` · Beneficiarios |
-| UC-03 | Afiliado | FR-SOL-01, FR-SOL-02, FR-SOL-03 | `SubsidyFlowIT.create` | Asistente de solicitud |
-| UC-04 | Afiliado | FR-SOL-05, FR-SOL-06 | `DocumentUploadIT` | Carga de evidencias |
-| UC-05 | Afiliado / empresa | FR-AFI-05, FR-SOL-08, FR-SOL-12 | `StatusStreamIT` | Detalle con línea de tiempo |
+| UC-03 | Afiliado | FR-SOL-01, FR-SOL-02, FR-SOL-03 | `SubsidyRequestCreationTest` | Asistente de solicitud |
+| UC-04 | Afiliado | FR-SOL-05, FR-SOL-06, FR-SOL-07 | `SubsidyDocumentServiceTest` | Carga de evidencias |
+| UC-05 | Afiliado / empresa | FR-AFI-05, FR-AFI-06, FR-SOL-08, FR-SOL-12 | `SubsidyRequestQueryServiceTest` | Detalle con línea de tiempo |
 | UC-06 | Afiliado | FR-SOL-09 | `SubsidyRequestServiceTest.cancel` | Acción de cancelación |
 | UC-07 | Afiliado | FR-AFI-07 | `NotificationIT` | Bandeja y contador |
 | UC-08 | Empresa | FR-EMP-01 | `CompanyIT.profile` | `mfe-companies` · Empresa |
