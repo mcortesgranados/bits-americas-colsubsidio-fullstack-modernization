@@ -107,6 +107,77 @@ es el texto de la convocatoria.</p>
 <p><strong>Duración:</strong> 2,5 meses. <strong>Dedicación:</strong> 160 horas/mes (tiempo completo). <strong>Cantidad de recursos:</strong> 1.</p>
 </div>
 
+<h3 id="911-comparativa-del-bloque-cloud">9.1.1 Comparativa del bloque Cloud</h3>
+<p>Cuadro de análisis, <strong>no forma parte del texto original</strong>. Contrasta las cinco tecnologías citadas con lo
+que la cuenta gratuita de Azure incluye hoy, y con el estado real en este repositorio.</p>
+<table>
+<thead>
+<tr>
+<th>Tecnología del JD</th>
+<th>¿Free tier?</th>
+<th>Capacidad incluida</th>
+<th>Qué implica en la práctica</th>
+<th>Estado en el prototipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Azure Functions</strong> (plan Consumption)</td>
+<td><strong>Sí</strong>, permanente</td>
+<td>1 000 000 de ejecuciones y 400 000 GB-s al mes</td>
+<td>Unas 33 000 ejecuciones al día sin coste</td>
+<td>Adaptador de notificación previsto; no hay código de Function</td>
+</tr>
+<tr>
+<td><strong>Azure Functions</strong> (plan Flex Consumption)</td>
+<td><strong>Sí</strong>, permanente</td>
+<td>250 000 ejecuciones y 100 000 GB-s al mes</td>
+<td>Menos ejecuciones que Consumption; útil si se quiere escala a cero por instancia</td>
+<td>Alternativa de plan, no usada</td>
+</tr>
+<tr>
+<td><strong>Azure Service Bus</strong></td>
+<td><strong>No</strong></td>
+<td>Sin cuota gratuita: se factura por operación</td>
+<td>El flujo asíncrono cuesta desde el primer mensaje</td>
+<td>Adaptador <code>azure</code> escrito y compilado, sin ejecutar</td>
+</tr>
+<tr>
+<td><strong>Azure Event Grid</strong></td>
+<td><strong>Sí</strong>, permanente</td>
+<td>100 000 operaciones al mes</td>
+<td>Unas 3 300 operaciones al día</td>
+<td>Previsto para UC-04 y para el bus de auditoría del §10.14; no implementado</td>
+</tr>
+<tr>
+<td><strong>Azure Storage Account · Blob</strong></td>
+<td><strong>No</strong></td>
+<td>Sin cuota en la lista de servicios gratuitos consultada: se paga por GB y por operaciones</td>
+<td>Las evidencias cuestan desde el primer archivo</td>
+<td>Adaptador <code>azure</code> escrito, sin ejecutar</td>
+</tr>
+<tr>
+<td><strong>Azure Storage Account · Table</strong></td>
+<td><strong>No</strong></td>
+<td>Igual que Blob: sin cuota, pago por operación</td>
+<td>—</td>
+<td>Descartado en el documento 10</td>
+</tr>
+<tr>
+<td><strong>Azure Static Web Apps</strong> (plan Free)</td>
+<td><strong>Sí</strong>, permanente</td>
+<td>100 GB de banda al mes <strong>por suscripción</strong>, 0,5 GB por app y 2 dominios personalizados</td>
+<td>Suficiente para tres portales estáticos; sin SLA</td>
+<td>Shell y remoto listos para publicarse</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dos costes que la columna «free tier» no revela:</strong> Functions necesita una <strong>cuenta de almacenamiento</strong>
+para su estado, que se factura aparte; y el crédito de 200 USD de la cuenta gratuita caduca a los
+<strong>30 días</strong>, no a los 12 meses. Los servicios marcados «permanente» no vencen, pero tampoco cubren a sus
+dependencias.</p>
+<p>La tabla es el resumen; el detalle por caso de uso está en <a href="08-casos-de-uso.html">8 · §8.6</a> y el inventario
+completo de servicios en <a href="10-tecnologias-azure.html">10 · §10.3</a>.</p>
 <h2 id="92-lectura-estructurada">9.2 Lectura estructurada</h2>
 <table>
 <thead>

@@ -80,6 +80,29 @@ repositorio y qué queda pendiente.
 <p><strong>Duración:</strong> 2,5 meses. <strong>Dedicación:</strong> 160 horas/mes (tiempo completo). <strong>Cantidad de recursos:</strong> 1.</p>
 </div>
 
+### 9.1.1 Comparativa del bloque Cloud
+
+Cuadro de análisis, **no forma parte del texto original**. Contrasta las cinco tecnologías citadas con lo
+que la cuenta gratuita de Azure incluye hoy, y con el estado real en este repositorio.
+
+| Tecnología del JD | ¿Free tier? | Capacidad incluida | Qué implica en la práctica | Estado en el prototipo |
+|-------------------|-------------|--------------------|----------------------------|------------------------|
+| **Azure Functions** (plan Consumption) | **Sí**, permanente | 1 000 000 de ejecuciones y 400 000 GB-s al mes | Unas 33 000 ejecuciones al día sin coste | Adaptador de notificación previsto; no hay código de Function |
+| **Azure Functions** (plan Flex Consumption) | **Sí**, permanente | 250 000 ejecuciones y 100 000 GB-s al mes | Menos ejecuciones que Consumption; útil si se quiere escala a cero por instancia | Alternativa de plan, no usada |
+| **Azure Service Bus** | **No** | Sin cuota gratuita: se factura por operación | El flujo asíncrono cuesta desde el primer mensaje | Adaptador `azure` escrito y compilado, sin ejecutar |
+| **Azure Event Grid** | **Sí**, permanente | 100 000 operaciones al mes | Unas 3 300 operaciones al día | Previsto para UC-04 y para el bus de auditoría del §10.14; no implementado |
+| **Azure Storage Account · Blob** | **No** | Sin cuota en la lista de servicios gratuitos consultada: se paga por GB y por operaciones | Las evidencias cuestan desde el primer archivo | Adaptador `azure` escrito, sin ejecutar |
+| **Azure Storage Account · Table** | **No** | Igual que Blob: sin cuota, pago por operación | — | Descartado en el documento 10 |
+| **Azure Static Web Apps** (plan Free) | **Sí**, permanente | 100 GB de banda al mes **por suscripción**, 0,5 GB por app y 2 dominios personalizados | Suficiente para tres portales estáticos; sin SLA | Shell y remoto listos para publicarse |
+
+**Dos costes que la columna «free tier» no revela:** Functions necesita una **cuenta de almacenamiento**
+para su estado, que se factura aparte; y el crédito de 200 USD de la cuenta gratuita caduca a los
+**30 días**, no a los 12 meses. Los servicios marcados «permanente» no vencen, pero tampoco cubren a sus
+dependencias.
+
+La tabla es el resumen; el detalle por caso de uso está en [8 · §8.6](08-casos-de-uso.md) y el inventario
+completo de servicios en [10 · §10.3](10-tecnologias-azure.md).
+
 ## 9.2 Lectura estructurada
 
 | Dimensión | Exigencia del JD | Implicación para esta prueba |
