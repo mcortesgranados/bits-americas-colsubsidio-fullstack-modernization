@@ -1,4 +1,4 @@
-﻿# 07 · Inventario del código preliminar
+# 07 · Inventario del código preliminar
 
 ## 7.1 Estado
 
@@ -32,9 +32,9 @@ Ningún archivo se elimina sin dejar constancia aquí de la razón y del reempla
 | `storage` | Puerto, DTO y adaptadores local/Azure | Completo | Falta prueba de path traversal y checksum |
 | `audit` | Entidad, repositorio, servicio y catálogo de acciones | Completo | Transacción independiente documentada |
 | `config` | Propiedades tipadas y `WebClient` | Completo | Revisar validación de propiedades obligatorias |
-| `db/migration` | — | **Pendiente** | Fase 2 |
-| Pruebas | — | **Pendiente** | Fase 3 |
-| Frontend | — | **Pendiente** | Fase 4 |
+| `db/migration` | `V1` esquema, `V2` índices, `V3` datos sintéticos | **Completo** | Historial de Flyway marcado en la versión 3 |
+| Pruebas | 9 pruebas de backend (JUnit/Mockito) y 7 de frontend (Jest) | **Parcial** | Faltan integración con MySQL real y E2E |
+| Frontend | Workspace Angular 18 con `shell`, `mfe-affiliates` y `shared-core`; login y perfil implementados | **Parcial** | Faltan el remoto de empresas, los demás UC y el pipeline |
 
 ## 7.3 Brechas para que el backend compile
 

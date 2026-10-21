@@ -13,14 +13,16 @@ camino de despliegue en Azure.
 | Fase | Alcance | Estado |
 |------|---------|--------|
 | 1 | Requisitos, alcance y arquitectura | Completada (v1.0) |
-| 2 | Backend, modelo de datos y APIs | En progreso (esqueleto inicial) |
-| 3 | Seguridad, pruebas y OpenAPI | Pendiente |
-| 4 | Portales Angular y Module Federation | Pendiente |
+| 2 | Backend, modelo de datos y APIs | En progreso: esquema, semilla y **UC-01 de punta a punta** |
+| 3 | Seguridad, pruebas y OpenAPI | Parcial: JWT, autorización por token y 9 pruebas de backend |
+| 4 | Portales Angular y Module Federation | Parcial: shell, remoto de afiliados, login y perfil |
 | 5 | Mensajería asíncrona y adaptadores Azure | Parcial (esqueleto) |
 | 6 | Docker, CI/CD y Postman | Pendiente |
 | 7 | ADR, modernización y guion de demo | Pendiente |
 
-El backend **todavía no compila**: faltan servicios y controladores listados en
+El backend compila y arranca contra MySQL. El caso de uso **UC-01 (consultar el perfil del afiliado)**
+funciona de punta a punta: login con JWT, perfil enmascarado y listado de solicitudes, verificado en
+navegador. Lo que sigue pendiente está en
 [07 · Inventario del código preliminar](docs/07-inventario-codigo-preliminar.md). No se declara ninguna
 prueba como exitosa sin su ejecución real.
 
@@ -94,13 +96,21 @@ cd backend
 #    Con Maven instalado fuera del wrapper:
 #    mvn spring-boot:run
 
-# 3. Frontend (tres procesos)
+# 3. Frontend
 cd frontend
 npm install
+npm run build:lib        # la librería de contratos se compila antes que las aplicaciones
 npm run start:shell      # http://localhost:4200
 npm run start:affiliates # http://localhost:4201
-npm run start:companies  # http://localhost:4202
 ```
+
+El shell descubre el remoto en `projects/shell/src/assets/mf.manifest.json` y la URL de la API en
+`projects/shell/src/assets/config.json`. Para una demostración con artefactos compilados, sirve
+`dist/mfe-affiliates` como estático con CORS (`tools/serve_static_cors.py`) en lugar de `ng serve`: el
+servidor de desarrollo inyecta su cliente de recarga dentro del remoto y ese cliente acaba recargando el
+shell.
+
+Pruebas del frontend: `npm test` (Jest, 4 suites).
 
 Credenciales de demostración previstas: `afiliado.demo`, `empresa.demo`, `backoffice.demo`,
 `auditor.demo`, todas con contraseña `Demo123!` y sobreescribibles por variables de entorno.

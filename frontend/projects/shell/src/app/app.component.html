@@ -1,0 +1,32 @@
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<header class="shell-header">
+  <div class="shell-header__inner">
+    <a class="brand" routerLink="/afiliados">
+      <span class="brand__mark" aria-hidden="true">CS</span>
+      <span class="brand__text">
+        <strong>Colsubsidio</strong>
+        <small>Prototipo de demostración</small>
+      </span>
+    </a>
+
+    <nav class="shell-nav" aria-label="Navegación principal">
+      <a routerLink="/afiliados" routerLinkActive="is-active">Afiliados</a>
+    </nav>
+
+    @if (auth.isAuthenticated()) {
+      <button class="shell-header__action" type="button" (click)="logout()">Cerrar sesión</button>
+    }
+  </div>
+</header>
+
+<main id="contenido" class="shell-main" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer class="shell-footer">
+  <p>
+    Datos sintéticos. Este prototipo no reproduce la arquitectura ni los sistemas de Colsubsidio y ninguna
+    decisión equivale a una aprobación real de subsidio.
+  </p>
+</footer>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Documentación</title>
+<title>07 · Inventario del código preliminar</title>
 <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
@@ -27,7 +27,7 @@
     <a href="index.html">← Índice de documentación</a>
   </nav>
   <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#71-estado">7.1 Estado</a></li><li><a href="#72-archivos-generados">7.2 Archivos generados</a></li><li><a href="#73-brechas-para-que-el-backend-compile">7.3 Brechas para que el backend compile</a></li><li><a href="#74-ajustes-detectados-al-contrastar-con-los-requisitos">7.4 Ajustes detectados al contrastar con…</a></li><li><a href="#75-regla-de-conservacion">7.5 Regla de conservación</a></li></ul></nav>
-<p>﻿# 07 · Inventario del código preliminar</p>
+<h1 id="07-inventario-del-codigo-preliminar">07 · Inventario del código preliminar</h1>
 <h2 id="71-estado">7.1 Estado</h2>
 <p>El repositorio contiene un <strong>esqueleto de backend</strong> generado antes de cerrar la línea base de
 requisitos. Se conserva completo porque adelanta trabajo de la Fase 2, pero:</p>
@@ -152,21 +152,21 @@ requisitos. Se conserva completo porque adelanta trabajo de la Fase 2, pero:</p>
 </tr>
 <tr>
 <td><code>db/migration</code></td>
-<td>—</td>
-<td><strong>Pendiente</strong></td>
-<td>Fase 2</td>
+<td><code>V1</code> esquema, <code>V2</code> índices, <code>V3</code> datos sintéticos</td>
+<td><strong>Completo</strong></td>
+<td>Historial de Flyway marcado en la versión 3</td>
 </tr>
 <tr>
 <td>Pruebas</td>
-<td>—</td>
-<td><strong>Pendiente</strong></td>
-<td>Fase 3</td>
+<td>9 pruebas de backend (JUnit/Mockito) y 7 de frontend (Jest)</td>
+<td><strong>Parcial</strong></td>
+<td>Faltan integración con MySQL real y E2E</td>
 </tr>
 <tr>
 <td>Frontend</td>
-<td>—</td>
-<td><strong>Pendiente</strong></td>
-<td>Fase 4</td>
+<td>Workspace Angular 18 con <code>shell</code>, <code>mfe-affiliates</code> y <code>shared-core</code>; login y perfil implementados</td>
+<td><strong>Parcial</strong></td>
+<td>Faltan el remoto de empresas, los demás UC y el pipeline</td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,7 @@
+{
+  "mfeAffiliates": {
+    "remoteEntry": "http://localhost:4201/remoteEntry.js",
+    "exposedModule": "./Routes",
+    "contractVersion": "1.0.0"
+  }
+}

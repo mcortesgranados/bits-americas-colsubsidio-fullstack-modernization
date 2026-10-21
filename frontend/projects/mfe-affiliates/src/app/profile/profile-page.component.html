@@ -1,0 +1,91 @@
+<section class="profile" aria-labelledby="profile-title" [attr.aria-busy]="loading()">
+  <header class="profile__header">
+    <div>
+      <p class="profile__eyebrow">Portal de afiliados</p>
+      <h1 id="profile-title" class="profile__title">Mi perfil</h1>
+    </div>
+    <button class="profile__refresh" type="button" (click)="load()" [disabled]="loading()">Actualizar</button>
+  </header>
+
+  <p class="profile__status" role="status" aria-live="polite">
+    @if (loading()) {
+      <span>Cargando tu información…</span>
+    }
+    @if (errorMessage(); as message) {
+      <span class="profile__status--error">{{ message }}</span>
+    }
+  </p>
+
+  @if (profile(); as data) {
+    <article class="card" aria-labelledby="identity-title">
+      <h2 id="identity-title" class="card__title">Datos del titular</h2>
+
+      <dl class="data">
+        <div class="data__row">
+          <dt>Nombre</dt>
+          <dd>{{ data.fullName }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Documento</dt>
+          <dd>{{ data.documentType }} {{ data.documentNumber }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Correo</dt>
+          <dd>{{ data.email }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Teléfono</dt>
+          <dd>{{ data.phone ?? 'No registrado' }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Categoría</dt>
+          <dd>{{ data.category ?? 'Sin categoría' }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Estado</dt>
+          <dd>
+            <span class="badge" [class.badge--inactive]="data.status !== 'ACTIVE'">{{ data.status }}</span>
+          </dd>
+        </div>
+        <div class="data__row">
+          <dt>Empresa</dt>
+          <dd>{{ data.companyName ?? 'Sin empresa aportante' }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Afiliado desde</dt>
+          <dd>{{ data.createdAt | date: 'dd/MM/yyyy' }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="card" aria-labelledby="requests-title">
+      <h2 id="requests-title" class="card__title">Mis últimas solicitudes</h2>
+
+      @if (requests().length > 0) {
+        <table class="table">
+          <caption class="table__caption">Solicitudes ordenadas de la más reciente a la más antigua</caption>
+          <thead>
+            <tr>
+              <th scope="col">Radicado</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Radicada</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of requests(); track request.requestNumber) {
+              <tr>
+                <th scope="row">{{ request.requestNumber }}</th>
+                <td>{{ typeLabel(request.subsidyType) }}</td>
+                <td>{{ statusLabel(request.status) }}</td>
+                <td>{{ request.submittedAt ? (request.submittedAt | date: 'dd/MM/yyyy') : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="card__empty">Todavía no tienes solicitudes registradas.</p>
+      }
+    </article>
+  }
+</section>

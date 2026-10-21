@@ -1,0 +1,144 @@
+:host {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  color: #14603a;
+  z-index: 10;
+
+  &:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+}
+
+.shell-header {
+  border-bottom: 1px solid #d7ded9;
+  background: #ffffff;
+
+  &__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+  }
+
+  &__action {
+    margin-left: auto;
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    border: 1px solid #14603a;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: #14603a;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: #eef5f0;
+    }
+
+    &:focus-visible {
+      outline: 3px solid #1d8f5a;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: #12211a;
+
+  &__mark {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    background: #14603a;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  &__text {
+    display: grid;
+    line-height: 1.15;
+
+    small {
+      color: #44544c;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.shell-nav {
+  display: flex;
+  gap: 0.5rem;
+
+  a {
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.4rem;
+    color: #14603a;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      background: #eef5f0;
+    }
+
+    &.is-active {
+      background: #14603a;
+      color: #ffffff;
+    }
+  }
+}
+
+.shell-main {
+  flex: 1;
+  max-width: 72rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.shell-footer {
+  border-top: 1px solid #d7ded9;
+  background: #f6f8f7;
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: #44544c;
+
+  p {
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .shell-header__inner {
+    gap: 0.5rem;
+  }
+
+  .shell-nav {
+    order: 3;
+    width: 100%;
+  }
+}

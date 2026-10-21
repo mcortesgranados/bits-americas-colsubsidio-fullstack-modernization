@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Documentación</title>
+<title>12 · Plan de despliegue: microfrontends en Azure y backend en AWS</title>
 <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
@@ -27,7 +27,7 @@
     <a href="index.html">← Índice de documentación</a>
   </nav>
   <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#121-estado-actual">12.1 Estado actual</a></li><li><a href="#122-topologia-de-despliegue">12.2 Topología de despliegue</a></li><li><a href="#123-unidades-de-despliegue">12.3 Unidades de despliegue</a></li><li><a href="#124-decision-tres-static-web-apps-no-una">12.4 Decisión: tres Static Web Apps, no una</a></li><li><a href="#125-configuracion-de-las-aplicaciones-estaticas">12.5 Configuración de las aplicaciones es…</a></li><li><a href="#126-secuencia-de-despliegue-de-un-remoto">12.6 Secuencia de despliegue de un remoto</a></li><li><a href="#127-despliegue-del-backend-en-app-service-alternativa">12.7 Despliegue del backend en App Servic…</a></li><li><a href="#128-orden-de-despliegue-y-compatibilidad">12.8 Orden de despliegue y compatibilidad</a></li><li><a href="#129-identidad-y-secretos">12.9 Identidad y secretos</a></li><li><a href="#1210-base-de-datos-en-el-pipeline">12.10 Base de datos en el pipeline</a></li><li><a href="#1211-pipeline-en-azure-devops">12.11 Pipeline en Azure DevOps</a></li><li><a href="#1212-ambientes-y-promocion">12.12 Ambientes y promoción</a></li><li><a href="#1213-coste-y-free-tier-del-despliegue">12.13 Coste y free tier del despliegue</a></li><li><a href="#1214-riesgos-de-despliegue">12.14 Riesgos de despliegue</a></li><li><a href="#1215-que-falta-para-ejecutar-este-plan">12.15 Qué falta para ejecutar este plan</a></li><li><a href="#1216-topologia-vigente-backend-en-aws-ec2">12.16 Topología vigente: backend en AWS EC2</a></li><li><a href="#1217-decision-registrada">12.17 Decisión registrada</a></li></ul></nav>
-<p>﻿# 12 · Plan de despliegue: microfrontends en Azure y backend en AWS</p>
+<h1 id="12-plan-de-despliegue-microfrontends-en-azure-y-backend-en-aws">12 · Plan de despliegue: microfrontends en Azure y backend en AWS</h1>
 <p>Cómo se publica el prototipo cuando exista: qué artefactos se generan, dónde aterrizan, en qué orden se
 promueven y cómo se revierte. El diseño de microfrontends del documento 04 (§4.8) ya decidió tres cosas
 que aquí se materializan: <strong>tres aplicaciones independientes</strong>, un <strong>manifiesto de remotos leído en
@@ -37,7 +37,7 @@ en una instancia <strong>AWS EC2</strong> con Docker Compose. App Service queda 
 cuando se exija que todo el sistema viva en Azure. El detalle de la decisión, con lo que se gana y lo que
 se deja de demostrar, está en la <a href="#1216-topologia-vigente-backend-en-aws-ec2">sección 12.16</a>.</p>
 <blockquote>
-<p><strong>Nada de este documento se ha ejecutado.</strong> No hay suscripción, ni <code>frontend/</code>, ni <code>infra/</code>, ni
+<p><strong>Nada de este documento se ha ejecutado.</strong> No hay suscripción, ni <code>infra/</code>, ni
 pipeline: la Fase 6 del <a href="06-plan-entrega.html">plan de entrega</a> es la que los crea. Los nombres de
 recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local sin Azure.</p>
 </blockquote>
@@ -58,8 +58,8 @@ recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local 
 </tr>
 <tr>
 <td><code>frontend/</code></td>
-<td><strong>No existe</strong></td>
-<td>El shell y los dos remotos son diseño, no código</td>
+<td>Sí: workspace Angular 18 con shell, <code>mfe-affiliates</code> y <code>shared-core</code></td>
+<td>Falta el remoto de empresas y el pipeline</td>
 </tr>
 <tr>
 <td><code>infra/</code> (Bicep)</td>

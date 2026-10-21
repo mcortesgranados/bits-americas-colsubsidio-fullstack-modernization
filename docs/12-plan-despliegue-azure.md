@@ -1,4 +1,4 @@
-﻿# 12 · Plan de despliegue: microfrontends en Azure y backend en AWS
+# 12 · Plan de despliegue: microfrontends en Azure y backend en AWS
 
 Cómo se publica el prototipo cuando exista: qué artefactos se generan, dónde aterrizan, en qué orden se
 promueven y cómo se revierte. El diseño de microfrontends del documento 04 (§4.8) ya decidió tres cosas
@@ -10,7 +10,7 @@ en una instancia **AWS EC2** con Docker Compose. App Service queda documentado c
 cuando se exija que todo el sistema viva en Azure. El detalle de la decisión, con lo que se gana y lo que
 se deja de demostrar, está en la [sección 12.16](#1216-topologia-vigente-backend-en-aws-ec2).
 
-> **Nada de este documento se ha ejecutado.** No hay suscripción, ni `frontend/`, ni `infra/`, ni
+> **Nada de este documento se ha ejecutado.** No hay suscripción, ni `infra/`, ni
 > pipeline: la Fase 6 del [plan de entrega](06-plan-entrega.md) es la que los crea. Los nombres de
 > recurso y las cifras son de ejemplo, y todo el flujo sigue funcionando en local sin Azure.
 
@@ -19,7 +19,7 @@ se deja de demostrar, está en la [sección 12.16](#1216-topologia-vigente-backe
 | Pieza | Existe hoy | Consecuencia |
 |-------|------------|--------------|
 | `backend/` | Sí: 92 archivos Java, `pom.xml`, `application.yml` y migraciones `V1`–`V3` | Compila como proyecto Maven; falta crear la base local y los usuarios de demostración |
-| `frontend/` | **No existe** | El shell y los dos remotos son diseño, no código |
+| `frontend/` | Sí: workspace Angular 18 con shell, `mfe-affiliates` y `shared-core` | Falta el remoto de empresas y el pipeline |
 | `infra/` (Bicep) | **No existe** | No hay infraestructura como código |
 | Pipeline | **No existe** | Ningún despliegue automatizado |
 | `docker-compose.yml` | **No existe** | El entorno local se levanta a mano |
