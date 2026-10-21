@@ -1,4 +1,4 @@
-# 07 · Inventario del código preliminar
+﻿# 07 · Inventario del código preliminar
 
 ## 7.1 Estado
 
@@ -40,10 +40,10 @@ Ningún archivo se elimina sin dejar constancia aquí de la razón y del reempla
 
 | # | Brecha | Acción en Fase 2 |
 |---|--------|------------------|
-| B1 | `SubsidyRequestService` referenciado por `AffiliateController` y por el manejador de eventos | Implementar servicio de solicitudes y DTOs asociados |
+| B1 | `SubsidyRequestService` referenciado por `AffiliateController` y por el manejador de eventos | **Resuelto en parte**: `SubsidyRequestService.listForAffiliate` y `SubsidyRequestSummaryResponse`; las operaciones de escritura siguen pendientes |
 | B2 | Servicio, DTOs y controlador de empresas | Implementar `CompanyService`, `CompanyController` y DTOs |
-| B3 | Emisión de JWT, controlador de autenticación e inicializador de usuarios demo | Implementar `DemoTokenService`, `AuthController`, `DemoUserInitializer` |
-| B4 | DTOs de solicitud (`SubsidyRequestSummaryResponse`, detalle, documentos, historial, revisión) | Crear en `subsidy/api/dto` |
+| B3 | Emisión de JWT, controlador de autenticación e inicializador de usuarios demo | **Resuelto**: `AuthController` con `POST /api/v1/auth/demo-token`, `AuthService` y `DemoUserInitializer` con BCrypt |
+| B4 | DTOs de solicitud (`SubsidyRequestSummaryResponse`, detalle, documentos, historial, revisión) | **Parcial**: el resumen existe; faltan detalle, documentos, historial y revisión |
 | B5 | Tablero reactivo del afiliado | Crear módulo `dashboard` con `Mono.zip` |
 | B6 | Controlador de operación (outbox y fallidos) | Crear `ops` |
 | B7 | Migraciones Flyway | **Resuelto**: `V1__esquema_inicial.sql`, `V2__indices_de_consulta.sql` y `V3__datos_sinteticos.sql` |

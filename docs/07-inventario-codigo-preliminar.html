@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>07 · Inventario del código preliminar</title>
+<title>Documentación</title>
 <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
@@ -27,7 +27,7 @@
     <a href="index.html">← Índice de documentación</a>
   </nav>
   <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#71-estado">7.1 Estado</a></li><li><a href="#72-archivos-generados">7.2 Archivos generados</a></li><li><a href="#73-brechas-para-que-el-backend-compile">7.3 Brechas para que el backend compile</a></li><li><a href="#74-ajustes-detectados-al-contrastar-con-los-requisitos">7.4 Ajustes detectados al contrastar con…</a></li><li><a href="#75-regla-de-conservacion">7.5 Regla de conservación</a></li></ul></nav>
-<h1 id="07-inventario-del-codigo-preliminar">07 · Inventario del código preliminar</h1>
+<p>﻿# 07 · Inventario del código preliminar</p>
 <h2 id="71-estado">7.1 Estado</h2>
 <p>El repositorio contiene un <strong>esqueleto de backend</strong> generado antes de cerrar la línea base de
 requisitos. Se conserva completo porque adelanta trabajo de la Fase 2, pero:</p>
@@ -183,7 +183,7 @@ requisitos. Se conserva completo porque adelanta trabajo de la Fase 2, pero:</p>
 <tr>
 <td>B1</td>
 <td><code>SubsidyRequestService</code> referenciado por <code>AffiliateController</code> y por el manejador de eventos</td>
-<td>Implementar servicio de solicitudes y DTOs asociados</td>
+<td><strong>Resuelto en parte</strong>: <code>SubsidyRequestService.listForAffiliate</code> y <code>SubsidyRequestSummaryResponse</code>; las operaciones de escritura siguen pendientes</td>
 </tr>
 <tr>
 <td>B2</td>
@@ -193,12 +193,12 @@ requisitos. Se conserva completo porque adelanta trabajo de la Fase 2, pero:</p>
 <tr>
 <td>B3</td>
 <td>Emisión de JWT, controlador de autenticación e inicializador de usuarios demo</td>
-<td>Implementar <code>DemoTokenService</code>, <code>AuthController</code>, <code>DemoUserInitializer</code></td>
+<td><strong>Resuelto</strong>: <code>AuthController</code> con <code>POST /api/v1/auth/demo-token</code>, <code>AuthService</code> y <code>DemoUserInitializer</code> con BCrypt</td>
 </tr>
 <tr>
 <td>B4</td>
 <td>DTOs de solicitud (<code>SubsidyRequestSummaryResponse</code>, detalle, documentos, historial, revisión)</td>
-<td>Crear en <code>subsidy/api/dto</code></td>
+<td><strong>Parcial</strong>: el resumen existe; faltan detalle, documentos, historial y revisión</td>
 </tr>
 <tr>
 <td>B5</td>

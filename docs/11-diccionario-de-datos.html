@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Documentación</title>
+<title>11 · Diccionario de datos y modelo entidad-relación</title>
 <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
@@ -27,7 +27,7 @@
     <a href="index.html">← Índice de documentación</a>
   </nav>
   <nav class="quick-access" aria-label="Acceso rápido a secciones"><span class="quick-access-label">Acceso rápido</span><ul class="quick-access-list"><li><a href="#111-convenciones-del-esquema">11.1 Convenciones del esquema</a></li><li><a href="#112-modelo-entidad-relacion">11.2 Modelo entidad-relación</a></li><li><a href="#113-diccionario-de-datos">11.3 Diccionario de datos</a></li><li><a href="#114-enumeraciones-y-maquina-de-estados">11.4 Enumeraciones y máquina de estados</a></li><li><a href="#115-indices-y-restricciones">11.5 Índices y restricciones</a></li><li><a href="#116-integridad-concurrencia-y-retencion">11.6 Integridad, concurrencia y retención</a></li><li><a href="#117-datos-personales-y-enmascarado">11.7 Datos personales y enmascarado</a></li><li><a href="#118-correspondencia-tabla-modulo-caso-de-uso">11.8 Correspondencia tabla ↔ módulo ↔ cas…</a></li><li><a href="#119-migraciones">11.9 Migraciones</a></li><li><a href="#1110-lo-que-falta-para-que-este-modelo-sea-ejecutable">11.10 Lo que falta para que este modelo s…</a></li></ul></nav>
-<p>﻿# 11 · Diccionario de datos y modelo entidad-relación</p>
+<h1 id="11-diccionario-de-datos-y-modelo-entidad-relacion">11 · Diccionario de datos y modelo entidad-relación</h1>
 <p>Detalle del modelo relacional del prototipo: qué tablas existen, qué guarda cada columna, qué
 restricciones la protegen y qué columnas contienen datos personales. El diagrama de arquitectura del
 documento 04 muestra el modelo en contexto; <strong>este documento es la fuente de verdad del esquema</strong>.</p>
@@ -1601,17 +1601,17 @@ como si lo fueran, porque el objetivo es demostrar el control.</p>
 <tr>
 <td><code>affiliate.document_number</code></td>
 <td>Personal identificable</td>
-<td>Enmascarado: <code>****1234</code></td>
+<td>Enmascarado <strong>siempre</strong>, incluso al titular: <code>******4050</code></td>
 </tr>
 <tr>
 <td><code>affiliate.email</code></td>
 <td>Personal identificable</td>
-<td>Enmascarado: <code>a***@dominio.com</code></td>
+<td>En claro al titular; enmascarado en la vista de back-office o auditoría (<code>a***@dominio.com</code>)</td>
 </tr>
 <tr>
 <td><code>affiliate.phone</code></td>
 <td>Personal identificable</td>
-<td>Enmascarado: <code>*** *** 45</code></td>
+<td>En claro al titular; enmascarado en la vista de staff</td>
 </tr>
 <tr>
 <td><code>affiliate.first_name</code>, <code>last_name</code></td>
@@ -1657,6 +1657,9 @@ como si lo fueran, porque el objetivo es demostrar el control.</p>
 </table>
 <p>El enmascarado ocurre en el mapper del DTO (<code>MaskingUtils</code>), no en la consulta. Así, un error de mapeo
 produce un <code>500</code> y no una fuga de datos en claro.</p>
+<p>La decisión depende del <strong>punto de vista, no solo de la columna</strong>: <code>AffiliateService.profile</code> calcula un
+indicador de staff y el mapper decide con él. Cuando la lectura es de back-office se registra además
+<code>PII_ACCESS</code> en <code>audit_log</code>, de modo que un dato enmascarado deja rastro de quién lo consultó.</p>
 <h2 id="118-correspondencia-tabla-modulo-caso-de-uso">11.8 Correspondencia tabla ↔ módulo ↔ caso de uso</h2>
 <table>
 <thead>
@@ -1831,12 +1834,12 @@ los parámetros JDBC lo interpreta <code>cmd</code>. Queda una fila <code>BASELI
 <td>La validación vive solo en la capa de aplicación</td>
 </tr>
 <tr>
-<td><code>app_user</code> sin semilla</td>
-<td>No hay usuarios de demostración hasta que exista el <code>DemoUserInitializer</code></td>
+<td><code>app_user</code> se siembra en el arranque, no en SQL</td>
+<td><code>DemoUserInitializer</code> crea los cuatro usuarios con BCrypt desde configuración; no hay usuarios si no se arranca la aplicación</td>
 </tr>
 <tr>
-<td>Sin prueba de integración contra MySQL real</td>
-<td>H2 no valida el DDL específico del motor (ver 11.9)</td>
+<td>Sin prueba de integración automatizada</td>
+<td>El recorrido se verificó a mano contra MySQL 8.0.46; la suite sigue sin un test que arranque el motor</td>
 </tr>
 <tr>
 <td>Los índices de <code>V2</code> no se han medido con datos de volumen</td>

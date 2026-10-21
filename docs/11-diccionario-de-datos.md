@@ -1,4 +1,4 @@
-﻿# 11 · Diccionario de datos y modelo entidad-relación
+# 11 · Diccionario de datos y modelo entidad-relación
 
 Detalle del modelo relacional del prototipo: qué tablas existen, qué guarda cada columna, qué
 restricciones la protegen y qué columnas contienen datos personales. El diagrama de arquitectura del
@@ -355,9 +355,9 @@ como si lo fueran, porque el objetivo es demostrar el control.
 
 | Columna | Clasificación | Cómo se expone |
 |---------|---------------|----------------|
-| `affiliate.document_number` | Personal identificable | Enmascarado: `****1234` |
-| `affiliate.email` | Personal identificable | Enmascarado: `a***@dominio.com` |
-| `affiliate.phone` | Personal identificable | Enmascarado: `*** *** 45` |
+| `affiliate.document_number` | Personal identificable | Enmascarado **siempre**, incluso al titular: `******4050` |
+| `affiliate.email` | Personal identificable | En claro al titular; enmascarado en la vista de back-office o auditoría (`a***@dominio.com`) |
+| `affiliate.phone` | Personal identificable | En claro al titular; enmascarado en la vista de staff |
 | `affiliate.first_name`, `last_name` | Personal | Visibles solo al titular y al back-office autorizado |
 | `affiliate.birth_date` | Personal | Visible al titular; en reportes se usa solo el rango de edad |
 | `beneficiary.full_name`, `document_number`, `birth_date` | Personal de tercero | Enmascarado en la API de empresa; visible al afiliado titular |
@@ -369,6 +369,10 @@ como si lo fueran, porque el objetivo es demostrar el control.
 
 El enmascarado ocurre en el mapper del DTO (`MaskingUtils`), no en la consulta. Así, un error de mapeo
 produce un `500` y no una fuga de datos en claro.
+
+La decisión depende del **punto de vista, no solo de la columna**: `AffiliateService.profile` calcula un
+indicador de staff y el mapper decide con él. Cuando la lectura es de back-office se registra además
+`PII_ACCESS` en `audit_log`, de modo que un dato enmascarado deja rastro de quién lo consultó.
 
 ## 11.8 Correspondencia tabla ↔ módulo ↔ caso de uso
 
@@ -457,8 +461,8 @@ CREATE TABLE subsidy_request (
 | Pendiente | Impacto |
 |-----------|---------|
 | Sin restricciones `CHECK` en `requested_amount > 0` y longitudes de motivo | La validación vive solo en la capa de aplicación |
-| `app_user` sin semilla | No hay usuarios de demostración hasta que exista el `DemoUserInitializer` |
-| Sin prueba de integración contra MySQL real | H2 no valida el DDL específico del motor (ver 11.9) |
+| `app_user` se siembra en el arranque, no en SQL | `DemoUserInitializer` crea los cuatro usuarios con BCrypt desde configuración; no hay usuarios si no se arranca la aplicación |
+| Sin prueba de integración automatizada | El recorrido se verificó a mano contra MySQL 8.0.46; la suite sigue sin un test que arranque el motor |
 | Los índices de `V2` no se han medido con datos de volumen | El diseño es razonable, pero no hay evidencia de rendimiento |
 
 Estos puntos están alineados con las brechas B1–B7 del [documento 07](07-inventario-codigo-preliminar.md)
