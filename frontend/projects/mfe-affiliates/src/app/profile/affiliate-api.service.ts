@@ -1,7 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AffiliateProfile, Beneficiary, PageResponse, SubsidyRequestSummary } from 'shared-core';
+import {
+  AffiliateProfile,
+  Beneficiary,
+  PageResponse,
+  SubsidyDocument,
+  SubsidyDocumentUploaded,
+  SubsidyRequestDetail,
+  SubsidyRequestCreate,
+  SubsidyRequestCreated,
+  SubsidyRequestSummary,
+} from 'shared-core';
 
 /**
  * Acceso a los endpoints del afiliado autenticado.
@@ -27,6 +37,47 @@ export class AffiliateApiService {
    */
   getBeneficiaries(): Observable<Beneficiary[]> {
     return this.http.get<Beneficiary[]>('/api/v1/affiliates/me/beneficiaries');
+  }
+
+  /**
+   * Registra una solicitud de subsidio (UC-03).
+   *
+   * El cuerpo solo lleva tipo, monto y motivo: el afiliado y el radicado los resuelve el backend. Un 201
+   * devuelve el radicado y el catálogo de documentos que el asistente muestra como siguiente paso.
+   */
+  createSubsidyRequest(payload: SubsidyRequestCreate): Observable<SubsidyRequestCreated> {
+    return this.http.post<SubsidyRequestCreated>('/api/v1/subsidy-requests', payload);
+  }
+
+  /** Detalle de la solicitud con documentos e historial (UC-05). */
+  getRequestDetail(requestId: number): Observable<SubsidyRequestDetail> {
+    return this.http.get<SubsidyRequestDetail>(`/api/v1/subsidy-requests/${requestId}`);
+  }
+
+  /** Documentos exigidos por una solicitud, con su estado actual (UC-04). */
+  getDocuments(requestId: number): Observable<SubsidyDocument[]> {
+    return this.http.get<SubsidyDocument[]>(`/api/v1/subsidy-requests/${requestId}/documents`);
+  }
+
+  /**
+   * Carga o reemplaza un documento (UC-04).
+   *
+   * El `Content-Type` no se fija a mano: el navegador debe añadir el `boundary` del multipart, y forzarlo
+   * rompería el parseo en el servidor. El nombre del campo (`file`) y el tipo van como campos del formulario.
+   */
+  uploadDocument(requestId: number, documentType: string, file: File): Observable<SubsidyDocumentUploaded> {
+    const body = new FormData();
+    body.append('documentType', documentType);
+    body.append('file', file);
+    return this.http.post<SubsidyDocumentUploaded>(`/api/v1/subsidy-requests/${requestId}/documents`, body);
+  }
+
+  /** Descarga el archivo como blob; el enlace directo no enviaría el token de sesión. */
+  downloadDocument(requestId: number, documentType: string): Observable<Blob> {
+    return this.http.get(
+      `/api/v1/subsidy-requests/${requestId}/documents/${documentType}/content`,
+      { responseType: 'blob' },
+    );
   }
 
   /** Últimas solicitudes del titular, de la más reciente a la más antigua. */

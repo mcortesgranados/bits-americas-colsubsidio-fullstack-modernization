@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AffiliateProfile, SubsidyRequestSummary } from 'shared-core';
 import { AffiliateApiService } from './affiliate-api.service';
 
@@ -35,7 +36,7 @@ const TYPE_LABELS: Record<string, string> = {
 @Component({
   selector: 'cs-profile-page',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
 })

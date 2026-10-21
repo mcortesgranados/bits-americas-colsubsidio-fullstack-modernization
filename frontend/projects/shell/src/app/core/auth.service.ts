@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { DemoTokenRequest, DemoTokenResponse } from 'shared-core';
+import { DEMO_TOKEN_STORAGE_KEY, DemoTokenRequest, DemoTokenResponse } from 'shared-core';
 import { Observable, tap } from 'rxjs';
 
-const STORAGE_KEY = 'cs.demo.token';
+const STORAGE_KEY = DEMO_TOKEN_STORAGE_KEY;
 
 /**
  * Estado de sesión del portal.

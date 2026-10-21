@@ -3,5 +3,6 @@
  */
 
 export * from './lib/contracts';
+export * from './lib/session';
 export * from './lib/shared-core.service';
 export * from './lib/shared-core.component';

@@ -1,0 +1,228 @@
+// Tokens heredados del shell; se declaran como respaldo para el modo aislado del remoto.
+:host {
+  --cs-ink: #212529;
+  --cs-graphite: #333333;
+  --cs-white: #ffffff;
+  --cs-border: #cccccc;
+  --cs-muted: #5c636a;
+  --cs-accent: #0067b1;
+  --cs-danger: #a1151b;
+  --cs-ok: #1d6b3a;
+  --cs-pill: 80px;
+  --cs-font: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  display: block;
+}
+
+.documents {
+  display: grid;
+  gap: 1.25rem;
+  color: var(--cs-ink);
+  font-family: var(--cs-font);
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__eyebrow {
+    margin: 0 0 0.2rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cs-muted);
+  }
+
+  &__title {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+    color: var(--cs-graphite);
+  }
+
+  &__hint,
+  &__note {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--cs-muted);
+  }
+
+  &__back {
+    color: var(--cs-graphite);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__status {
+    min-height: 1.25rem;
+    margin: 0;
+    font-size: 0.875rem;
+
+    &--ok {
+      color: var(--cs-ok);
+      font-weight: 600;
+    }
+
+    &--error {
+      color: var(--cs-danger);
+      font-weight: 600;
+    }
+  }
+}
+
+.card {
+  border: 1px solid var(--cs-border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: var(--cs-white);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  &__caption {
+    text-align: left;
+    font-size: 0.75rem;
+    color: var(--cs-muted);
+    padding-bottom: 0.5rem;
+  }
+
+  th,
+  td {
+    padding: 0.65rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid #e6e8ee;
+    vertical-align: middle;
+  }
+
+  thead th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cs-muted);
+  }
+
+  &__file {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  &__meta {
+    font-size: 0.75rem;
+    color: var(--cs-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.7rem;
+  border-radius: var(--cs-pill);
+  background: #e7f0fa;
+  color: var(--cs-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &--pending {
+    background: #f2f3f7;
+    color: var(--cs-muted);
+  }
+
+  &--rejected {
+    background: #fbe9e9;
+    color: var(--cs-danger);
+  }
+}
+
+.button {
+  min-height: 36px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--cs-graphite);
+  border-radius: var(--cs-pill);
+  background: var(--cs-white);
+  color: var(--cs-graphite);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--cs-accent);
+    outline-offset: 1px;
+  }
+
+  &--ghost:hover {
+    background: #f2f3f7;
+  }
+}
+
+.file {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 0.9rem;
+  border-radius: var(--cs-pill);
+  background: var(--cs-graphite);
+  color: var(--cs-white);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--busy {
+    opacity: 0.7;
+    cursor: progress;
+  }
+
+  &__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  &:focus-within {
+    outline: 3px solid var(--cs-accent);
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 720px) {
+  .table {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    tr {
+      display: grid;
+      gap: 0.2rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #e6e8ee;
+    }
+
+    th,
+    td {
+      border: 0;
+      padding: 0;
+    }
+
+    &__actions {
+      margin-top: 0.35rem;
+    }
+  }
+}

@@ -1,0 +1,115 @@
+<section class="request" aria-labelledby="request-title">
+  <header class="request__header">
+    <div>
+      <p class="request__eyebrow">Portal de afiliados</p>
+      <h1 id="request-title" class="request__title">Nueva solicitud de subsidio</h1>
+    </div>
+  </header>
+
+  @if (created(); as result) {
+    <article class="card card--success" aria-labelledby="created-title">
+      <p class="request__badge">Radicado</p>
+      <h2 id="created-title" class="request__number">{{ result.requestNumber }}</h2>
+      <p class="request__lead">
+        Tu solicitud quedó <strong>{{ result.status === 'SUBMITTED' ? 'radicada' : result.status }}</strong>.
+        Guarda el número para consultar el estado.
+      </p>
+
+      <dl class="data">
+        <div class="data__row">
+          <dt>Tipo</dt>
+          <dd>{{ typeLabel(result.subsidyType) }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Monto</dt>
+          <dd>{{ result.requestedAmount | number: '1.0-2' }} {{ result.currency }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Radicada</dt>
+          <dd>{{ result.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        </div>
+      </dl>
+
+      <h3 class="request__subtitle">Documentos que debes cargar</h3>
+      <ul class="documents">
+        @for (document of result.requiredDocuments; track document) {
+          <li class="documents__item">{{ documentLabel(document) }}</li>
+        }
+      </ul>
+
+      <p class="request__note">
+        Reglas de demostración: ninguna decisión de este prototipo equivale a una aprobación real de subsidio.
+      </p>
+
+      <div class="request__actions">
+        <a class="button" [routerLink]="['..', result.id]">Ver solicitud</a>
+        <a class="button button--ghost" [routerLink]="['..', result.id, 'documentos']">Cargar documentos</a>
+        <a class="button button--ghost" routerLink="../../">Volver a mi perfil</a>
+        <button class="button button--ghost" type="button" (click)="restart()">
+          Registrar otra solicitud
+        </button>
+      </div>
+    </article>
+  } @else {
+    <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form__field">
+        <label for="subsidyType">Tipo de subsidio</label>
+        <select id="subsidyType" formControlName="subsidyType">
+          <option value="VIVIENDA">Vivienda</option>
+          <option value="EDUCACION">Educación</option>
+          <option value="RECREACION">Recreación</option>
+          <option value="CREDITO">Crédito</option>
+        </select>
+        <p class="form__hint">
+          Límite de demostración para este tipo: {{ currentLimit() | number: '1.0-0' }} COP.
+        </p>
+      </div>
+
+      <div class="form__field">
+        <label for="requestedAmount">Monto solicitado (COP)</label>
+        <input
+          id="requestedAmount"
+          type="number"
+          formControlName="requestedAmount"
+          min="0.01"
+          step="0.01"
+          inputmode="decimal"
+          [attr.aria-invalid]="form.controls.requestedAmount.touched && form.controls.requestedAmount.invalid"
+          aria-describedby="amount-hint amount-error"
+        />
+        <p id="amount-hint" class="form__hint">Solo números, máximo dos decimales.</p>
+        @if (form.controls.requestedAmount.touched && form.controls.requestedAmount.invalid) {
+          <p id="amount-error" class="form__error" role="alert">
+            @if (form.controls.requestedAmount.hasError('required')) {
+              El monto es obligatorio.
+            } @else {
+              El monto debe ser mayor que cero.
+            }
+          </p>
+        }
+      </div>
+
+      <div class="form__field">
+        <label for="purpose">Motivo (opcional)</label>
+        <textarea
+          id="purpose"
+          formControlName="purpose"
+          rows="3"
+          maxlength="400"
+          placeholder="Cuéntanos brevemente para qué necesitas el subsidio"
+        ></textarea>
+        <p class="form__hint">{{ form.controls.purpose.value?.length ?? 0 }}/400 caracteres.</p>
+      </div>
+
+      @if (errorMessage(); as message) {
+        <p class="form__error form__error--block" role="alert">{{ message }}</p>
+      }
+
+      <div class="request__actions">
+        <button class="button" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Registrando…' : 'Registrar solicitud' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

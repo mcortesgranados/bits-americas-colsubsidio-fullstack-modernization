@@ -24,6 +24,29 @@ export const routes: Routes = [
         loadComponent: () =>
           import('../beneficiaries/beneficiaries-page.component').then((m) => m.BeneficiariesPageComponent),
       },
+      {
+        path: 'solicitudes',
+        children: [
+          {
+            path: 'nueva',
+            title: 'Nueva solicitud · Portal de afiliados',
+            loadComponent: () =>
+              import('../requests/subsidy-request-page.component').then((m) => m.SubsidyRequestPageComponent),
+          },
+          {
+            path: ':id',
+            title: 'Detalle de la solicitud · Portal de afiliados',
+            loadComponent: () =>
+              import('../requests/request-detail.component').then((m) => m.RequestDetailComponent),
+          },
+          {
+            path: ':id/documentos',
+            title: 'Documentos de la solicitud · Portal de afiliados',
+            loadComponent: () =>
+              import('../requests/documents-page.component').then((m) => m.DocumentsPageComponent),
+          },
+        ],
+      },
     ],
   },
 ];

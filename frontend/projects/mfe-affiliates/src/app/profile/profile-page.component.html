@@ -75,7 +75,7 @@
           <tbody>
             @for (request of requests(); track request.requestNumber) {
               <tr>
-                <th scope="row">{{ request.requestNumber }}</th>
+                <th scope="row"><a [routerLink]="['solicitudes', request.id]">{{ request.requestNumber }}</a></th>
                 <td>{{ typeLabel(request.subsidyType) }}</td>
                 <td>{{ statusLabel(request.status) }}</td>
                 <td>{{ request.submittedAt ? (request.submittedAt | date: 'dd/MM/yyyy') : '—' }}</td>

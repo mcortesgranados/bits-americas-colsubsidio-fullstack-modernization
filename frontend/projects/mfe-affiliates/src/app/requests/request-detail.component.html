@@ -1,0 +1,123 @@
+<section class="detail" aria-labelledby="detail-title">
+  <header class="detail__header">
+    <div>
+      <p class="detail__eyebrow">Portal de afiliados</p>
+      @if (detail(); as request) {
+        <h1 id="detail-title" class="detail__title">Solicitud {{ request.requestNumber }}</h1>
+        <span class="badge" [class.badge--ok]="request.status === 'APPROVED_DEMO'"
+              [class.badge--danger]="request.status === 'REJECTED_DEMO' || request.status === 'CANCELLED'"
+              [class.badge--pending]="request.status === 'SUBMITTED' || request.status === 'PENDING_DOCUMENTS'">
+          {{ statusLabel(request.status) }}
+        </span>
+      } @else {
+        <h1 id="detail-title" class="detail__title">Solicitud</h1>
+      }
+    </div>
+    <a class="detail__back" routerLink="../..">Volver a mi perfil</a>
+  </header>
+
+  <p class="detail__live" role="status" aria-live="polite">
+    @if (liveMessage(); as message) {
+      <span class="detail__live--ok">{{ message }}</span>
+    }
+  </p>
+
+  @if (loading() && !detail()) {
+    <p class="detail__hint">Cargando la solicitud…</p>
+  }
+
+  @if (errorMessage(); as message) {
+    <p class="detail__error" role="alert">{{ message }}</p>
+  }
+
+  @if (detail(); as request) {
+    <article class="card" aria-labelledby="summary-title">
+      <h2 id="summary-title" class="card__title">Resumen</h2>
+      <dl class="data">
+        <div class="data__row">
+          <dt>Tipo</dt>
+          <dd>{{ typeLabel(request.subsidyType) }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Monto solicitado</dt>
+          <dd>{{ request.requestedAmount | number: '1.0-2' }} {{ request.currency }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Radicada</dt>
+          <dd>{{ request.submittedAt ? (request.submittedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd>
+        </div>
+        <div class="data__row">
+          <dt>Decidida</dt>
+          <dd>{{ request.decidedAt ? (request.decidedAt | date: 'dd/MM/yyyy HH:mm') : 'Pendiente' }}</dd>
+        </div>
+        @if (request.purpose) {
+          <div class="data__row data__row--wide">
+            <dt>Motivo</dt>
+            <dd>{{ request.purpose }}</dd>
+          </div>
+        }
+        @if (request.decisionReason) {
+          <div class="data__row data__row--wide">
+            <dt>Decisión</dt>
+            <dd>{{ request.decisionReason }}</dd>
+          </div>
+        }
+      </dl>
+    </article>
+
+    @if (request.pendingDocuments > 0 || request.rejectedDocuments > 0) {
+      <article class="notice" role="status">
+        <p class="notice__text">
+          Tienes {{ request.pendingDocuments }} documento(s) pendiente(s)
+          @if (request.rejectedDocuments > 0) {
+            y {{ request.rejectedDocuments }} rechazado(s)
+          }.
+        </p>
+        <a class="button" [routerLink]="['..', request.id, 'documentos']">Gestionar documentos</a>
+      </article>
+    }
+
+    <article class="card" aria-labelledby="documents-title">
+      <h2 id="documents-title" class="card__title">Documentos</h2>
+      <table class="table">
+        <caption class="table__caption">Evidencias exigidas para esta solicitud.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Documento</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Archivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (document of request.documents; track document.id) {
+            <tr>
+              <th scope="row">{{ documentLabel(document.documentType) }}</th>
+              <td>{{ documentStatusLabel(document.status) }}</td>
+              <td>{{ document.fileName ?? 'Sin archivo' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </article>
+
+    <article class="card" aria-labelledby="history-title">
+      <h2 id="history-title" class="card__title">Historial de estados</h2>
+      <ol class="timeline">
+        @for (entry of request.history; track entry.id) {
+          <li class="timeline__item">
+            <p class="timeline__status">
+              {{ entry.fromStatus ? statusLabel(entry.fromStatus) : 'Inicio' }} →
+              <strong>{{ statusLabel(entry.toStatus) }}</strong>
+            </p>
+            <p class="timeline__meta">
+              {{ entry.occurredAt | date: 'dd/MM/yyyy HH:mm' }} · {{ entry.actor }}
+            </p>
+            @if (entry.reason) {
+              <p class="timeline__reason">{{ entry.reason }}</p>
+            }
+          </li>
+        }
+      </ol>
+    </article>
+  }
+</section>

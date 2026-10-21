@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AffiliateProfile, PageResponse, SubsidyRequestSummary } from 'shared-core';
 import { AffiliateApiService } from './affiliate-api.service';
@@ -22,6 +23,7 @@ const PROFILE: AffiliateProfile = {
 const REQUESTS: PageResponse<SubsidyRequestSummary> = {
   content: [
     {
+      id: 5,
       requestNumber: 'SOL-2026-0001',
       subsidyType: 'EDUCACION',
       status: 'IN_REVIEW',
@@ -49,6 +51,7 @@ describe('ProfilePageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ProfilePageComponent],
       providers: [
+      provideRouter([]),
         {
           provide: AffiliateApiService,
           useValue: {

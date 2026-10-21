@@ -1,0 +1,94 @@
+<section class="documents" aria-labelledby="documents-title">
+  <header class="documents__header">
+    <div>
+      <p class="documents__eyebrow">Portal de afiliados</p>
+      <h1 id="documents-title" class="documents__title">Documentos de la solicitud</h1>
+      <p class="documents__hint">Solicitud #{{ requestId }}. Formatos aceptados: PDF, PNG o JPG, hasta 5 MB.</p>
+    </div>
+    <a class="documents__back" routerLink="..">Volver al detalle</a>
+  </header>
+
+  <p class="documents__status" role="status" aria-live="polite">
+    @if (loading()) {
+      <span>Cargando documentos…</span>
+    }
+    @if (successMessage(); as message) {
+      <span class="documents__status--ok">{{ message }}</span>
+    }
+    @if (errorMessage(); as message) {
+      <span class="documents__status--error">{{ message }}</span>
+    }
+  </p>
+
+  @if (!loading()) {
+    <article class="card">
+      <table class="table">
+        <caption class="table__caption">
+          Catálogo de evidencias exigidas para esta solicitud.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Documento</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Archivo</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (document of documents(); track document.id) {
+            <tr>
+              <th scope="row">{{ documentLabel(document.documentType) }}</th>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge--pending]="document.status === 'PENDING'"
+                  [class.badge--rejected]="document.status === 'REJECTED'"
+                >
+                  {{ statusLabel(document.status) }}
+                </span>
+              </td>
+              <td class="table__file">
+                @if (document.fileName) {
+                  <span>{{ document.fileName }}</span>
+                  <span class="table__meta">
+                    {{ formatSize(document.sizeBytes) }} ·
+                    {{ document.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}
+                  </span>
+                } @else {
+                  <span class="table__meta">Sin archivo</span>
+                }
+              </td>
+              <td class="table__actions">
+                @if (document.status !== 'PENDING') {
+                  <button class="button button--ghost" type="button" (click)="download(document)">
+                    Descargar
+                  </button>
+                }
+                <label class="file" [class.file--busy]="uploadingType() === document.documentType">
+                  <span class="file__label">
+                    {{ uploadingType() === document.documentType
+                      ? 'Cargando…'
+                      : (document.status === 'PENDING' ? 'Cargar' : 'Reemplazar') }}
+                  </span>
+                  <input
+                    class="file__input"
+                    type="file"
+                    accept="application/pdf,image/png,image/jpeg"
+                    [disabled]="uploadingType() !== null"
+                    [attr.aria-label]="'Cargar ' + documentLabel(document.documentType)"
+                    (change)="onFileSelected(document.documentType, $event)"
+                  />
+                </label>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </article>
+
+    <p class="documents__note">
+      Cuando estén todos los documentos, el consumidor mueve la solicitud a revisión. Ninguna decisión de este
+      prototipo equivale a una aprobación real de subsidio.
+    </p>
+  }
+</section>
